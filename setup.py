@@ -23,7 +23,7 @@ except ImportError:
     sys.exit(1)
 
 sys.path.insert(0, os.path.abspath('lib'))
-from popEtl.release import __version__, __author__
+from dingDong.release import  __version__, __author__
 
 def read_file(file_name):
     """Read file and return its contents."""
