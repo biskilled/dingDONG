@@ -1,0 +1,17 @@
+# Note: this requirements.txt file is used to specify what dependencies are
+# needed to make the package run rather than for deployment of a tested set of
+# packages.  Thus, this should be the loosest set possible (only required
+# packages, not optional ones, and with the widest range of versions that could
+# be suitable)
+
+#ceodbc - download from gitHub : https://github.com/anthony-tuininga/ceODBC and exec setup.py build
+#pythonNet - needs to be installed from gitHub. follow : http://pythonnet.github.io/
+#Microsoft.AnalysisServices.DLL For using SSAS processing
+pyodbc
+pymysql
+vertica_python
+cx_Oracle
+pymongo
+
+sqlparse
+pandas

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>clrmodule</name>
+    </assembly>
+    <members>
+        <member name="M:clrModule.DebugPrint(System.String)">
+            <summary>
+            Substitute for Debug.Writeline(...). Ideally we would use Debug.Writeline
+            but haven't been able to configure the TRACE from within Python.
+            </summary>
+        </member>
+    </members>
+</doc>

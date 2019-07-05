@@ -1,0 +1,7 @@
+include README.rst
+include COPYING
+include requirements.txt
+#recursive-include docs *
+include Makefile
+include MANIFEST.in
+
