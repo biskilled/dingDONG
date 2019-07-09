@@ -25,9 +25,8 @@ import sys
 import multiprocessing
 from collections import OrderedDict
 
-from popEtl.connections.connector  import connector
-from popEtl.config          import config
-from popEtl.glob.glob       import p
+from dingDong.config        import config
+from dingDong.misc.logger   import p
 
 if 2 == sys.version_info[0]:
     reload(sys)
@@ -148,8 +147,14 @@ def __execParallel (priority, ListOftupleFiles, connObj):
     p("loadExcelSP->__execParallel: FINISH Excecuting priority %s, loaded files: %s >>>> " %(str(priority), str (multiProcessFiles)), "i")
 
 # sqlWithParamList --> list of tuple (file name, paramas)
-def execQuery (sqlWithParamList, connJsonVal=None,connType=None, connUrl=None ):
-    connObj = connector (connJsonVal=connJsonVal,connType=connType, connUrl=connUrl)
+def execQuery (sqlWithParamList, connObj ):
+    if sqlWithParamList is None or len(sqlWithParamList)==0:
+        p("NOT RECIAVE ANY SQL STATEMENT")
+        return
+
+    if isinstance(sqlWithParamList, str):
+        sqlWithParamList = [sqlWithParamList]
+
     connObj.connect()
     allFiles    = {}
     sqlFiles    = []
@@ -159,26 +164,26 @@ def execQuery (sqlWithParamList, connJsonVal=None,connType=None, connUrl=None ):
         parallelProcess = -1
         if len (script) == 3:
             parallelProcess = script[0]
-            locName    = script[1]
-            locParams  = script[2]
+            locName         = script[1]
+            locParams       = script[2]
         elif len (script) == 2:
-            locName = script[0]
-            locParams = script[1]
+            locName         = script[0]
+            locParams       = script[1]
         elif len (script) == 1:
-            locName = script[0]
+            locName         = script[0]
         else:
-            p("loadExcelSP->execQuery: Not configure propely, please update sql execution %s " % (str(script)) ,"e")
+            p("NOT CONFIGURE PROPERLY, MUST HAVE 1, 2 or 3 in a tuple  %s " % (str(script)) ,"e")
             break
 
         # sql file is list of all files to execute
         if os.path.isdir(locName):
-            p("loadExcelSP->execQuery: >>> CONNENCTION:%s, DIRECTORY: %s " % (connObj.cType, str(locName)), "ii")
+            p("CONNENCTION:%s, DIRECTORY: %s " % (connObj.conn, str(locName)), "ii")
             sqlFiles = [os.path.join(locName, pos_sql)  for pos_sql in os.listdir(locName) if pos_sql.endswith('.sql')]
         elif os.path.isfile(locName):
-            p("loadExcelSP->execQuery: >>> CONNENCTION:%s, PARALLEL:%s, FILE: %s  " % (connObj.cType, str(parallelProcess), str(locName)), "ii")
+            p("CONNENCTION:%s, PARALLEL:%s, FILE: %s  " % (connObj.conn, str(parallelProcess), str(locName)), "ii")
             sqlFiles.append(locName)
         else:
-            p("loadExcelSP->execQuery: >>> CONNENCTION:%s, QUERY: %s" % (connObj.cType, str(locName) ), "ii")
+            p("CONNENCTION:%s, QUERY: %s" % (connObj.conn, str(locName) ), "ii")
             sqlFiles.append(locName)
 
         # Adding all script into ordered dictionary
@@ -191,7 +196,7 @@ def execQuery (sqlWithParamList, connJsonVal=None,connType=None, connUrl=None ):
 
     for priority  in OrderedDict (sorted (allFiles.items())):
 
-        p ('loadExcelSP->execQuery: Executing prioiriy %s >>>>' %str(priority), "ii")
+        p ('Executing prioiriy %s >>>>' %str(priority), "ii")
         __execParallel (priority, allFiles[priority], connObj)
 
     connObj.close()

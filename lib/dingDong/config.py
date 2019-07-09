@@ -41,12 +41,9 @@ class config:
     LOGS_ERR_NAME  = 'log'
     LOGS_TMP_NAME  = 'lastLog'
 
-    #SMTP Configuration
+    #SMTP and massaging Configuration
     SMTP_SERVER             = ""
     SMTP_SERVER_USER        = ""
     SMTP_SERVER_PASS        = ""
     SMTP_SENDER             = ""
     SMTP_RECEIVERS          = ['info@biSkilled.com']
-
-
-###################################################################################################################################

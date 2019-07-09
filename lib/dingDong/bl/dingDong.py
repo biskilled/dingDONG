@@ -16,6 +16,7 @@
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
+import copy
 from collections import OrderedDict
 
 from dingDong.misc.logger       import p
@@ -23,16 +24,23 @@ from dingDong.bl.jsonParser     import jsonParser
 from dingDong.misc.enumsJson    import eJson
 from dingDong.conn.baseConnectorManager   import mngConnectors as conn
 
-class baseBL:
-    def __init__ (self, name='base model', dicObj=None, filePath=None,
+## Execters
+from dingDong.executers.executeSql import execQuery
+from dingDong.executers.executeAddMsg import executeAddMsg
+
+class dingDong:
+    def __init__ (self,  dicObj=None, filePath=None,
                 dirData=None, includeFiles=None, notIncludeFiles=None,
                 connDict=None):
-        self.name       = name
+
         self.jsonParser = jsonParser(dicObj=dicObj, filePath=filePath,
                                      dirData=dirData, includeFiles=includeFiles, notIncludeFiles=notIncludeFiles,
                                      connDict=connDict)
 
+        self.msg = executeAddMsg()
+
         ## Defualt properties
+        self.connDict       = self.jsonParser.connDict
         self.stt            = None
         self.addSourceColumn= True
         self.src            = None
@@ -44,7 +52,145 @@ class baseBL:
         self.mergeTarget    = None
         self.mergeKeys      = None
 
-    def setSTT (self, node):
+    def ding (self, destList=None, jsName=None, jsonNodes=None):
+        p('STARTING TO MODEL DATA STRUCURE >>>>>' , "i")
+        if jsName and jsonNodes:
+            allNodes = [(jsName, jsonNodes)]
+        else:
+            allNodes = [(jsName, jsonNodes) for jsName, jsonNodes in self.__getNodes(destList=destList)]
+
+        for jsName, jsonNodes in allNodes:
+
+            mergeSource = None
+            for jMap in jsonNodes:
+                self.__setSTT(node=jMap)
+                sourceStt = None
+                targetStt = None
+                for node in jMap:
+                    if isinstance(jMap[node], (list, tuple)):
+                        self.ding(destList=None, jsName=jsName, jsonNodes=jMap[node])
+                        continue
+
+                    if not isinstance(jMap[node], (dict, OrderedDict)):
+                        p("Not valid json values - must be list of dictionary.. continue. val: %s " % (str(jMap)),"e")
+                        continue
+
+                    self.__setMainProperty(key=node, valDict=jMap[node])
+
+                    if self.src:
+                        mergeSource = copy.copy(self.src)
+
+                    if self.tar and self.src:
+                        # convert source data type to target data types
+                        targetStt = self.__updateTargetBySourceAndStt(src=self.src, tar=self.tar)
+
+                        self.tar.create(stt=targetStt)
+                        mergeSource = copy.copy(self.tar)
+                        self.src.close()
+                        self.tar.close()
+
+                        sourceStt = None
+                        self.src = None
+                        self.tar = None
+
+                    elif self.tar and self.stt:
+                        self.tar.create(stt=self.stt)
+                        mergeSource = copy.copy(self.tar)
+                        self.tar.close()
+                        self.tar = None
+
+                    if self.mrg and mergeSource:
+                        sttMerge = self.__updateTargetBySourceAndStt(src=mergeSource, tar=self.mrg)
+                        self.mrg.create(stt=sttMerge)
+                        self.mrg.close()
+                        self.mrg = None
+
+        p('FINSHED TO MODEL DATA STRUCURE >>>>>', "i")
+        p('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', "ii")
+
+    def dong (self, destList=None, jsName=None, jsonNodes=None):
+        p('STARTING TO TRANSFER DATA STRUCURE >>>>>', "i")
+        if jsName and jsonNodes:
+            allNodes = [(jsName, jsonNodes)]
+        else:
+            allNodes = [(jsName, jsonNodes) for jsName, jsonNodes in self.__getNodes(destList=destList)]
+
+        for jsName, jsonNodes in allNodes:
+            self.src = None
+            self.tar = None
+            self.mrg = None
+            self.exec = None
+            self.stt = None
+            self.addSourceColumn = True
+
+            for jMap in jsonNodes:
+                self.__setSTT(node=jMap)
+
+                for node in jMap:
+                    if isinstance(jMap[node], (list, tuple)):
+                        self.dong(destList=destList, jsName=jsName, jsonNodes=jMap[node])
+                        continue
+
+                    if not isinstance(jMap[node], (dict, OrderedDict)):
+                        p("Not valid json values - must be list of dictionary.. continue. val: %s " % (str(jMap)),"e")
+                        continue
+
+                    self.__setMainProperty(key=node, valDict=jMap[node])
+
+                    if self.exec:
+                        """ Execute internal connection procedure """
+                        self.exec = None
+
+                    if self.src and self.tar:
+                        """ TRANSFER DATA FROM SOURCE TO TARGET """
+                        self.tar.preLoading()
+
+                        tarToSrc = self.__mappingLoadingSourceToTarget(src=self.src, tar=self.tar)
+                        self.src.extract(tar=self.tar, tarToSrc=tarToSrc, batchRows=10000, addAsTaret=True)
+                        self.tar.close()
+                        self.src.close()
+
+                        self.src = None
+                        self.tar = None
+
+                    """ MERGE DATA BETWEEN SOURCE AND TARGET TABLES """
+                    if self.mrg and self.mergeSource:
+                        self.mrg.merge(mergeTable=self.mergeTarget, mergeKeys=self.mergeKeys, sourceTable=None)
+                        self.mrg.close()
+
+                        self.mergeSource = None
+                        self.mergeTarget = None
+                        self.mergeKeys = None
+
+        p('FINISHED TO TRANSFER DATA STRUCURE >>>>>', "i")
+        p('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', "ii")
+
+    """ LOADING BUSINESS LOGIC EXECUTOERS """
+    def execDbSql(self, queries, connName=None, connType=None, connUrl=None, connLoadProp=None):
+        connPropDic = {eJson.jValues.NAME:connName, eJson.jValues.CONN:connType, eJson.jValues.URL:connUrl}
+        connObj = conn(connPropDic=connPropDic, connLoadProp=connLoadProp)
+        execQuery(sqlWithParamList=queries, connObj=connObj)
+
+
+    """ Check Source values in STT - remove invalid values """
+    def __updateSTTBySource (self, srcStructure, pre="[", pos="]"):
+        # Check if ther are sourcea in STT that not defined
+        srcStrucureL = {x.replace(pre,"").replace(pos,"").lower():x for x in srcStructure}
+        for col in self.stt:
+            if eJson.jSttValues.SOURCE in self.stt[col] and self.stt[col][eJson.jSttValues.SOURCE].replace(pre,"").replace(pos,"").lower() not in srcStrucureL:
+                p("STT TAREGT %s HAVE INVALID SOURCE %s --> ignore COLUMN " %(col,  self.stt[col][eJson.jSttValues.SOURCE]) ,"e")
+                del self.stt[col]
+
+    """ Check Taret values in STT - remove invalid values  """
+    def __updateSTTByTarget (self, tarStructure, pre="[", pos="]"):
+        # Check if ther are sourcea in STT that not defined
+        tarStrucureL = {x.replace(pre,"").replace(pos,"").lower():x for x in tarStructure}
+        for col in self.stt:
+            if col.replace(pre,"").replace(pos,"").lower() not in tarStrucureL:
+                p("STT COLUMN %s NOT EXISTS OBJECT --> ignore COLUMN " %(col) ,"e")
+                #del self.stt[col]
+
+    def __setSTT (self, node):
 
         if eJson.jKeys.STTONLY in node:
             self.stt            = node[eJson.jKeys.STTONLY]
@@ -56,7 +202,7 @@ class baseBL:
             self.stt            = {}
             self.addSourceColumn= True
 
-    def setMainProperty (self,key, valDict):
+    def __setMainProperty (self,key, valDict):
         if eJson.jKeys.EXEC == key or eJson.jKeys.EXEC in valDict:
             self.exec = valDict
 
@@ -88,42 +234,8 @@ class baseBL:
         else:
             p("IGNORE NODE: KEY:%s, VALUE:%s " % (key,str(valDict)), "e")
 
-    def model (self):
-
-        p('baseBL->blExec: START %s >>>>>' %(self.name), "i")
-        self.execJsonAllNodes()
-
-        p('baseBL->blExec: FINISH %s >>>>>' % (self.name), "i")
-        p('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', "ii")
-
-    def execJsonAllNodes (self):
-        for jsonMapping in self.jsonParser.jsonMappings(destList=None):
-            for jsonFile in jsonMapping:
-                self.execJsonNode(jsName=jsonFile,jsonNodes=jsonMapping[jsonFile])
-
-    def execJsonNode (self, jsName, jsonNodes):
-        pass
-
-    """ Check Source values in STT - remove invalid values """
-    def __updateSTTBySource (self, srcStructure, pre="[", pos="]"):
-        # Check if ther are sourcea in STT that not defined
-        srcStrucureL = {x.replace(pre,"").replace(pos,"").lower():x for x in srcStructure}
-        for col in self.stt:
-            if eJson.jSttValues.SOURCE in self.stt[col] and self.stt[col][eJson.jSttValues.SOURCE].replace(pre,"").replace(pos,"").lower() not in srcStrucureL:
-                p("STT TAREGT %s HAVE INVALID SOURCE %s --> ignore COLUMN " %(col,  self.stt[col][eJson.jSttValues.SOURCE]) ,"e")
-                del self.stt[col]
-
-    """ Check Taret values in STT - remove invalid values  """
-    def __updateSTTByTarget (self, tarStructure, pre="[", pos="]"):
-        # Check if ther are sourcea in STT that not defined
-        tarStrucureL = {x.replace(pre,"").replace(pos,"").lower():x for x in tarStructure}
-        for col in self.stt:
-            if col.replace(pre,"").replace(pos,"").lower() not in tarStrucureL:
-                p("STT COLUMN %s NOT EXISTS OBJECT --> ignore COLUMN " %(col) ,"e")
-                #del self.stt[col]
-
     """ LOADING MODULE: Return mapping between source and target """
-    def mappingLoadingSourceToTarget (self, src, tar):
+    def __mappingLoadingSourceToTarget (self, src, tar):
         tarToSrc        = OrderedDict()
         srcStructure    = src.getStructure()
         tarStructure    = tar.getStructure()
@@ -202,7 +314,7 @@ class baseBL:
         return tarToSrc
 
     """ MAPPING MODULE: Convert Source Data Type into Target Data Type """
-    def updateTargetBySourceAndStt(self, src, tar):
+    def __updateTargetBySourceAndStt(self, src, tar):
         retStrucure = OrderedDict()
         sourceStt   = src.getStructure()
 
@@ -260,7 +372,7 @@ class baseBL:
 
         return retStrucure
 
-    """ LOADING BUSINESS LOGIC EXECUTOERS """
-    def dbExec (self,  queries):
-        pass
-
+    def __getNodes(self, destList=None):
+        for jsonMapping in self.jsonParser.jsonMappings(destList=destList):
+            for jsName in jsonMapping:
+                yield jsName, jsonMapping[jsName]
