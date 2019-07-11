@@ -43,9 +43,9 @@ DEFAULTS = {
             eConn.SQLSERVER: {eJson.jValues.DEFAULT_TYPE: 'varchar(100)', eJson.jValues.SCHEMA: 'dbo',
                               eJson.jValues.EMPTY: 'Null', eJson.jValues.COLFRAME: ("[", "]"),
                               eJson.jValues.SP: {'match': r'([@].*[=])(.*?(;|$))', 'replace': r"[=;@\s']"}  },
-            eConn.ACCESS: {eJson.jValues.DEFAULT_TYPE: 'varchar(100)', eJson.jValues.SCHEMA: 'dbo',
-                           eJson.jValues.EMPTY: 'Null', eJson.jValues.COLFRAME: ("[", "]"),
-                           eJson.jValues.SP: {} }
+
+            eConn.LITE: {   eJson.jValues.DEFAULT_TYPE:'varchar(100)',eJson.jValues.SCHEMA:None,
+                            eJson.jValues.EMPTY:'Null'}
            }
 
 DATA_TYPES = {
@@ -68,9 +68,10 @@ class baseGlobalDb (baseBatch):
                   connIsSrc=None, connIsSql=None):
 
         baseBatch.__init__(self, conn=conn, connName=connName, connPropDict=connPropDict)
+
         self.DEFAULTS   = DEFAULTS
         self.DATA_TYPES = DATA_TYPES
-        self.usingSchema = True
+        self.usingSchema= True
 
         """ BASIC PROPERTIES FROM BASECONN """
         self.conn           = self.conn
@@ -97,7 +98,6 @@ class baseGlobalDb (baseBatch):
         self.connSql        = None
 
         self.parrallelProcessing    = False
-
 
         if not self.connUrl:
             err = "baseConn->init: Connection %s, NAME %s, must have VALID URL ! " %(self.conn, self.connName)
@@ -334,7 +334,8 @@ class baseGlobalDb (baseBatch):
         if totalRows == 0:
             p("THERE ARE NO ROWS")
             return
-        execQuery = "INSERT INTO %s.%s " % (self.defaultSchema, self.connObj)
+        tblFullName = "%s.%s" %(self.defaultSchema, self.connObj) if self.defaultSchema else self.connObj
+        execQuery = "INSERT INTO %s" % (tblFullName)
         pre, pos = self.columnFrame[0], self.columnFrame[1]
         colList = []
         colInsert = []

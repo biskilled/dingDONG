@@ -347,7 +347,7 @@ class dingDong:
                 ## Receive list of all dataType in DataTypes Tree
                 newDataTypeTree     = src.getDataTypeTree (dataType=replaceString.lower(), ret=([]))
                 if not newDataTypeTree:
-                    tarType = tar.defDatatType
+                    tarType = tar.defDataType
                 else:
                     targetList = tar.setDataTypeTree (dataTypeTree=newDataTypeTree, allDataTypes=tar.dataTypes, ret=[])
                     tarType = '%s%s' %(targetList[-1],postType) if targetList and len(targetList)>0 else tar.defDatatType

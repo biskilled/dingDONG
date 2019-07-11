@@ -111,9 +111,10 @@ class baseBatch (abc.ABC):
         defValues = {}
         if eConn.NONO in val and val[eConn.NONO]:
             defValues = val[eConn.NONO]
+
         if self.conn in val and val[self.conn]:
             defValues.update(val[self.conn])
-        else:
+        elif len(defValues)==0:
             defValues = val
 
         if defValues and isinstance(defValues, dict):

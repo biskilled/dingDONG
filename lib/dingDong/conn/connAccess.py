@@ -21,8 +21,14 @@ from collections import OrderedDict
 from dingDong.conn.connGlobalDB   import baseGlobalDb
 from dingDong.misc.enumsJson      import eConn, eJson, findProp
 
-DEFAULTS    = {}
-DATA_TYPES  = {}
+DEFAULTS    = { eJson.jValues.DEFAULT_TYPE: 'varchar(100)', eJson.jValues.SCHEMA: 'dbo',
+                eJson.jValues.EMPTY: 'Null', eJson.jValues.COLFRAME: ("[", "]"), eJson.jValues.SP: {}}
+
+DATA_TYPES  = { eConn.dataType.DB_VARCHAR:['varchar', 'longchar', 'bit', 'ntext'],
+                    eConn.dataType.DB_INT:['integer', 'counter'],
+                    eConn.dataType.DB_FLOAT:['double'],
+                    eConn.dataType.DB_DECIMAL:['decimal']
+                    }
 
 
 class access (baseGlobalDb):

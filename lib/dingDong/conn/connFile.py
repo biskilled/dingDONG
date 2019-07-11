@@ -21,6 +21,7 @@ import os
 import io
 import time
 import codecs
+import csv
 from collections import OrderedDict
 
 from dingDong.conn.baseBatch  import baseBatch
@@ -155,7 +156,6 @@ class connFile (baseBatch):
         if self.isExists() and self.append:
             p("FILE %s EXISTS WILL APPEND DATA " % (self.fileFullName))
 
-
     def extract(self, tar, tarToSrc, batchRows, addAsTaret=True):
         fnOnRowsDic     = {}
         execOnRowsDic   = {}
@@ -228,11 +228,12 @@ class connFile (baseBatch):
         """ EXECUTING LOADING SOURCE FILE DATA """
         rows = []
         try:
-            with io.open (self.fileFullName, 'r', encoding=self.encode, errors=self.withCharErr) as fFile:
-                for i, line in enumerate(fFile):
-                    line = line.replace('"', '').replace("\t", "")
-                    line = line.strip(self.endOfLine)
-                    split_line = line.split(self.delimiter)
+            with io.open (self.fileFullName, 'r', encoding=self.encode, errors=self.withCharErr) as textFile:
+                fFile = csv.reader(textFile, delimiter=self.delimiter)
+                for i, split_line in enumerate(fFile):
+                    #line = line.replace('"', '').replace("\t", "")
+                    #line = line.strip(self.endOfLine)
+                    #split_line = line.split(self.delimiter)
                     # Add headers structure
                     if i>=startFromRow:
                         if loadFileAsIs:

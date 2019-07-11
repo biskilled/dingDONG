@@ -131,10 +131,11 @@ class eConn (object):
 
 
     class dataType(object):
-        B_STR = 'str'
-        B_INT = 'int'
-        B_FLOAT = 'float'
-        B_LONG_STR = 'text'
+        B_STR       = 'str'
+        B_INT       = 'int'
+        B_FLOAT     = 'float'
+        B_LONG_STR  = 'text'
+        B_BLOB      = 'blob'
 
         DB_VARCHAR  = 'varchar'
         DB_VARCHAR_MAX='varchar(MAX)'

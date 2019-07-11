@@ -31,7 +31,7 @@ CLASS_TO_LOAD = {eConn.SQLSERVER :baseGlobalDb,
                  eConn.VERTICA:baseGlobalDb,
                  eConn.ACCESS:access,
                  eConn.MYSQL:baseGlobalDb,
-                 eConn.LITE:sqlLite,
+                 eConn.LITE:baseGlobalDb,
                  eConn.FILE:connFile}
 
 def addPropToDict (existsDict, newProp):

@@ -90,24 +90,29 @@ class setSqlQuery (baseSqlQuery):
 
     def setSqlRename (self, tableSchema, tableName, tableNewName):
         tableName = '%s.%s' %(tableSchema, tableName) if tableSchema else tableName
-        self.default = "Select Not implementes"
+        self.default = "ALTER TABLE %s RENAME TO %s;" %(tableName, tableNewName)
         self.connQuery[eConn.NONO] = self.default
+        self.connQuery[eConn.LITE] = self.default
 
         self.connQuery[eConn.SQLSERVER] = "EXEC sp_rename '%s','%s'" %(tableName, tableNewName)
+
 
     def setSqlDrop (self, tableName, tableSchema):
         tableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
         self.default = "drop table %s " %(tableName)
         self.connQuery[eConn.SQLSERVER] = self.default
-        self.connQuery[eConn.ORACLE] = self.default
+        self.connQuery[eConn.ORACLE]    = self.default
+        self.connQuery[eConn.LITE] = self.default
 
     def setSqlTruncate (self, tableName, tableSchema):
         fullTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
         self.default = "truncate table %s;" %(fullTableName)
         self.connQuery[eConn.SQLSERVER] = self.default
         self.connQuery[eConn.ORACLE]    = self.default
+        self.connQuery[eConn.LITE] = "DELETE FROM %s;" %(fullTableName)
 
     def setSqlTableStructure (self, tableName, tableSchema):
+
         self.default = "SQL Structure is not implemented ;"
         #### SQL SERVER
         sql = """
@@ -138,6 +143,7 @@ class setSqlQuery (baseSqlQuery):
         sql += "name='" + tableName.replace("[", "").replace("]", "") + "') ORDER BY c.column_id"
 
         self.connQuery[eConn.SQLSERVER] = sql
+        self.connQuery[eConn.LITE]      = "select name, type from pragma_table_info('%s');" %tableName
 
         ### ORACLE
         sql = "select column_name, data_type || "
@@ -188,6 +194,9 @@ class setSqlQuery (baseSqlQuery):
         sql = "Select OBJECT_ID('%s')" %(fullTableName)
         self.default = sql
         self.connQuery[eConn.SQLSERVER] = sql
+        self.connQuery[eConn.LITE] = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = '%s';" %(fullTableName)
+
+
 
     def setSqlDelete (self, sqlFilter, tableName, tableSchema):
         fullTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
