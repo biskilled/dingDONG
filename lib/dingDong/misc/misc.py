@@ -18,7 +18,7 @@
 import re
 import sys
 
-from dingDong.config import config
+from lib.dingDong.config import config
 
 def replaceStr (sString,findStr, repStr, ignoreCase=True,addQuotes=None):
     if addQuotes and isinstance(repStr,str):

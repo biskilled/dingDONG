@@ -17,14 +17,13 @@
 
 from collections import OrderedDict
 
-from dingDong.misc.logger     import p
-from dingDong.misc.enumsJson import eConn, eJson
-from dingDong.config import config
+from lib.dingDong.misc.logger     import p
+from lib.dingDong.misc.enumsJson import eConn, eJson
+from lib.dingDong.config import config
 
-from dingDong.conn.connGlobalDB   import baseGlobalDb
-from dingDong.conn.connAccess     import access
-from dingDong.conn.connFile       import connFile
-from dingDong.conn.dbSqlLite      import sqlLite
+from lib.dingDong.conn.connGlobalDB   import baseGlobalDb
+from lib.dingDong.conn.connAccess     import access
+from lib.dingDong.conn.connFile       import connFile
 
 CLASS_TO_LOAD = {eConn.SQLSERVER :baseGlobalDb,
                  eConn.ORACLE:baseGlobalDb,
@@ -74,7 +73,6 @@ def mngConnectors(connPropDic, connLoadProp=None):
             p("CONNECTION %s is NOT DEFINED. PROP: %s" % (str(cType), str(connPropDic)), "e")
     else:
         p ("connectorMng->mngConnectors: must have TYPE prop. prop: %s " %(str(connPropDic)), "e")
-
 
 def __queryParsetIntoList(self, sqlScript, getPython=True, removeContent=True, dicProp=None, pythonWord="popEtl"):
         if isinstance(sqlScript, (tuple, list)):

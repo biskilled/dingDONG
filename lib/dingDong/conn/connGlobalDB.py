@@ -22,14 +22,14 @@ import sys
 import time
 from collections import OrderedDict
 
-from dingDong.conn.baseBatch            import baseBatch
-from dingDong.conn.baseBatchFunction    import *
-from dingDong.misc.enumsJson            import eConn, eJson, eSql
-from dingDong.misc.misc                 import decodePython2Or3
-from dingDong.config                    import config
-from dingDong.misc.logger               import p
-import dingDong.conn.connGlobalDbQueryParser as qp
-from dingDong.conn.connGlobalDbSqlQueries import setSqlQuery
+from lib.dingDong.conn.baseBatch            import baseBatch
+from lib.dingDong.conn.baseBatchFunction    import *
+from lib.dingDong.misc.enumsJson            import eConn, eJson, eSql
+from lib.dingDong.misc.misc                 import decodePython2Or3
+from lib.dingDong.config                    import config
+from lib.dingDong.misc.logger               import p
+import lib.dingDong.conn.connGlobalDbQueryParser as qp
+from lib.dingDong.conn.connGlobalDbSqlQueries import setSqlQuery
 
 DEFAULTS = {
             eConn.NONO: {   eJson.jValues.DEFAULT_TYPE:'varchar(100)',eJson.jValues.SCHEMA:'dbo',
@@ -192,6 +192,9 @@ class baseGlobalDb (baseBatch):
             p("baseConnDb->create: TABLE %s NOT MAPPED CORRECLTY " %(self.connObj), "e")
             return
         boolToCreate = self.cloneObject(stt, tableSchema, tableName)
+
+        print ("TAL 45454")
+        print (stt)
 
         if boolToCreate:
             sql = "CREATE TABLE %s \n (" %(tableFullName)
@@ -564,7 +567,7 @@ class baseGlobalDb (baseBatch):
 
         for col in newStructure:
             colAlias = newStructure[col][eJson.jStrucure.ALIACE] if eJson.jStrucure.ALIACE in newStructure[col] else None
-            colType  = newStructure[col][eJson.jStrucure.TYPE] if eJson.jStrucure.TYPE in newStructure[col] else self.defDatatType
+            colType  = newStructure[col][eJson.jStrucure.TYPE] if eJson.jStrucure.TYPE in newStructure[col] else self.defDataType
             if colAlias:
                 newStructureL[colAlias.replace(pre,"").replace(pos,"").lower()] = (colAlias,colType)
             else:
@@ -583,7 +586,7 @@ class baseGlobalDb (baseBatch):
             if col in newStructureL:
                 if existStructure[ existStructureL[col] ][eJson.jStrucure.TYPE].lower() != newStructureL[ col ][1].lower():
                     schemaEqual = False
-                    p("TYPE FOR COLUMN %s CHANGED, OLD: %s, NEW: %s" % (col, existStructure[col][eJson.jStrucure.TYPE], newStructureL[ col.lower() ][1]), "ii")
+                    p("TYPE FOR COLUMN %s CHANGED, OLD: %s, NEW: %s" % (col, existStructure[ existStructureL[col] ] [eJson.jStrucure.TYPE] , newStructureL[ col ][1]), "ii")
             else:
                 schemaEqual = False
                 p("TABLE CHANGED REMOVE COLUMN: %s " % (col), "ii")

@@ -19,8 +19,8 @@ import abc
 import sys
 import re
 
-from dingDong.misc.logger import p
-from dingDong.misc.enumsJson import eConn, eJson, findProp
+from lib.dingDong.misc.logger import p
+from lib.dingDong.misc.enumsJson import eConn, eJson, findProp
 
 DEFAULTS    =   {
                     eJson.jValues.DEFAULT_TYPE:eConn.dataType.B_STR

@@ -24,10 +24,10 @@ import codecs
 import csv
 from collections import OrderedDict
 
-from dingDong.conn.baseBatch  import baseBatch
-from dingDong.misc.enumsJson  import eConn, eJson
-from dingDong.config          import config
-from dingDong.misc.logger     import p
+from lib.dingDong.conn.baseBatch  import baseBatch
+from lib.dingDong.misc.enumsJson  import eConn, eJson
+from lib.dingDong.config          import config
+from lib.dingDong.misc.logger     import p
 
 DEFAULTS = {
             eJson.jFile.MIN_SIZE:1024,
@@ -89,8 +89,11 @@ class connFile (baseBatch):
             if head and len(head)>0 and tail and len (tail)>1:
                 self.fileFullName   = self.fileName
                 self.folder         = head
-            else:
+            elif self.folder:
                 self.fileFullName = os.path.join(self.folder, self.fileName)
+            else:
+                p("THERE IS NO FOLDER MAPPING, FILE CONNENTION FAILED, %s" %(self.fileName), "e")
+                return
             if (os.path.isfile(self.fileFullName)):
                 p ("FILE EXISTS:%s, DELIMITER %s, HEADER %s " %(str(self.fileFullName) , str(self.delimiter) ,str(self.header) ), "ii")
         elif self.folder:

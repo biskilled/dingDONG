@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
 
-from dingDong.misc.enumsJson import getAllProp, eConn, eSql
-from dingDong.misc.logger import p
+from lib.dingDong.misc.enumsJson import getAllProp, eConn, eSql
+from lib.dingDong.misc.logger import p
 
 """ Abstract Class: """
 class baseSqlQuery (object):

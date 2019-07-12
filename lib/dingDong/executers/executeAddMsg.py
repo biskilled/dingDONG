@@ -17,8 +17,8 @@
 import time
 from collections import OrderedDict
 
-from dingDong.misc.logger import logg,p
-from dingDong.executers.executeHTMLReport import eHtml, createHtmlFromList
+from lib.dingDong.misc.logger import logg,p
+from lib.dingDong.executers.executeHTMLReport import eHtml, createHtmlFromList
 
 class msgProp (object):
     STEP_NUM    = "STEP NUMBER"

@@ -19,14 +19,14 @@ import re
 import copy
 from collections import OrderedDict
 
-from dingDong.misc.logger       import p
-from dingDong.bl.jsonParser     import jsonParser
-from dingDong.misc.enumsJson    import eJson
-from dingDong.conn.baseConnectorManager   import mngConnectors as conn
+from lib.dingDong.misc.logger       import p
+from lib.dingDong.bl.jsonParser     import jsonParser
+from lib.dingDong.misc.enumsJson    import eJson
+from lib.dingDong.conn.baseConnectorManager   import mngConnectors as conn
 
 ## Execters
-from dingDong.executers.executeSql import execQuery
-from dingDong.executers.executeAddMsg import executeAddMsg
+from lib.dingDong.executers.executeSql import execQuery
+from lib.dingDong.executers.executeAddMsg import executeAddMsg
 
 class dingDong:
     def __init__ (self,  dicObj=None, filePath=None,
@@ -60,7 +60,6 @@ class dingDong:
             allNodes = [(jsName, jsonNodes) for jsName, jsonNodes in self.__getNodes(destList=destList)]
 
         for jsName, jsonNodes in allNodes:
-
             mergeSource = None
             for jMap in jsonNodes:
                 self.__setSTT(node=jMap)

@@ -18,8 +18,8 @@
 
 from collections import OrderedDict
 
-from dingDong.conn.connGlobalDB   import baseGlobalDb
-from dingDong.misc.enumsJson      import eConn, eJson, findProp
+from lib.dingDong.conn.connGlobalDB   import baseGlobalDb
+from lib.dingDong.misc.enumsJson      import eConn, eJson, findProp
 
 DEFAULTS    = { eJson.jValues.DEFAULT_TYPE: 'varchar(100)', eJson.jValues.SCHEMA: 'dbo',
                 eJson.jValues.EMPTY: 'Null', eJson.jValues.COLFRAME: ("[", "]"), eJson.jValues.SP: {}}

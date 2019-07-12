@@ -25,8 +25,8 @@ import sys
 import multiprocessing
 from collections import OrderedDict
 
-from dingDong.config        import config
-from dingDong.misc.logger   import p
+from lib.dingDong.config        import config
+from lib.dingDong.misc.logger   import p
 
 if 2 == sys.version_info[0]:
     reload(sys)
