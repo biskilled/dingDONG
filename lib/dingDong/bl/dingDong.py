@@ -258,7 +258,7 @@ class dingDong:
 
         ## {srcName in Target: Source column }
         for col in srcStructure:
-            colAlias= srcStructure[col][eJson.jStrucure.ALIACE] if eJson.jStrucure.ALIACE in srcStructure[col] else None
+            colAlias= srcStructure[col][eJson.jSttValues.ALIACE] if eJson.jSttValues.ALIACE in srcStructure[col] else None
             colName = colAlias if colAlias else col
             srcColumns[colName.replace(srcPre, "").replace(srcPos, "").lower()] = col
 
@@ -322,19 +322,19 @@ class dingDong:
         if src.conn == tar.conn:
             if self.addSourceColumn:
                 for col in sourceStt:
-                    if eJson.jStrucure.ALIACE in sourceStt[col] and sourceStt[col][eJson.jStrucure.ALIACE]:
-                        retStrucure[ sourceStt[col][eJson.jStrucure.ALIACE] ] = {eJson.jStrucure.TYPE: sourceStt[col][eJson.jStrucure.TYPE]}
+                    if eJson.jSttValues.ALIACE in sourceStt[col] and sourceStt[col][eJson.jSttValues.ALIACE]:
+                        retStrucure[ sourceStt[col][eJson.jSttValues.ALIACE] ] = {eJson.jSttValues.TYPE: sourceStt[col][eJson.jSttValues.TYPE]}
                     else:
-                        retStrucure[col] = {eJson.jStrucure.TYPE: sourceStt[col][eJson.jStrucure.TYPE]}
+                        retStrucure[col] = {eJson.jSttValues.TYPE: sourceStt[col][eJson.jSttValues.TYPE]}
 
         ### Source connection type is different than target connection type
         elif self.addSourceColumn:
             for col in sourceStt:
                 targetColName = col
-                if eJson.jStrucure.ALIACE in sourceStt[col] and sourceStt[col][eJson.jStrucure.ALIACE]:
-                    targetColName = sourceStt[col][eJson.jStrucure.ALIACE]
+                if eJson.jSttValues.ALIACE in sourceStt[col] and sourceStt[col][eJson.jSttValues.ALIACE]:
+                    targetColName = sourceStt[col][eJson.jSttValues.ALIACE]
 
-                colType = sourceStt[col][eJson.jStrucure.TYPE] if eJson.jStrucure.TYPE in sourceStt[col] and sourceStt[col][eJson.jStrucure.TYPE] else tar.defDataType
+                colType = sourceStt[col][eJson.jSttValues.TYPE] if eJson.jSttValues.TYPE in sourceStt[col] and sourceStt[col][eJson.jSttValues.TYPE] else tar.defDataType
                 fmatch = re.search(r'(.*)(\(.+\))', colType, re.M | re.I)
                 if fmatch:
                     replaceString   = fmatch.group(1)  # --> varchar, int , ...
@@ -350,7 +350,7 @@ class dingDong:
                 else:
                     targetList = tar.setDataTypeTree (dataTypeTree=newDataTypeTree, allDataTypes=tar.dataTypes, ret=[])
                     tarType = '%s%s' %(targetList[-1],postType) if targetList and len(targetList)>0 else tar.defDatatType
-                retStrucure[targetColName] = {eJson.jStrucure.TYPE:tarType}
+                retStrucure[targetColName] = {eJson.jSttValues.TYPE:tarType}
 
         for col in self.stt:
             if col.lower() in sourceColL and eJson.jSttValues.TYPE in self.stt[col] and self.stt[col][eJson.jSttValues.TYPE]:
@@ -362,9 +362,9 @@ class dingDong:
 
             elif col.lower() not in sourceColL:
                 if eJson.jSttValues.TYPE in self.stt[col] and self.stt[col][eJson.jSttValues.TYPE]:
-                    retStrucure[col] = {eJson.jStrucure.TYPE: self.stt[col][eJson.jSttValues.TYPE]}
+                    retStrucure[col] = {eJson.jSttValues.TYPE: self.stt[col][eJson.jSttValues.TYPE]}
                 else:
-                    retStrucure[col] = {eJson.jStrucure.TYPE: self.tar.defDataType}
+                    retStrucure[col] = {eJson.jSttValues.TYPE: self.tar.defDataType}
 
                     if eJson.jSttValues.ALIACE in self.stt[col]:
                         retStrucure[col][eJson.jSttValues.ALIACE] = self.stt[col][eJson.jSttValues.ALIACE]

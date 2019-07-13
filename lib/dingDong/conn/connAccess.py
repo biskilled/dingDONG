@@ -52,7 +52,7 @@ class access (baseGlobalDb):
 
         if self.conn == eConn.ACCESS:
             for row in self.cursor.columns():
-                val = {eJson.jStrucure.TYPE:self.defDataType, eJson.jStrucure.ALIACE:None}
+                val = {eJson.jSttValues.TYPE:self.defDataType, eJson.jSttValues.ALIACE:None}
 
                 if len(row) > 3:
                     curTblName = row[2].encode("utf-8")
@@ -66,7 +66,7 @@ class access (baseGlobalDb):
                         else:
                             colDefType = colType
 
-                        val[eJson.jStrucure.TYPE] = colDefType
+                        val[eJson.jSttValues.TYPE] = colDefType
 
                         ret[colName] = val
         return ret

@@ -193,17 +193,14 @@ class baseGlobalDb (baseBatch):
             return
         boolToCreate = self.cloneObject(stt, tableSchema, tableName)
 
-        print ("TAL 45454")
-        print (stt)
-
         if boolToCreate:
             sql = "CREATE TABLE %s \n (" %(tableFullName)
             for col in stt:
-                if eJson.jStrucure.ALIACE in stt[col] and stt[col][eJson.jStrucure.ALIACE] and len (stt[col][eJson.jStrucure.ALIACE])>0:
-                    colName = self.wrapColName (col=stt[col][eJson.jStrucure.ALIACE], remove=False)
+                if eJson.jSttValues.ALIACE in stt[col] and stt[col][eJson.jSttValues.ALIACE] and len (stt[col][eJson.jSttValues.ALIACE])>0:
+                    colName = self.wrapColName (col=stt[col][eJson.jSttValues.ALIACE], remove=False)
                 else:
                     colName =  self.wrapColName (col=col, remove=False)
-                colType =  stt[col][eJson.jStrucure.TYPE]
+                colType =  stt[col][eJson.jSttValues.TYPE]
                 sql += '\t%s\t%s,\n' %(colName, colType)
             sql = sql[:-2]+')'
 
@@ -232,8 +229,8 @@ class baseGlobalDb (baseBatch):
             col = col.replace (pre,"").replace(pos,"")
             finallStructure[col] = retStructure[col]
 
-            if eJson.jStrucure.ALIACE in finallStructure[col] and finallStructure[col][eJson.jStrucure.ALIACE] is not None:
-                finallStructure[col][eJson.jStrucure.ALIACE] = finallStructure[col][eJson.jStrucure.ALIACE].replace(pre,"").replace(pos,"")
+            if eJson.jSttValues.ALIACE in finallStructure[col] and finallStructure[col][eJson.jSttValues.ALIACE] is not None:
+                finallStructure[col][eJson.jSttValues.ALIACE] = finallStructure[col][eJson.jSttValues.ALIACE].replace(pre,"").replace(pos,"")
 
         return finallStructure
 
@@ -446,7 +443,7 @@ class baseGlobalDb (baseBatch):
         for col in rows:
             colName = decodePython2Or3(col[0], un=True)
             colType = decodePython2Or3(col[1], un=True)
-            val = {eJson.jStrucure.TYPE: colType, eJson.jStrucure.ALIACE: None}
+            val = {eJson.jSttValues.TYPE: colType, eJson.jSttValues.ALIACE: None}
             ret[colName] = val
         return ret
 
@@ -506,7 +503,7 @@ class baseGlobalDb (baseBatch):
             for col in colDict:
                 if col in tableColL:
                     ret[tableColL[col]] = tableStrucure[tableColL[col]]
-                    ret[tableColL[col]][eJson.jStrucure.ALIACE] = colDict[col][1]
+                    ret[tableColL[col]][eJson.jSttValues.ALIACE] = colDict[col][1]
                 else:
                     p("COLUMN %s NOT FOUND IN TABLE %s " % (tableColL[col], tbl), "ii")
 
@@ -514,7 +511,7 @@ class baseGlobalDb (baseBatch):
             for col in noMappingColumnsL:
                 if col in tableColL:
                     ret[tableColL[col]] = tableStrucure[tableColL[col]]
-                    ret[tableColL[col]][eJson.jStrucure.ALIACE] = noMappingColumnsL[col][1]
+                    ret[tableColL[col]][eJson.jSttValues.ALIACE] = noMappingColumnsL[col][1]
                     foundColumn.append(col)
 
             ## Delete Column that has data type
@@ -540,7 +537,7 @@ class baseGlobalDb (baseBatch):
                 for col in noMappingColumnsL:
                     if col in tableColL:
                         ret[tableColL[col]] = tableStrucure[tableColL[col]]
-                        ret[tableColL[col]][eJson.jStrucure.ALIACE] = noMappingColumnsL[col][1]
+                        ret[tableColL[col]][eJson.jSttValues.ALIACE] = noMappingColumnsL[col][1]
                         foundColumn.append(col)
 
                 for col in foundColumn:
@@ -552,7 +549,7 @@ class baseGlobalDb (baseBatch):
             for col in noMappingColumnsL:
                 colName = noMappingColumnsL[col][0]
                 colAlias = noMappingColumnsL[col][1]
-                ret[colName] = {eJson.jStrucure.TYPE: self.defDataType, eJson.jStrucure.ALIACE: colAlias}
+                ret[colName] = {eJson.jSttValues.TYPE: self.defDataType, eJson.jSttValues.ALIACE: colAlias}
 
         return ret
 
@@ -566,8 +563,8 @@ class baseGlobalDb (baseBatch):
         pre,pos = self.columnFrame[0], self.columnFrame[1]
 
         for col in newStructure:
-            colAlias = newStructure[col][eJson.jStrucure.ALIACE] if eJson.jStrucure.ALIACE in newStructure[col] else None
-            colType  = newStructure[col][eJson.jStrucure.TYPE] if eJson.jStrucure.TYPE in newStructure[col] else self.defDataType
+            colAlias = newStructure[col][eJson.jSttValues.ALIACE] if eJson.jSttValues.ALIACE in newStructure[col] else None
+            colType  = newStructure[col][eJson.jSttValues.TYPE] if eJson.jSttValues.TYPE in newStructure[col] else self.defDataType
             if colAlias:
                 newStructureL[colAlias.replace(pre,"").replace(pos,"").lower()] = (colAlias,colType)
             else:
@@ -584,9 +581,9 @@ class baseGlobalDb (baseBatch):
 
         for col in existStructureL:
             if col in newStructureL:
-                if existStructure[ existStructureL[col] ][eJson.jStrucure.TYPE].lower() != newStructureL[ col ][1].lower():
+                if existStructure[ existStructureL[col] ][eJson.jSttValues.TYPE].lower() != newStructureL[ col ][1].lower():
                     schemaEqual = False
-                    p("TYPE FOR COLUMN %s CHANGED, OLD: %s, NEW: %s" % (col, existStructure[ existStructureL[col] ] [eJson.jStrucure.TYPE] , newStructureL[ col ][1]), "ii")
+                    p("TYPE FOR COLUMN %s CHANGED, OLD: %s, NEW: %s" % (col, existStructure[ existStructureL[col] ] [eJson.jSttValues.TYPE] , newStructureL[ col ][1]), "ii")
             else:
                 schemaEqual = False
                 p("TABLE CHANGED REMOVE COLUMN: %s " % (col), "ii")

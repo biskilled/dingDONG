@@ -94,13 +94,6 @@ class eJson (object):
         EXECFUNC= 'e'
         DIC     = {SOURCE: None, TYPE: None, ALIACE:None}
 
-    # Column Name : {Type:XXXX, Alicae: New Column Name}
-    class jStrucure(object):
-        TYPE    = 'type'
-        ALIACE  = 'alias'
-        OBJECT  = 'object'
-        DIC     = {TYPE:None, ALIACE:None}
-
     class jMergeValues(object):
         SOURCE  = 'merge_source'
         TARGET  = 'merge_target'

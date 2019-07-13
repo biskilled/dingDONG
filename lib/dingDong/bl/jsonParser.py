@@ -285,9 +285,9 @@ class jsonParser (object):
 
         for tar in propVal:
             if tar.lower() in existsColumnsDict:
-                stt[ existsColumnsDict[tar.lower()] ][eJson.jSttValues.SOURCE] = propVal[tar]
+                stt[ existsColumnsDict[tar.lower()] ][eJson.jSttValues.TYPE] = propVal[tar]
             else:
-                stt[tar] = {eJson.jSttValues.SOURCE:propVal[tar]}
+                stt[tar] = {eJson.jSttValues.TYPE:propVal[tar]}
         return stt
 
     # Insert / Add new column types
@@ -298,9 +298,9 @@ class jsonParser (object):
         existsColumnsDict = {x.lower(): x for x in stt.keys()}
         for tar in propVal:
             if tar.lower() in existsColumnsDict:
-                stt[ existsColumnsDict[tar.lower()] ][eJson.jSttValues.TYPE] = propVal[tar]
+                stt[ existsColumnsDict[tar.lower()] ][eJson.jSttValues.SOURCE] = propVal[tar]
             else:
-                stt[tar][eJson.jSttValues.TYPE] = propVal[tar]
+                stt[tar][eJson.jSttValues.SOURCE] = propVal[tar]
         return stt
 
     # Special connection execution
