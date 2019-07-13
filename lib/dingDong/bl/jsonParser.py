@@ -167,7 +167,17 @@ class jsonParser (object):
                             del newDict[eJson.jKeys.QUERY]
 
                         if k == eJson.jKeys.STT or k == eJson.jKeys.STTONLY:
-                            stt.update(node[prop])
+
+                            newSttL = {x.lower():x for x in node[prop]}
+                            sttL    = {x.lower():x for x in stt}
+                            for s in stt:
+                                if s.lower() in newSttL:
+                                    stt[s].update ( node[prop][newSttL[s.lower()]] )
+
+                            for s in newSttL:
+                                if s not in sttL:
+                                    stt[ newSttL[s] ] = node[prop][ newSttL[s] ]
+
                             newDict[k] =stt
                         # parse source / target / query
                         elif k == eJson.jKeys.SOURCE or k == eJson.jKeys.TARGET or k == eJson.jKeys.QUERY:
@@ -281,7 +291,6 @@ class jsonParser (object):
             return stt
 
         existsColumnsDict   = {x.lower():x for x in stt.keys()}
-
 
         for tar in propVal:
             if tar.lower() in existsColumnsDict:

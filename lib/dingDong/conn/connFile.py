@@ -16,7 +16,6 @@
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
 
 import shutil
-import re
 import os
 import io
 import time
@@ -25,6 +24,7 @@ import csv
 from collections import OrderedDict
 
 from lib.dingDong.conn.baseBatch  import baseBatch
+from lib.dingDong.conn.baseBatchFunction    import *
 from lib.dingDong.misc.enumsJson  import eConn, eJson
 from lib.dingDong.config          import config
 from lib.dingDong.misc.logger     import p
@@ -33,11 +33,11 @@ DEFAULTS = {
             eJson.jFile.MIN_SIZE:1024,
             eJson.jFile.DEF_COLUMN_PREF :'col_',
             eJson.jFile.DECODING:"windows-1255",
-            eJson.jFile.ENCODING:'utf8',
+            eJson.jFile.ENCODING:'windows-1255',
             eJson.jFile.DELIMITER:',',
             eJson.jFile.ROW_HEADER:1,
             eJson.jFile.END_OF_LINE:'\r\n',
-            eJson.jFile.MAX_LINES_PARSE:10000,
+            eJson.jFile.MAX_LINES_PARSE:5000,
             eJson.jFile.LOAD_WITH_CHAR_ERR:'strict',
             eJson.jFile.APPEND:False
            }
@@ -47,9 +47,10 @@ DATA_TYPES = {  }
 class connFile (baseBatch):
 
     def __init__ (self, folder=None,fileName=None,
-                    fileMinSize=512, colPref='col_', decode="windows-1255", encode='utf8',
-                    delimiter=',',header=1, endOfLine='\r\n',linesToParse=10000,withCharErr='strict',append=False,
-                    isTar=False, isSrc=False, connPropDict=None):
+                    fileMinSize=None, colPref=None, decode=None, encode=None,
+                    delimiter=None,header=None, endOfLine=None,linesToParse=None,withCharErr=None,append=False,
+                    isTar=None, isSrc=None, connPropDict=None):
+
 
         self.conn = eConn.FILE
         baseBatch.__init__(self, conn=self.conn, connPropDict=connPropDict)
@@ -149,6 +150,7 @@ class connFile (baseBatch):
                             break
         else:
             p ('FILE NOT EXISTS %s >>> ' %( str(fullPath) ), "ii")
+
         return ret
 
     def isExists(self, fullPath=None):

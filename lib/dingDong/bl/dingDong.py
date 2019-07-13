@@ -175,10 +175,15 @@ class dingDong:
     def __updateSTTBySource (self, srcStructure, pre="[", pos="]"):
         # Check if ther are sourcea in STT that not defined
         srcStrucureL = {x.replace(pre,"").replace(pos,"").lower():x for x in srcStructure}
+
+        removeColumns = []
         for col in self.stt:
             if eJson.jSttValues.SOURCE in self.stt[col] and self.stt[col][eJson.jSttValues.SOURCE].replace(pre,"").replace(pos,"").lower() not in srcStrucureL:
-                p("STT TAREGT %s HAVE INVALID SOURCE %s --> ignore COLUMN " %(col,  self.stt[col][eJson.jSttValues.SOURCE]) ,"e")
-                del self.stt[col]
+                removeColumns.append (col)
+
+        for col in removeColumns:
+            p("STT TAREGT %s HAVE INVALID SOURCE %s --> ignore COLUMN " % (col, self.stt[col][eJson.jSttValues.SOURCE]),"e")
+            del self.stt[col]
 
     """ Check Taret values in STT - remove invalid values  """
     def __updateSTTByTarget (self, tarStructure, pre="[", pos="]"):
@@ -190,7 +195,6 @@ class dingDong:
                 #del self.stt[col]
 
     def __setSTT (self, node):
-
         if eJson.jKeys.STTONLY in node:
             self.stt            = node[eJson.jKeys.STTONLY]
             self.addSourceColumn= False
