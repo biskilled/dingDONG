@@ -21,9 +21,9 @@ import json
 
 from collections import OrderedDict
 
-from lib.dingDong.misc.logger import p
-from lib.dingDong.misc.enumsJson import eJson, eConn, findProp
-from lib.dingDong.config      import config
+from dingDong.misc.logger import p
+from dingDong.misc.enumsJson import eJson, eConn, findProp
+from dingDong.config      import config
 
 
 #xx = [[{'s':}],[{'prop':{'pp':45}},{}],{'sql1':'', 's':xxx,'t':'dsdsdsd'},{''},{}]

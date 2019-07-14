@@ -21,8 +21,8 @@ from collections import OrderedDict
 from sqlparse.sql       import IdentifierList, Identifier, Parenthesis
 from sqlparse.tokens    import Keyword, DML
 
-from lib.dingDong.misc.logger import p
-from lib.dingDong.misc.enumsJson import eJson
+from dingDong.misc.logger import p
+from dingDong.misc.enumsJson import eJson
 
 
 COLUMNS   = '~COLUMNS'          # --> Dictionary : {columnName:TargetName, ...}

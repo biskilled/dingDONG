@@ -16,11 +16,12 @@
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
 
 import abc
+import six
 import sys
 import re
 
-from lib.dingDong.misc.logger import p
-from lib.dingDong.misc.enumsJson import eConn, eJson, findProp
+from dingDong.misc.logger import p
+from dingDong.misc.enumsJson import eConn, eJson, findProp
 
 DEFAULTS    =   {
                     eJson.jValues.DEFAULT_TYPE:eConn.dataType.B_STR
@@ -39,9 +40,9 @@ DATA_TYPES = {
     eConn.dataType.DB_DATE:{eConn.dataType.DB_DATE:None}
 }
 
-
 """ baseConn -- get connection propertirs : conn, connUrl,  connExtraUrl, connName,connDataTypes, connDefaultType, connPropDic"""
-class baseBatch (abc.ABC):
+@six.add_metaclass(abc.ABCMeta)
+class baseBatch ():
     def __init__ (self, conn=None, connName=None, connPropDict=None):
         self.connPropDict   = connPropDict
         self.conn           = self.setProperties (propKey=eJson.jValues.CONN, propVal=conn)

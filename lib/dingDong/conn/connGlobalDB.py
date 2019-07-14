@@ -22,14 +22,14 @@ import sys
 import time
 from collections import OrderedDict
 
-from lib.dingDong.conn.baseBatch            import baseBatch
-from lib.dingDong.conn.baseBatchFunction    import *
-from lib.dingDong.misc.enumsJson            import eConn, eJson, eSql
-from lib.dingDong.misc.misc                 import decodePython2Or3
-from lib.dingDong.config                    import config
-from lib.dingDong.misc.logger               import p
-import lib.dingDong.conn.connGlobalDbQueryParser as qp
-from lib.dingDong.conn.connGlobalDbSqlQueries import setSqlQuery
+from dingDong.conn.baseBatch            import baseBatch
+from dingDong.conn.baseBatchFunction    import *
+from dingDong.misc.enumsJson            import eConn, eJson, eSql
+from dingDong.misc.misc                 import decodePython2Or3
+from dingDong.config                    import config
+from dingDong.misc.logger               import p
+import dingDong.conn.connGlobalDbQueryParser as qp
+from dingDong.conn.connGlobalDbSqlQueries import setSqlQuery
 
 DEFAULTS = {
             eConn.NONO: {   eJson.jValues.DEFAULT_TYPE:'varchar(100)',eJson.jValues.SCHEMA:'dbo',
@@ -63,8 +63,8 @@ DATA_TYPES = {
 
 class baseGlobalDb (baseBatch):
 
-    def __init__ (self, conn=None, connUrl=None, connExtraUrl=None,
-                  connName=None,connObj=None, connPropDict=None, connFilter=None, connIsTar=None,
+    def __init__ (self, connPropDict=None, conn=None, connUrl=None, connExtraUrl=None,
+                  connName=None,connObj=None,  connFilter=None, connIsTar=None,
                   connIsSrc=None, connIsSql=None):
 
         baseBatch.__init__(self, conn=conn, connName=connName, connPropDict=connPropDict)
@@ -352,10 +352,10 @@ class baseGlobalDb (baseBatch):
             p('LOAD %s into target: %s >>>>>> ' % (str(totalRows), self.connObj), "ii")
 
         except Exception as e:
-            p("TYPE:%s, OBJCT:%s ERROR in cursor.executemany !!!!" % (self.conn, str(self.connObj)), "e")
-            p("ERROR QUERY:%s " % str(execQuery), "e")
+            p(u"TYPE:%s, OBJCT:%s ERROR in cursor.executemany !!!!" % (self.conn, self.connObj), "e")
+            p(u"ERROR QUERY:%s " % execQuery, "e")
             sampleRes = ['Null' if not r else "'%s'" % r for r in rows[0]]
-            p("SAMPLE:%s " % str(", ".join(sampleRes)), "e")
+            p(u"SAMPLE:%s " % u", ".join(sampleRes), "e")
             p(e, "e")
             if config.LOOP_ON_ERROR:
                 iCnt = 0
@@ -363,14 +363,14 @@ class baseGlobalDb (baseBatch):
                 errDict = {}
                 totalErrorToLooap = int(tCnt * 0.1)
                 totalErrorsFound = 0
-                p("ERROR, LOADING ROW BY ROW UT TO %s ERRORS OUT OF %s ROWS " % (str(totalErrorToLooap), str(tCnt)),
+                p("ROW BY ROW ERROR-> LOADING %s OUT OF %s ROWS " % (str(totalErrorToLooap), str(tCnt)),
                   "e")
                 for r in rows:
                     try:
                         iCnt += 1
                         r = [r]
                         self.cursor.executemany(execQuery, r)
-                        self.conn.commit()
+                        self.connDB.commit()
                     except Exception as e:
                         totalErrorsFound += 1
                         if totalErrorsFound > totalErrorToLooap:
@@ -385,14 +385,13 @@ class baseGlobalDb (baseBatch):
                                     ret += "Null, "
                                 else:
                                     ret += "'%s'," % (col)
-                            p(execQuery, "e")
+                            p("ROW BY ROW ERROR-> %s" %execQuery, "e")
                             p(ret, "e")
                             p(e, "e")
                         else:
                             errDict[errMsg] += 1
 
-                p("ERROR ROW BY ROW: TOTAL ERROS:%s OUT OF %s, QUITING  " % (
-                    str(totalErrorToLooap), str(tCnt)), "e")
+                p("ROW BY ROW ERROR-> LOADED %s OUT OF %s ROWS" % (str(totalErrorToLooap), str(tCnt)), "e")
                 for err in errDict:
                     p("TOTAL ERRORS: %s, MSG: %s: " % (str(err), str(errDict[err])), "e")
 

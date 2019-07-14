@@ -17,13 +17,13 @@
 
 from collections import OrderedDict
 
-from lib.dingDong.misc.logger     import p
-from lib.dingDong.misc.enumsJson import eConn, eJson
-from lib.dingDong.config import config
+from dingDong.misc.logger     import p
+from dingDong.misc.enumsJson import eConn, eJson
+from dingDong.config import config
 
-from lib.dingDong.conn.connGlobalDB   import baseGlobalDb
-from lib.dingDong.conn.connAccess     import access
-from lib.dingDong.conn.connFile       import connFile
+from dingDong.conn.connGlobalDB   import baseGlobalDb
+from dingDong.conn.connAccess     import access
+from dingDong.conn.connFile       import connFile
 
 CLASS_TO_LOAD = {eConn.SQLSERVER :baseGlobalDb,
                  eConn.ORACLE:baseGlobalDb,
@@ -69,6 +69,7 @@ def mngConnectors(connPropDic, connLoadProp=None):
         cType = connPropDic[eJson.jValues.CONN]
         if cType in CLASS_TO_LOAD:
             return CLASS_TO_LOAD[cType]( connPropDict=connPropDic )
+
         else:
             p("CONNECTION %s is NOT DEFINED. PROP: %s" % (str(cType), str(connPropDic)), "e")
     else:

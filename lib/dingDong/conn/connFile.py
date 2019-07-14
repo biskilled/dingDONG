@@ -23,11 +23,11 @@ import codecs
 import csv
 from collections import OrderedDict
 
-from lib.dingDong.conn.baseBatch  import baseBatch
-from lib.dingDong.conn.baseBatchFunction    import *
-from lib.dingDong.misc.enumsJson  import eConn, eJson
-from lib.dingDong.config          import config
-from lib.dingDong.misc.logger     import p
+from dingDong.conn.baseBatch  import baseBatch
+from dingDong.conn.baseBatchFunction    import *
+from dingDong.misc.enumsJson  import eConn, eJson
+from dingDong.config          import config
+from dingDong.misc.logger     import p
 
 DEFAULTS = {
             eJson.jFile.MIN_SIZE:1024,
@@ -93,10 +93,10 @@ class connFile (baseBatch):
             elif self.folder:
                 self.fileFullName = os.path.join(self.folder, self.fileName)
             else:
-                p("THERE IS NO FOLDER MAPPING, FILE CONNENTION FAILED, %s" %(self.fileName), "e")
+                p(u"THERE IS NO FOLDER MAPPING, FILE CONNENTION FAILED, %s" %(self.fileName), "e")
                 return
             if (os.path.isfile(self.fileFullName)):
-                p ("FILE EXISTS:%s, DELIMITER %s, HEADER %s " %(str(self.fileFullName) , str(self.delimiter) ,str(self.header) ), "ii")
+                p (u"FILE EXISTS:%s, DELIMITER %s, HEADER %s " %(self.fileFullName , self.delimiter ,self.header ), "ii")
         elif self.folder:
             head, tail = os.path.split(self.folder)
             if head and len(head)>0 and tail and len (tail)>1:
@@ -226,25 +226,25 @@ class connFile (baseBatch):
             for colNum in listOfColumnsH:
                 listOfColumnsL.append(colNum)
 
-        if None not in listOfColumnsL and set(listOfColumnsL) == set(listOfColumnsH):
-            loadFileAsIs = True
+        #if None not in listOfColumnsL and set(listOfColumnsL) == set(listOfColumnsH):
+        #    loadFileAsIs = True
 
 
         """ EXECUTING LOADING SOURCE FILE DATA """
         rows = []
         try:
-            with io.open (self.fileFullName, 'r', encoding=self.encode, errors=self.withCharErr) as textFile:
-                fFile = csv.reader(textFile, delimiter=self.delimiter)
-                for i, split_line in enumerate(fFile):
-                    #line = line.replace('"', '').replace("\t", "")
-                    #line = line.strip(self.endOfLine)
-                    #split_line = line.split(self.delimiter)
+            with io.open( self.fileFullName, 'r', encoding=self.encode, errors=self.withCharErr) as fFile:
+                #fFile = csv.reader(textFile, delimiter=self.delimiter, quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
+                for i, line in enumerate(fFile):
+                    line = line.replace('"', '').replace("\t", "")
+                    line = line.strip(self.endOfLine)
+                    split_line = line.split(self.delimiter)
                     # Add headers structure
                     if i>=startFromRow:
                         if loadFileAsIs:
                             rows.append(split_line)
                         else:
-                            rows.append( [split_line[x] if x else None for x in listOfColumnsL] )
+                            rows.append( [split_line[x] if x and len(split_line[x])>0 else None for x in listOfColumnsL] )
 
                     if self.maxLinesParse and i>startFromRow and i%self.maxLinesParse == 0:
                         rows = self.dataTransform(data=rows, functionDict=fnOnRowsDic, execDict=execOnRowsDic)

@@ -22,7 +22,7 @@ import re
 import traceback
 import datetime
 
-from lib.dingDong.misc.logger import p
+from dingDong.misc.logger import p
 
 class fncBase ():
     def __init__(self,*args, **kargs):

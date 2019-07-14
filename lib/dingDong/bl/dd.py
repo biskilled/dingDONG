@@ -19,14 +19,14 @@ import re
 import copy
 from collections import OrderedDict
 
-from lib.dingDong.misc.logger       import p
-from lib.dingDong.bl.jsonParser     import jsonParser
-from lib.dingDong.misc.enumsJson    import eJson
-from lib.dingDong.conn.baseConnectorManager   import mngConnectors as conn
+from dingDong.misc.logger       import p
+from dingDong.bl.jsonParser     import jsonParser
+from dingDong.misc.enumsJson    import eJson
+from dingDong.conn.baseConnectorManager   import mngConnectors as conn
 
 ## Execters
-from lib.dingDong.executers.executeSql import execQuery
-from lib.dingDong.executers.executeAddMsg import executeAddMsg
+from dingDong.executers.executeSql import execQuery
+from dingDong.executers.executeAddMsg import executeAddMsg
 
 class dingDong:
     def __init__ (self,  dicObj=None, filePath=None,
@@ -46,7 +46,7 @@ class dingDong:
         self.src            = None
         self.tar            = None
         self.mrg            = None
-        self.exec           = None
+        self.execProc       = None
 
         self.mergeSource    = None
         self.mergeTarget    = None
@@ -118,7 +118,7 @@ class dingDong:
             self.src = None
             self.tar = None
             self.mrg = None
-            self.exec = None
+            self.execProc = None
             self.stt = None
             self.addSourceColumn = True
 
@@ -136,9 +136,9 @@ class dingDong:
 
                     self.__setMainProperty(key=node, valDict=jMap[node])
 
-                    if self.exec:
+                    if self.execProc:
                         """ Execute internal connection procedure """
-                        self.exec = None
+                        self.execProc = None
 
                     if self.src and self.tar:
                         """ TRANSFER DATA FROM SOURCE TO TARGET """
@@ -207,7 +207,7 @@ class dingDong:
 
     def __setMainProperty (self,key, valDict):
         if eJson.jKeys.EXEC == key or eJson.jKeys.EXEC in valDict:
-            self.exec = valDict
+            self.execProc = valDict
 
         elif eJson.jKeys.SOURCE == key or eJson.jKeys.SOURCE in valDict:
             valDict[eJson.jValues.IS_SOURCE] = True

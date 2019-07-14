@@ -25,12 +25,12 @@ import sys
 import multiprocessing
 from collections import OrderedDict
 
-from lib.dingDong.config        import config
-from lib.dingDong.misc.logger   import p
+from dingDong.config        import config
+from dingDong.misc.logger   import p
 
-if 2 == sys.version_info[0]:
-    reload(sys)
-    sys.setdefaultencoding(config.FILE_ENCODING)
+#if 2 == sys.version_info[0]:
+#    reload(sys)
+#    sys.setdefaultencoding(config.FILE_ENCODING)
 
 # replace paramters will change from sp regex expression
 # sql server match = @[Paramter] = values

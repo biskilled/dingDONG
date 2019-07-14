@@ -24,7 +24,7 @@ from collections import OrderedDict
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from lib.dingDong.config import config
+from dingDong.config import config
 
 class ListHandler(logging.Handler):  # Inherit from logging.Handler
     def __init__(self):
