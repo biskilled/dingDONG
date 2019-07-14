@@ -37,7 +37,7 @@ DEFAULTS = {
             eJson.jFile.DELIMITER:',',
             eJson.jFile.ROW_HEADER:1,
             eJson.jFile.END_OF_LINE:'\r\n',
-            eJson.jFile.MAX_LINES_PARSE:5000,
+            eJson.jFile.MAX_LINES_PARSE:50000,
             eJson.jFile.LOAD_WITH_CHAR_ERR:'strict',
             eJson.jFile.APPEND:False
            }
@@ -192,7 +192,7 @@ class connFile (baseBatch):
                     else:
                         mappingSourceColumnNotExists.append (srcColumnName)
                 else:
-                    listOfColumnsL.append(None)
+                    listOfColumnsL.append(-1)
 
                 ### ADD FUNCTION
                 if eJson.jSttValues.FUNCTION in tarToSrc[col] and tarToSrc[col][eJson.jSttValues.FUNCTION]:
@@ -226,10 +226,6 @@ class connFile (baseBatch):
             for colNum in listOfColumnsH:
                 listOfColumnsL.append(colNum)
 
-        #if None not in listOfColumnsL and set(listOfColumnsL) == set(listOfColumnsH):
-        #    loadFileAsIs = True
-
-
         """ EXECUTING LOADING SOURCE FILE DATA """
         rows = []
         try:
@@ -241,10 +237,7 @@ class connFile (baseBatch):
                     split_line = line.split(self.delimiter)
                     # Add headers structure
                     if i>=startFromRow:
-                        if loadFileAsIs:
-                            rows.append(split_line)
-                        else:
-                            rows.append( [split_line[x] if x and len(split_line[x])>0 else None for x in listOfColumnsL] )
+                        rows.append( [split_line[x] if x>-1 and len(split_line[x])>0 else None for x in listOfColumnsL] )
 
                     if self.maxLinesParse and i>startFromRow and i%self.maxLinesParse == 0:
                         rows = self.dataTransform(data=rows, functionDict=fnOnRowsDic, execDict=execOnRowsDic)
