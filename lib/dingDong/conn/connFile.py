@@ -15,13 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
 import shutil
 import os
 import io
 import time
 import codecs
-import csv
 from collections import OrderedDict
+if sys.version_info[0] == 2:
+    import csv23 as csv
+else:
+    import csv as csv
 
 from dingDong.conn.baseBatch  import baseBatch
 from dingDong.conn.baseBatchFunction    import *
@@ -32,14 +36,15 @@ from dingDong.misc.logger     import p
 DEFAULTS = {
             eJson.jFile.MIN_SIZE:1024,
             eJson.jFile.DEF_COLUMN_PREF :'col_',
-            eJson.jFile.DECODING:"windows-1255",
             eJson.jFile.ENCODING:'windows-1255',
             eJson.jFile.DELIMITER:',',
             eJson.jFile.ROW_HEADER:1,
             eJson.jFile.END_OF_LINE:'\r\n',
             eJson.jFile.MAX_LINES_PARSE:50000,
             eJson.jFile.LOAD_WITH_CHAR_ERR:'strict',
-            eJson.jFile.APPEND:False
+            eJson.jFile.APPEND:False,
+            eJson.jFile.CSV:False,
+            eJson.jFile.REPLACE_TO_NONE:None #r'\"|\t'
            }
 
 DATA_TYPES = {  }
@@ -47,8 +52,9 @@ DATA_TYPES = {  }
 class connFile (baseBatch):
 
     def __init__ (self, folder=None,fileName=None,
-                    fileMinSize=None, colPref=None, decode=None, encode=None,
-                    delimiter=None,header=None, endOfLine=None,linesToParse=None,withCharErr=None,append=False,
+                    fileMinSize=None, colPref=None, encode=None,isCsv=None,
+                    delimiter=None,header=None, endOfLine=None,linesToParse=None,
+                    withCharErr=None,append=None,replaceToNone=None,
                     isTar=None, isSrc=None, connPropDict=None):
 
 
@@ -66,7 +72,6 @@ class connFile (baseBatch):
 
         self.fileMinSize= self.setProperties (propKey=eJson.jFile.MIN_SIZE, propVal=fileMinSize, propDef=DEFAULTS)
         self.colPref    = self.setProperties(propKey=eJson.jFile.DEF_COLUMN_PREF, propVal=colPref, propDef=DEFAULTS)
-        self.decode     = self.setProperties(propKey=eJson.jFile.DECODING, propVal=decode, propDef=DEFAULTS)
         self.encode     = self.setProperties(propKey=eJson.jFile.ENCODING, propVal=encode, propDef=DEFAULTS)
         self.header     = self.setProperties(propKey=eJson.jFile.ROW_HEADER, propVal=header, propDef=DEFAULTS)
         self.maxLinesParse = self.setProperties(propKey=eJson.jFile.MAX_LINES_PARSE, propVal=linesToParse, propDef=DEFAULTS)
@@ -74,6 +79,8 @@ class connFile (baseBatch):
         self.delimiter  = self.setProperties(propKey=eJson.jFile.DELIMITER, propVal=delimiter, propDef=DEFAULTS)
         self.endOfLine  = self.setProperties(propKey=eJson.jFile.END_OF_LINE, propVal=endOfLine, propDef=DEFAULTS)
         self.append     = self.setProperties(propKey=eJson.jFile.APPEND, propVal=append, propDef=DEFAULTS)
+        self.replaceToNone= self.setProperties(propKey=eJson.jFile.REPLACE_TO_NONE, propVal=replaceToNone, propDef=DEFAULTS)
+        self.isCsv      = self.setProperties(propKey=eJson.jFile.CSV, propVal=isCsv, propDef=DEFAULTS)
 
         """ FILE PROPERTIES """
         self.fileFullName = None
@@ -113,7 +120,7 @@ class connFile (baseBatch):
                 p("CONNETCTED USING FOLDER %s" %self.folder)
                 return True
             else:
-                err = u"FILE NOT VALID: %s" %(self.decodeStrPython2Or3(sObj=self.fileFullName, un=True, decode=self.decode))
+                err = u"FILE NOT VALID: %s" %(self.fileFullName)
                 raise ValueError(err)
         return True
 
@@ -132,7 +139,7 @@ class connFile (baseBatch):
         fullPath= fullPath if fullPath else self.fileFullName
 
         if self.isExists(fullPath=fullPath):
-            with io.open(fullPath, 'r', encoding=self.decode) as f:
+            with io.open(fullPath, 'r', encoding=self.encode) as f:
                 if not self.header:
                     headers = f.readline().strip(self.endOfLine).split(self.delimiter)
                     if headers and len(headers) > 0:
@@ -164,7 +171,6 @@ class connFile (baseBatch):
     def extract(self, tar, tarToSrc, batchRows, addAsTaret=True):
         fnOnRowsDic     = {}
         execOnRowsDic   = {}
-        loadFileAsIs    = False
 
         startFromRow    = 0 if not self.header else self.header
         listOfColumnsH  = {}
@@ -229,20 +235,34 @@ class connFile (baseBatch):
         """ EXECUTING LOADING SOURCE FILE DATA """
         rows = []
         try:
-            with io.open( self.fileFullName, 'r', encoding=self.encode, errors=self.withCharErr) as fFile:
-                #fFile = csv.reader(textFile, delimiter=self.delimiter, quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
-                for i, line in enumerate(fFile):
-                    line = line.replace('"', '').replace("\t", "")
-                    line = line.strip(self.endOfLine)
-                    split_line = line.split(self.delimiter)
-                    # Add headers structure
-                    if i>=startFromRow:
-                        rows.append( [split_line[x] if x>-1 and len(split_line[x])>0 else None for x in listOfColumnsL] )
+            with io.open( self.fileFullName, 'r', encoding=self.encode, errors=self.withCharErr) as textFile:
+                if self.isCsv:
+                    fFile = csv.reader(textFile, delimiter=self.delimiter)
+                    for i, split_line in enumerate(fFile):
+                        if i>=startFromRow:
+                            if self.replaceToNone:
+                                rows.append( [ re.sub(self.replaceToNone,"",split_line[x],re.IGNORECASE|re.MULTILINE|re.UNICODE)  if x>-1 and len(split_line[x])>0 else None for x in listOfColumnsL] )
+                            else:
+                                rows.append([split_line[x] if x > -1 and len(split_line[x]) > 0 else None for x in listOfColumnsL])
 
-                    if self.maxLinesParse and i>startFromRow and i%self.maxLinesParse == 0:
-                        rows = self.dataTransform(data=rows, functionDict=fnOnRowsDic, execDict=execOnRowsDic)
-                        tar.load(rows=rows, targetColumn=targetColumnList)
-                        rows = list ([])
+                        if self.maxLinesParse and i>startFromRow and i%self.maxLinesParse == 0:
+                            rows = self.dataTransform(data=rows, functionDict=fnOnRowsDic, execDict=execOnRowsDic)
+                            tar.load(rows=rows, targetColumn=targetColumnList)
+                            rows = list ([])
+                else:
+                    for i, line in enumerate(textFile):
+                        line = re.sub(self.replaceToNone,"",line,re.IGNORECASE|re.MULTILINE|re.UNICODE) if self.replaceToNone else line
+                        line = line.strip(self.endOfLine)
+                        split_line = line.split(self.delimiter)
+                        # Add headers structure
+                        if i >= startFromRow:
+                            rows.append([split_line[x] if x > -1 and len(split_line[x]) > 0 else None for x in listOfColumnsL])
+
+                        if self.maxLinesParse and i > startFromRow and i % self.maxLinesParse == 0:
+                            rows = self.dataTransform(data=rows, functionDict=fnOnRowsDic, execDict=execOnRowsDic)
+                            tar.load(rows=rows, targetColumn=targetColumnList)
+                            rows = list([])
+
 
                 if len(rows)>0 : #and split_line:
                     rows = self.dataTransform(data=rows, functionDict=fnOnRowsDic, execDict=execOnRowsDic)
@@ -271,8 +291,6 @@ class connFile (baseBatch):
                 row = [str(s) for s in row]
                 f.write(self.delimiter.join(row))
                 f.write(self.endOfLine)
-
-
 
         p('LOAD %s ROWS INTO FILE %s >>>>>> ' % (str(totalRows), self.fileFullName), "ii")
         return
@@ -311,10 +329,6 @@ class connFile (baseBatch):
                 p("FILE %s EXISTS, SIZE %s STRUCTURE CHANGED !!" % (fullPath, str(actulSize)), "ii")
             else:
                 p("FILE %s EXISTS, SIZE %s STRUCURE DID NOT CHANGED !! " % (fullPath, str(actulSize)), "ii")
-
-
-
-
 
 
             if toUpdateFile and config.TRACK_HISTORY:

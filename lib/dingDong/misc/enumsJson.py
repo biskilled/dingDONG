@@ -103,7 +103,6 @@ class eJson (object):
     class jFile(object):
         MIN_SIZE        = 'min'
         DEF_COLUMN_PREF = 'defCol'
-        DECODING        = 'decoding'
         ENCODING        = 'encoding'
         DELIMITER       = 'delimiter'
         ROW_HEADER      = 'headerline'
@@ -111,6 +110,8 @@ class eJson (object):
         MAX_LINES_PARSE = 'maxlines'
         LOAD_WITH_CHAR_ERR = 'charerror'
         APPEND          = 'append'
+        REPLACE_TO_NONE = 'replace'
+        CSV             = 'csv'
 
 class eConn (object):
     SQLSERVER   = "sql"

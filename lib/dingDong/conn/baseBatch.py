@@ -239,7 +239,7 @@ class baseBatch ():
             return propVal
         elif propDict and propKey in propDict and propDict[propKey] is not None:
             return propDict[propKey]
-        elif isinstance(propDef, dict) and propKey in propDef and propDef[propKey] is not None:
+        elif isinstance(propDef, dict) and propKey in propDef:
             return propDef[propKey]
         return propDef
 
