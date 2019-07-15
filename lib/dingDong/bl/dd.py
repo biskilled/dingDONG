@@ -27,6 +27,7 @@ from dingDong.conn.baseConnectorManager   import mngConnectors as conn
 ## Execters
 from dingDong.executers.executeSql import execQuery
 from dingDong.executers.executeAddMsg import executeAddMsg
+from dingDong.executers.executeMicrosoftOLAP import OLAP_Process
 
 class dingDong:
     def __init__ (self,  dicObj=None, filePath=None,
@@ -169,6 +170,9 @@ class dingDong:
         connPropDic = {eJson.jValues.NAME:connName, eJson.jValues.CONN:connType, eJson.jValues.URL:connUrl}
         connObj = conn(connPropDic=connPropDic, connLoadProp=connLoadProp)
         execQuery(sqlWithParamList=queries, connObj=connObj)
+
+    def execMicrosoftOLAP (self, serverName, dbName, cubes=[], dims=[], fullProcess=True):
+        OLAP_Process(serverName=serverName, dbName=dbName, cubes=cubes, dims=dims, fullProcess=fullProcess)
 
 
     """ Check Source values in STT - remove invalid values """

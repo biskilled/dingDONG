@@ -21,9 +21,9 @@ import json
 
 from collections import OrderedDict
 
-from dingDong.misc.logger import p
-from dingDong.misc.enumsJson import eJson, eConn, findProp
-from dingDong.config      import config
+from lib.dingDong.misc.logger import p
+from lib.dingDong.misc.enumsJson import eJson, eConn, findProp
+from lib.dingDong.config      import config
 
 
 #xx = [[{'s':}],[{'prop':{'pp':45}},{}],{'sql1':'', 's':xxx,'t':'dsdsdsd'},{''},{}]
@@ -167,17 +167,7 @@ class jsonParser (object):
                             del newDict[eJson.jKeys.QUERY]
 
                         if k == eJson.jKeys.STT or k == eJson.jKeys.STTONLY:
-
-                            newSttL = {x.lower():x for x in node[prop]}
-                            sttL    = {x.lower():x for x in stt}
-                            for s in stt:
-                                if s.lower() in newSttL:
-                                    stt[s].update ( node[prop][newSttL[s.lower()]] )
-
-                            for s in newSttL:
-                                if s not in sttL:
-                                    stt[ newSttL[s] ] = node[prop][ newSttL[s] ]
-
+                            stt.update(node[prop])
                             newDict[k] =stt
                         # parse source / target / query
                         elif k == eJson.jKeys.SOURCE or k == eJson.jKeys.TARGET or k == eJson.jKeys.QUERY:
@@ -291,6 +281,7 @@ class jsonParser (object):
             return stt
 
         existsColumnsDict   = {x.lower():x for x in stt.keys()}
+
 
         for tar in propVal:
             if tar.lower() in existsColumnsDict:
