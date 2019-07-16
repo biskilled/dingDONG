@@ -74,16 +74,13 @@ class executeAddMsg (object):
                         self.logg.info("Delete File %s" %(path))
                         os.remove(path)
 
-    def end(self, pr=True, msg=None):
+    def end(self, msg=None,pr=True):
         msg = msg if msg else msgProp.MSG_LAST_STEP
         self.addState(sDesc=msg)
 
         if pr:
-            p ( self.stateDic.keys )
-
             for col in self.stateDic:
                 p (list(self.stateDic[col].values()))
-
 
     def sendSMTPmsg (self, msgName, onlyOnErr=False, withErr=True, ):
 

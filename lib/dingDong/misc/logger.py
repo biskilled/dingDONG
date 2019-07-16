@@ -19,14 +19,10 @@ import time
 import logging
 import inspect
 import os
-import smtplib
-from collections import OrderedDict
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
 from dingDong.config import config
 
-class ListHandler(logging.Handler):  # Inherit from logging.Handler
+class __listHandler(logging.Handler):  # Inherit from logging.Handler
     def __init__(self):
         # run the regular Handler __init__
         logging.Handler.__init__(self)
@@ -40,7 +36,7 @@ class ListHandler(logging.Handler):  # Inherit from logging.Handler
     def getList (self):
         return self.log_list
 
-class myLogger (object):
+class __myLogger (object):
     def __init__ (self, loggLevel=logging.DEBUG, logFormat='%(asctime)s %(levelname)s %(message)s' ):
         dateFormat = '%Y-%m-%d %H:%M:%S'
         self.logFormatter   = logging.Formatter(logFormat, dateFormat)
@@ -51,26 +47,25 @@ class myLogger (object):
         self.logTmpFile     = None
         self.logg =  logging.getLogger(__name__)
 
-        #extra = {'app_name': 'Super App'}
-        #self.logg = logging.LoggerAdapter (self.logg, extra)
+        if config.LOGS_DIR and os.path.isdir(config.LOGS_DIR):
+            self.setLogsFiles(logDir=config.LOGS_DIR)
 
         #if logStdout:
         #    consoleHandler = logging.StreamHandler(sys.stdout)
         #    consoleHandler.setFormatter(self.logFormatter)
         #    self.logg.addHandler(consoleHandler)
 
-    def setLogsFiles (self, logDir=None, logFile='log',
-                      logErrFile="log",logTmpFile='lastLog'):
+    def setLogsFiles (self, logDir=None):
 
         self.logDir = logDir if logDir else config.LOGS_DIR
         currentDate = time.strftime('%Y%m%d')
-        logFile = logFile if logFile else config.LOGS_INFO_NAME
+        logFile = config.LOGS_INFO_NAME
         logFile = "%s_%s.log"%(logFile, currentDate) if logFile and ".log" not in logFile.lower() else logFile
 
-        logErrFile = logErrFile if logErrFile else config.LOGS_ERR_NAME
+        logErrFile = config.LOGS_ERR_NAME
         logErrFile = "%s_%s.err" % (logErrFile, currentDate) if logErrFile and ".err" not in logErrFile.lower() else logErrFile
 
-        logTmpFile = logTmpFile if logTmpFile else config.LOGS_TMP_NAME
+        logTmpFile = config.LOGS_TMP_NAME
         logTmpFile = "%s.err" % (logTmpFile) if logTmpFile and ".err" not in logTmpFile.lower() else logTmpFile
 
         if not os.path.isdir(self.logDir):
@@ -129,7 +124,8 @@ class myLogger (object):
                     lines = f.read().splitlines()
         return lines
 
-logg = myLogger(loggLevel=config.LOGS_DEBUG).getLogg()
+LOGGER  = __myLogger(loggLevel=config.LOGS_DEBUG)
+__logg  = LOGGER.getLogg()
 
 def p(msg, ind='I'):
     func = inspect.currentframe().f_back.f_code
@@ -142,10 +138,10 @@ def p(msg, ind='I'):
                 'III': 'Progress>> '}
 
     if 'III' in ind:
-        logg.debug("\r %s %s" %(indPrint[ind], msg))
+        __logg.debug("\r %s %s" %(indPrint[ind], msg))
     elif 'II' in ind:
-        logg.debug("%s->%s: %s" %(fileName, func.co_name, msg))
+        __logg.debug("%s->%s: %s" %(fileName, func.co_name, msg))
     elif 'I' in ind:
-        logg.info("%s->%s: %s" %(fileName, func.co_name, msg))
+        __logg.info("%s->%s: %s" %(fileName, func.co_name, msg))
     else:
-        logg.error("%s,%s->%s : %s " % (fileName, func.co_firstlineno, func.co_name,msg))
+        __logg.error("%s,%s->%s : %s " % (fileName, func.co_firstlineno, func.co_name,msg))
