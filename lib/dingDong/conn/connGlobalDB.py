@@ -651,21 +651,22 @@ class baseGlobalDb (baseBatch):
         return col
 
     """ Cnvert all paramters in config.QUERY_PARAMS into variable and add it into SQL QUERY """
-    def setQueryWithParams(self, query):
+    def setQueryWithParams(self, query, queryParams=None):
+        queryParams = queryParams.update (config.QUERY_PARAMS) if queryParams else config.QUERY_PARAMS
         qRet = u""
         if query and len(query) > 0:
             if isinstance(query, (list, tuple)):
                 for q in query:
-                    for param in config.QUERY_PARAMS:
-                        q = self.__replaceStr(sString=q, findStr=param, repStr=config.QUERY_PARAMS[param], ignoreCase=True,addQuotes="'")
+                    for param in queryParams:
+                        q = self.__replaceStr(sString=q, findStr=param, repStr=queryParams[param], ignoreCase=True,addQuotes="'")
                     qRet += q + u" "
             else:
-                for param in config.QUERY_PARAMS:
+                for param in queryParams:
                     if param in query:
-                        query = self.__replaceStr(sString=query, findStr=param, repStr=config.QUERY_PARAMS[param],ignoreCase=True, addQuotes="'")
+                        query = self.__replaceStr(sString=query, findStr=param, repStr=queryParams[param],ignoreCase=True, addQuotes="'")
                 qRet += query
-            if len(config.QUERY_PARAMS)>0:
-                p("baseConnDb->setQueryWithParams: replace params: %s " % (str(config.QUERY_PARAMS)), "ii")
+            if len(queryParams)>0:
+                p("REPLACE PARAMS: %s" % (str(queryParams)), "ii")
         else:
             qRet = query
         return qRet

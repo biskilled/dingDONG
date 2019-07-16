@@ -33,6 +33,7 @@ class config:
     DECODE          = "windows-1255"
     TRACK_HISTORY   = True
     LOOP_ON_ERROR   = True
+    NUM_OF_PROCESSES= 4
 
     #LOGGING Properties
     LOGS_DEBUG = logging.DEBUG

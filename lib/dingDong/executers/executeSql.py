@@ -21,55 +21,115 @@ __metaclass__ = type
 import os
 import re
 import io
-import sys
 import multiprocessing
 from collections import OrderedDict
 
 from dingDong.config        import config
 from dingDong.misc.logger   import p
 
-#if 2 == sys.version_info[0]:
-#    reload(sys)
-#    sys.setdefaultencoding(config.FILE_ENCODING)
+# sqlWithParamList --> list of tuple (file name, paramas)
+def execQuery (sqlWithParamList, connObj ):
+    if sqlWithParamList is None or len(sqlWithParamList)==0:
+        p("NOT RECIAVE ANY SQL STATEMENT")
+        return
 
-# replace paramters will change from sp regex expression
-# sql server match = @[Paramter] = values
-# sql server replace =;@\s to ''
-def __replaceParameters (connType, line, dicParam):
-    delimiterChar = ';'
-    arrLine = line.split(delimiterChar)
-    arrRet = []
+    if isinstance(sqlWithParamList, str):
+        sqlWithParamList = [sqlWithParamList]
 
-    for tup in arrLine:
-        fmatch = re.search(config.DATA_TYPE['sp'][connType]['match'], line)
-        if fmatch:
-            varKey  = re.sub (config.DATA_TYPE['sp'][connType]['replace'],'',fmatch.group(1))
-            varValue= re.sub (config.DATA_TYPE['sp'][connType]['replace'],'',fmatch.group(2))
+    connObj.connect()
+    allFiles    = OrderedDict()
+    sqlFiles    = []
+    locParams   = {}
 
-            if varKey in dicParam:
-                tup = tup.replace( varValue , dicParam[varKey] )
-        arrRet.append(tup)
+    for script in sqlWithParamList:
+        parallelProcess = -1
+        if len (script) == 3:
+            parallelProcess = script[0]
+            locName         = script[1]
+            locParams       = script[2]
+        elif len (script) == 2:
+            locName         = script[0]
+            locParams       = script[1]
+        elif len (script) == 1:
+            locName         = script[0]
+        else:
+            p("NOT CONFIGURE PROPERLY, MUST HAVE 1, 2 or 3 in a tuple  %s " % (str(script)) ,"e")
+            break
 
-    return delimiterChar.join (arrRet)
+        # sql file is list of all files to execute
+        if os.path.isdir(locName):
+            sqlFiles = [os.path.join(locName, pos_sql)  for pos_sql in os.listdir(locName) if pos_sql.endswith('.sql')]
+        elif os.path.isfile(locName):
+            sqlFiles.append(locName)
+        else:
+            sqlFiles.append(locName)
 
-def __split_sql_removeString (line, remove=False):
+        # Adding all script into ordered dictionary
 
-    #if remove:
-    #    if "*/" in line:
-    #        line = re.sub(r'.*\*\/', '', line)
-    #        remove = False
-    #    else:
-    #        return '', True
-    line = line.strip()
-    line = re.sub(r'\/\*.*\*\/', '', line)
-    line = re.sub(r'--.*', '', line)
+        if parallelProcess not in allFiles:
+            allFiles[parallelProcess] = []
 
+        allFiles[parallelProcess].append ( (sqlFiles, locParams) )
+        sqlFiles = list([])
 
-    #if "/*" in line:
-    #    remove = True
-    #    line = re.sub(r'\/\*.*', '', line)
-    line = line.replace("\n", " ").replace("\t", " ")
-    return line, remove
+    for priority  in OrderedDict (sorted (allFiles.items())):
+
+        p ('START EXECUTING PRIORITY %s >>>>>>> ' %str(priority), "ii")
+        __execParallel (priority, allFiles[priority], connObj)
+
+    connObj.close()
+
+def __execParallel (priority, ListOftupleFiles, connObj):
+    multiProcessParam = []
+    multiProcessFiles = ''
+
+    for tupleFiles in ListOftupleFiles:
+        sqlFiles    = tupleFiles[0]
+        locParams   = tupleFiles[1]
+
+        for sqlScript in sqlFiles:
+            multiProcessParam.append( (sqlScript, locParams, connObj,) )
+            multiProcessFiles += "'" + sqlScript + "' ; "
+
+    # single process
+    if priority<0 or len(multiProcessParam)<2:
+        p("SINGLE PROCESS: %s" % (str(multiProcessFiles)), "ii")
+        for query in multiProcessParam:
+            __execSql(query)
+
+    # multiprocess execution
+    else:
+        if len(multiProcessParam) > 1:
+            p ("MULTI PROCESS: %s" %(str(multiProcessFiles)), "ii")
+            # Strat runing all processes
+            proc = multiprocessing.Pool(config.NUM_OF_PROCESSES).map( __execSql ,multiProcessParam )
+
+    p("FINISH EXECUTING PRIORITY %s, LOADED FILES: %s >>>> " %(str(priority), str (multiProcessFiles)), "i")
+
+def __execSql ( params ):
+    (sqlScript, locParams, connObj) = params
+    connObj.connect()
+    def __execEachLine (connObj, sqlTxt):
+        sqlQuery = __split_sql_expressions(sqlTxt)
+
+        isParam = True if len(locParams) > 0 else False
+        for sql in sqlQuery:
+            if isParam:
+                sql =  connObj.setQueryWithParams (query=sql, queryParams=locParams)
+            if 'PRINT' in sql:
+                disp = sql.split("'")[1]
+                p('SQL PRINT: ' + disp, "i")
+            if len(sql) > 1:
+                connObj.exeSQL(sql=sql)
+                p ("FINISH EXEC: %s" %sql, "i")
+
+    if str(sqlScript).endswith(".sql") and os.path.isfile(sqlScript):
+        with io.open(sqlScript, 'r') as inp:
+            __execEachLine(connObj, inp)
+
+    else:
+        __execEachLine(connObj, sqlScript)
+    connObj.close()
 
 def __split_sql_expressions(text):
     if (isinstance(text, str)):
@@ -93,110 +153,23 @@ def __split_sql_expressions(text):
         results.append(tup)
     return results
 
-def __execSql ( params ):
-    (sqlScript, locParams, connObj) = params
-    connObj.connect()
-    def __execEachLine (connObj, sqlTxt):
-        sqlQuery = __split_sql_expressions(sqlTxt)
+def __split_sql_removeString (line, remove=False):
 
-        isParam = True if len(locParams) > 0 else False
-        for line in sqlQuery:
-            if isParam:
-                line = __replaceParameters(connObj.cType, line, locParams)
-            if 'PRINT' in line:
-                disp = line.split("'")[1]
-                p('SQL PRINT: ' + disp, "i")
-            if len(line) > 1:
-                connObj.execSP(line)
-                p ("loadExecSP->__execSql Finish Executing : %s " %line, "i")
-
-    if str(sqlScript).endswith(".sql") and os.path.isfile(sqlScript):
-        with io.open(sqlScript, 'r',  encoding=config.FILE_ENCODING) as inp:
-            __execEachLine(connObj, inp)
-
-    else:
-        __execEachLine(connObj, sqlScript)
-    connObj.close()
+    #if remove:
+    #    if "*/" in line:
+    #        line = re.sub(r'.*\*\/', '', line)
+    #        remove = False
+    #    else:
+    #        return '', True
+    line = line.strip()
+    line = re.sub(r'\/\*.*\*\/', '', line)
+    line = re.sub(r'--.*', '', line)
 
 
-def __execParallel (priority, ListOftupleFiles, connObj):
-    multiProcessParam = []
-    multiProcessFiles = ''
+    #if "/*" in line:
+    #    remove = True
+    #    line = re.sub(r'\/\*.*', '', line)
+    line = line.replace("\n", " ").replace("\t", " ")
+    return line, remove
 
-    for tupleFiles in ListOftupleFiles:
-        sqlFiles    = tupleFiles[0]
-        locParams   = tupleFiles[1]
 
-        for sqlScript in sqlFiles:
-            multiProcessParam.append( (sqlScript, locParams, connObj,) )
-            multiProcessFiles += "'" + sqlScript + "' ; "
-
-    # single process
-    if priority<0 or len(multiProcessParam)<2:
-        p("loadExcelSP->__execParallel: SINGLE process: %s" % (str(multiProcessFiles)), "ii")
-        for query in multiProcessParam:
-            __execSql(query)
-
-    # multiprocess execution
-    else:
-        if len(multiProcessParam) > 1:
-            p ("loadExcelSP->__execParallel: MULTI process: %s" %(str(multiProcessFiles)), "ii")
-            # Strat runing all processes
-            proc = multiprocessing.Pool(config.NUM_OF_PROCESSES).map( __execSql ,multiProcessParam )
-
-    p("loadExcelSP->__execParallel: FINISH Excecuting priority %s, loaded files: %s >>>> " %(str(priority), str (multiProcessFiles)), "i")
-
-# sqlWithParamList --> list of tuple (file name, paramas)
-def execQuery (sqlWithParamList, connObj ):
-    if sqlWithParamList is None or len(sqlWithParamList)==0:
-        p("NOT RECIAVE ANY SQL STATEMENT")
-        return
-
-    if isinstance(sqlWithParamList, str):
-        sqlWithParamList = [sqlWithParamList]
-
-    connObj.connect()
-    allFiles    = {}
-    sqlFiles    = []
-    locParams   = {}
-
-    for script in sqlWithParamList:
-        parallelProcess = -1
-        if len (script) == 3:
-            parallelProcess = script[0]
-            locName         = script[1]
-            locParams       = script[2]
-        elif len (script) == 2:
-            locName         = script[0]
-            locParams       = script[1]
-        elif len (script) == 1:
-            locName         = script[0]
-        else:
-            p("NOT CONFIGURE PROPERLY, MUST HAVE 1, 2 or 3 in a tuple  %s " % (str(script)) ,"e")
-            break
-
-        # sql file is list of all files to execute
-        if os.path.isdir(locName):
-            p("CONNENCTION:%s, DIRECTORY: %s " % (connObj.conn, str(locName)), "ii")
-            sqlFiles = [os.path.join(locName, pos_sql)  for pos_sql in os.listdir(locName) if pos_sql.endswith('.sql')]
-        elif os.path.isfile(locName):
-            p("CONNENCTION:%s, PARALLEL:%s, FILE: %s  " % (connObj.conn, str(parallelProcess), str(locName)), "ii")
-            sqlFiles.append(locName)
-        else:
-            p("CONNENCTION:%s, QUERY: %s" % (connObj.conn, str(locName) ), "ii")
-            sqlFiles.append(locName)
-
-        # Adding all script into ordered dictionary
-
-        if parallelProcess not in allFiles:
-            allFiles[parallelProcess] = []
-
-        allFiles[parallelProcess].append ( (sqlFiles, locParams) )
-        sqlFiles = list([])
-
-    for priority  in OrderedDict (sorted (allFiles.items())):
-
-        p ('Executing prioiriy %s >>>>' %str(priority), "ii")
-        __execParallel (priority, allFiles[priority], connObj)
-
-    connObj.close()
