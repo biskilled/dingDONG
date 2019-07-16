@@ -15,3 +15,5 @@ pymongo
 
 sqlparse
 pandas
+csv23
+pythonnet
