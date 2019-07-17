@@ -16,10 +16,11 @@
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
+import os
 from collections            import OrderedDict
 
 from dingDong.config        import config
-from dingDong.misc.logger   import LOGGER,p
+from dingDong.misc.logger   import LOGGER_OBJECT,p
 from dingDong.executers.executeHTMLReport import eHtml, createHtmlFromList
 
 class msgProp (object):
@@ -42,7 +43,7 @@ class executeAddMsg (object):
         self.startTime  = time.time()
         self.lastTime   = self.startTime
         self.stateDic   = OrderedDict()
-        self.loggObj    = logg
+        self.loggObj    = LOGGER_OBJECT.getLogg()
         self.timeFormat = timeFormat
         self.stateCnt   = 0
         self.sDesc      = sDesc
@@ -73,7 +74,7 @@ class executeAddMsg (object):
                 if os.path.isfile(path):
                     stat = os.stat(path)
                     if stat.st_mtime < old:
-                        self.logg.info("Delete File %s" %(path))
+                        self.logg.info("DELETE FILE %s" %(path))
                         os.remove(path)
 
     def end(self, msg=None,pr=True):
@@ -89,7 +90,7 @@ class executeAddMsg (object):
         okMsg = msgProp.MSG_SUBJECT_SUCCESS %(msgName)
         errMsg= msgProp.MSG_SUBJECT_FAILURE %(msgName)
 
-        errList = self.loggObj.getLogTemp ()
+        errList = self.loggObj.getLogData ()
         errCnt  = len(errList) if errList else 0
 
         htmlList = []

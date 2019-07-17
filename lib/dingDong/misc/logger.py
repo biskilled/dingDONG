@@ -22,6 +22,7 @@ import os
 
 from dingDong.config import config
 
+
 class __listHandler(logging.Handler):  # Inherit from logging.Handler
     def __init__(self):
         # run the regular Handler __init__
@@ -55,10 +56,18 @@ class __myLogger (object):
         #    consoleHandler.setFormatter(self.logFormatter)
         #    self.logg.addHandler(consoleHandler)
 
-    def setLogsFiles (self, logDir=None):
-
+    def setLogsFiles (self, logDir=None, timeFormat='%Y%m%d'):
         self.logDir = logDir if logDir else config.LOGS_DIR
-        currentDate = time.strftime('%Y%m%d')
+
+        if not self.logDir or len(self.logDir)<1:
+            p("DIRECTORY FOR LOGS IS NOT DEFINED ")
+            return
+
+        if not os.path.isdir(self.logDir):
+            err = "LOGS DIRECTORY: %s IS NOT VALID !" %(self.logDir)
+            raise ValueError(err)
+
+        currentDate = time.strftime(timeFormat)
         logFile = config.LOGS_INFO_NAME
         logFile = "%s_%s.log"%(logFile, currentDate) if logFile and ".log" not in logFile.lower() else logFile
 
@@ -106,26 +115,18 @@ class __myLogger (object):
         self.logLevel = logLevel
         self.logg.setLevel(self.logLevel)
 
-    def setLogDir (self, logDir, logFile='log',logErrFile="log",logTmpFile='lastLog'):
-        if os.path.isdir(logDir):
-            self.logDir = logDir
-            self.setLogsFiles (logDir=logDir, logFile=logFile,
-                      logErrFile=logErrFile,logTmpFile=logTmpFile)
-        else:
-            err = "Logs dir: %s NOT VALID !" %(logDir)
-            raise ValueError(err)
-
-    def getLogTemp (self):
+    def getLogData (self, logPath=None):
         lines = None
-        if self.logDir and self.logTmpFile:
-            fileLoc = os.path.join (self.logDir,self.logTmpFile)
-            if fileLoc and os.path.isfile(fileLoc):
-                with open (fileLoc) as f:
-                    lines = f.read().splitlines()
+        if not logPath and self.logDir and self.logTmpFile:
+            logPath = os.path.join (self.logDir,self.logTmpFile)
+
+        if logPath and os.path.isfile(logPath):
+            with open (logPath) as f:
+                lines = f.read().splitlines()
         return lines
 
-LOGGER  = __myLogger(loggLevel=config.LOGS_DEBUG)
-__logg  = LOGGER.getLogg()
+LOGGER_OBJECT  = __myLogger(loggLevel=config.LOGS_DEBUG)
+__logg  = LOGGER_OBJECT.getLogg()
 
 def p(msg, ind='I'):
     func = inspect.currentframe().f_back.f_code

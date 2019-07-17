@@ -16,10 +16,12 @@
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
+import os
 import copy
 from collections import OrderedDict
 
-from dingDong.misc.logger       import p
+from dingDong.config            import config
+from dingDong.misc.logger       import p, LOGGER_OBJECT
 from dingDong.bl.jsonParser     import jsonParser
 from dingDong.misc.enumsJson    import eJson
 from dingDong.conn.baseConnectorManager   import mngConnectors as conn
@@ -32,13 +34,16 @@ from dingDong.executers.executeMicrosoftOLAP import OLAP_Process
 class dingDong:
     def __init__ (self,  dicObj=None, filePath=None,
                 dirData=None, includeFiles=None, notIncludeFiles=None,
-                connDict=None):
+                dirLogs=None,connDict=None):
 
         self.jsonParser = jsonParser(dicObj=dicObj, filePath=filePath,
                                      dirData=dirData, includeFiles=includeFiles, notIncludeFiles=notIncludeFiles,
                                      connDict=connDict)
 
         self.msg = executeAddMsg()
+
+        if dirLogs or config.LOGS_DIR:
+            LOGGER_OBJECT.setLogsFiles (logDir=dirLogs)
 
         ## Defualt properties
         self.connDict       = self.jsonParser.connDict
