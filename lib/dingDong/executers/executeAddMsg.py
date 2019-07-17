@@ -14,10 +14,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
-import time
-from collections import OrderedDict
 
-from dingDong.misc.logger import logg,p
+import time
+from collections            import OrderedDict
+
+from dingDong.config        import config
+from dingDong.misc.logger   import LOGGER,p
 from dingDong.executers.executeHTMLReport import eHtml, createHtmlFromList
 
 class msgProp (object):
@@ -115,8 +117,6 @@ class executeAddMsg (object):
 
             msgHtml = createHtmlFromList(htmlList=htmlList, htmlHeader=msgName)
             self.__sendSMTP(msgSubj=msgSubj, msgHtml=msgHtml)
-
-
 
     def __sendSMTP (self, msgSubj, msgHtml=None, msgText=None):
         sender          = config.SMTP_SENDER
