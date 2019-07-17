@@ -16,7 +16,6 @@
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
-import os
 import copy
 from collections import OrderedDict
 
@@ -47,16 +46,19 @@ class dingDong:
 
         ## Defualt properties
         self.connDict       = self.jsonParser.connDict
-        self.stt            = None
-        self.addSourceColumn= True
-        self.src            = None
-        self.tar            = None
-        self.mrg            = None
-        self.execProc       = None
+        self.setDefaults()
 
-        self.mergeSource    = None
-        self.mergeTarget    = None
-        self.mergeKeys      = None
+    def setDefaults (self):
+        self.stt = None
+        self.addSourceColumn = True
+        self.src = None
+        self.tar = None
+        self.mrg = None
+        self.execProc = None
+
+        self.mergeSource = None
+        self.mergeTarget = None
+        self.mergeKeys = None
 
     def ding (self, destList=None, jsName=None, jsonNodes=None):
         p('STARTING TO MODEL DATA STRUCURE >>>>>' , "i")
@@ -66,7 +68,8 @@ class dingDong:
             allNodes = [(jsName, jsonNodes) for jsName, jsonNodes in self.__getNodes(destList=destList)]
 
         for jsName, jsonNodes in allNodes:
-            mergeSource = None
+            self.setDefaults()
+
             for jMap in jsonNodes:
                 self.__setSTT(node=jMap)
                 sourceStt = None
@@ -365,7 +368,17 @@ class dingDong:
                     tarType = '%s%s' %(targetList[-1],postType) if targetList and len(targetList)>0 else tar.defDatatType
                 retStrucure[targetColName] = {eJson.jSttValues.TYPE:tarType}
 
+        retStrucureL = {x.lower():x for x in retStrucure}
+        retStrucureKeys = list (retStrucure.keys())
+
         for col in self.stt:
+            if eJson.jSttValues.SOURCE in self.stt[col]:
+                sourceName = self.stt[col][eJson.jSttValues.SOURCE]
+                if sourceName in retStrucureKeys:
+                    del retStrucure[sourceName]
+                elif sourceName.lower() in retStrucureL:
+                    del retStrucure[retStrucureL[sourceName.lower()]]
+
             if col.lower() in sourceColL and eJson.jSttValues.TYPE in self.stt[col] and self.stt[col][eJson.jSttValues.TYPE]:
                 retStrucure[sourceColL[ col.lower() ]][eJson.jSttValues.TYPE] = self.stt[col][eJson.jSttValues.TYPE]
 

@@ -24,15 +24,16 @@ class eHtml (object):
 
 def createHtmlFromList(htmlList, htmlHeader=None):
     htmlRow = "\t\t<h1>%s</h1>\n" %htmlHeader if htmlHeader else ""
+    ### color : #000000
     htmlHeader = """
             table {
                 border-collapse: collapse; 
-                border:1px solid #69899F;} 
+                border:1px solid #69899F;}
             table td{
-                border:1px dotted #000000;
+                border:1px dotted black;
                 padding:5px;}
             table td:first-child{
-                border-left:0px solid #000000;}
+                border-left:0px solid black;}
             table th{
                border:2px solid #69899F;
                padding:5px;}"""
@@ -86,7 +87,7 @@ def createHtmlFromList(htmlList, htmlHeader=None):
 
         htmlBody+='%s\n\t<br>\n' %tblHtml
 
-    htmlBody = "\t<body>\n%s%s</body>" %(htmlRow,htmlBody)
+    htmlBody = "\t<body dir='ltr'>\n%s%s</body>" %(htmlRow,htmlBody)
 
     htmlStr = "<html>%s\n%s\n</html>" %(htmlHeader, htmlBody)
 

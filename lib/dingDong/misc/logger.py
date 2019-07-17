@@ -39,7 +39,7 @@ class __listHandler(logging.Handler):  # Inherit from logging.Handler
 
 class __myLogger (object):
     def __init__ (self, loggLevel=logging.DEBUG, logFormat='%(asctime)s %(levelname)s %(message)s' ):
-        dateFormat = '%Y-%m-%d %H:%M:%S'
+        dateFormat          = '%Y-%m-%d %H:%M:%S'
         self.logFormatter   = logging.Formatter(logFormat, dateFormat)
         self.logLevel       = loggLevel
 

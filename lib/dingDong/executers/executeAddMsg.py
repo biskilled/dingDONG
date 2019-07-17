@@ -17,7 +17,10 @@
 
 import time
 import os
+import smtplib
 from collections            import OrderedDict
+from email.mime.multipart   import MIMEMultipart
+from email.mime.text        import MIMEText
 
 from dingDong.config        import config
 from dingDong.misc.logger   import LOGGER_OBJECT,p
@@ -43,7 +46,7 @@ class executeAddMsg (object):
         self.startTime  = time.time()
         self.lastTime   = self.startTime
         self.stateDic   = OrderedDict()
-        self.loggObj    = LOGGER_OBJECT.getLogg()
+        self.loggClass  = LOGGER_OBJECT
         self.timeFormat = timeFormat
         self.stateCnt   = 0
         self.sDesc      = sDesc
@@ -65,7 +68,7 @@ class executeAddMsg (object):
                                         msgProp.TOTAL_TIME :tCntFromStart })
 
     def deleteOldLogFiles (self, days=5 ):
-        logsDir = self.loggObj.getLogsDir()
+        logsDir = self.loggClass.getLogsDir()
         if logsDir:
             now = time.time()
             old = now - (days * 24 * 60 * 60)
@@ -90,7 +93,7 @@ class executeAddMsg (object):
         okMsg = msgProp.MSG_SUBJECT_SUCCESS %(msgName)
         errMsg= msgProp.MSG_SUBJECT_FAILURE %(msgName)
 
-        errList = self.loggObj.getLogData ()
+        errList = self.loggClass.getLogData ()
         errCnt  = len(errList) if errList else 0
 
         htmlList = []
@@ -98,13 +101,18 @@ class executeAddMsg (object):
 
         if onlyOnErr and errCnt>0 or not onlyOnErr:
             # First table - general knowledge
-            self.addState()
+            self.addState(sDesc='')
 
-            dicFirstTable = {eHtml.HEADER:list(self.stateDic.keys()),
-                             eHtml.ROWS:[]}
+            headerNames = None
+            dicFirstTable = {eHtml.HEADER:[],eHtml.ROWS:[]}
+
 
             for st in self.stateDic:
-                dicFirstTable[eHtml.ROWS].append ( list(st.values()) )
+                if not headerNames:
+                    headerNames = list(self.stateDic[st].keys())
+                    dicFirstTable[eHtml.HEADER] = headerNames
+
+                dicFirstTable[eHtml.ROWS].append ( list(self.stateDic[st].values()) )
 
             htmlList.append (dicFirstTable)
             if withErr:

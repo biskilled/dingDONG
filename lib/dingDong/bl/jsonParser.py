@@ -186,12 +186,18 @@ class jsonParser (object):
                         # parse column data types
                         elif k == eJson.jKeys.COLUMNS:
                             stt = self.__sttAddColumns (stt=stt, propVal=node[prop])
-                            newDict[eJson.jKeys.STT] = stt
+                            newDict[eJson.jKeys.STTONLY] = stt
+
+                            if eJson.jKeys.STT in newDict:
+                                del newDict[eJson.jKeys.STT]
 
                         # parse column mapping
                         elif k == eJson.jKeys.MAP:
                             stt = self.__sttAddMappings(stt=stt, propVal=node[prop])
-                            newDict[eJson.jKeys.STT] = stt
+                            if eJson.jKeys.STT in newDict:
+                                newDict[eJson.jKeys.STT] = stt
+                            else:
+                                newDict[eJson.jKeys.STTONLY] = stt
                         else:
                             p ("%s not implemented !" %(k), "e")
                     else:
