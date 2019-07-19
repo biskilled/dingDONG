@@ -317,14 +317,14 @@ class baseGlobalDb (baseBatch):
                     rows = self.cursor.fetchmany( batchRows )
                     if not rows or len(rows) < 1:
                         break
-
                     rows = self.dataTransform(data=rows, functionDict=fnOnRowsDic, execDict=execOnRowsDic)
                     tar.load (rows=rows, targetColumn = targetColumnStr)
             else:
                 rows = self.cursor.fetchall()
                 if fnOnRowsDic and len(fnOnRowsDic)>0:
                     rows = self.dataTransform(data=rows, functionDict=fnOnRowsDic)
-                tar.load(rows, targetColumn = targetColumnStr)
+
+                    tar.load(rows, targetColumn = targetColumnStr)
         except Exception as e:
             p("TYPE:%s, OBJECT:%s ERROR FATCHING DATA" % (self.conn, str(self.connObj)), "e")
             p(str(e), "e")
@@ -350,6 +350,7 @@ class baseGlobalDb (baseBatch):
             self.cursor.executemany(execQuery, rows)
             self.connDB.commit()
             p('LOAD %s into target: %s >>>>>> ' % (str(totalRows), self.connObj), "ii")
+
 
         except Exception as e:
             p(u"TYPE:%s, OBJCT:%s ERROR in cursor.executemany !!!!" % (self.conn, self.connObj), "e")

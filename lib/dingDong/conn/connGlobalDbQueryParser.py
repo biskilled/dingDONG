@@ -155,10 +155,11 @@ def replaceSQLColumns (sqlStr, columnStr):
     sqlStr = re.sub(r"/\*[^*]*\*+(?:[^*/][^*]*\*+)*/", "", sqlStr)
     sqlStr = re.sub(r"\s+", " ",sqlStr)
     ## Search : Select [top xx] [col1, col2.....] from [tables...]
-    regSql    = r"(.*select\s+(?:top\s+\d+){0,1})(.*?)(from\s+.*)"
+
+    regSql    = r"(.*?select\s+(?:top\s+\d+){0,1})(.*?)(from\s+.*)"
 
     #sqlGrouping = re.search(regexSql, sqlStr, re.IGNORECASE | re.MULTILINE)
-    sqlGrouping = re.match(regSql, sqlStr, re.IGNORECASE | re.MULTILINE | re.S)
+    sqlGrouping = re.search(regSql, sqlStr, re.UNICODE | re.MULTILINE | re.S | re.I)
     if sqlGrouping:
         return '%s %s %s' %(sqlGrouping.group(1), columnStr, sqlGrouping.group(3))
 
@@ -358,5 +359,5 @@ def __extract_select_part (parsed):
     return columnDic
 
 
-#sql = "select popay.* from popay"
+
 #extract_TargetColumn (sql, pre="[", pos="]")

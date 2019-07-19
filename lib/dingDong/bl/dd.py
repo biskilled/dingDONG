@@ -152,7 +152,6 @@ class dingDong:
                     if self.src and self.tar:
                         """ TRANSFER DATA FROM SOURCE TO TARGET """
                         self.tar.preLoading()
-
                         tarToSrc = self.__mappingLoadingSourceToTarget(src=self.src, tar=self.tar)
                         self.src.extract(tar=self.tar, tarToSrc=tarToSrc, batchRows=10000, addAsTaret=True)
                         self.tar.close()
@@ -268,9 +267,10 @@ class dingDong:
             self.__updateSTTByTarget(tarStructure=tarStructure, pre=tarPre, pos=tarPos)
         self.__updateSTTBySource(srcStructure=srcStructure, pre=srcPre, pos=srcPos)
 
-        srcColumns = {}
-        tarColumns = {x.replace(tarPre, "").replace(tarPos, "").lower(): x for x in tarStructure}
-        sttColumns = {x.replace(tarPre, "").replace(tarPos, "").lower(): x for x in self.stt}
+        srcColumns = OrderedDict()
+        tarColumns = OrderedDict({x.replace(tarPre, "").replace(tarPos, "").lower(): x for x in tarStructure})
+        sttColumns = OrderedDict({x.replace(tarPre, "").replace(tarPos, "").lower(): x for x in self.stt})
+
 
         ## {srcName in Target: Source column }
         for col in srcStructure:
@@ -279,7 +279,7 @@ class dingDong:
             srcColumns[colName.replace(srcPre, "").replace(srcPos, "").lower()] = col
 
         # There is no target schema --> using all source and STT
-        if not tar.usingSchema and self.addSourceColumn:
+        if tar.usingSchema and self.addSourceColumn:
             for col in srcColumns:
                 tarToSrc[col] = {eJson.jSttValues.SOURCE: srcColumns[col]}
 
@@ -317,7 +317,6 @@ class dingDong:
                 columnNotMapped.append(tarColumns[col])
         if len(columnNotMapped) > 0:
             p("TARGET COLUMN NOT MAPPED: %s" % (str(columnNotMapped)), "ii")
-
 
         columnNotMapped = list([])
         for col in srcColumns:
