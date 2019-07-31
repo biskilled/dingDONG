@@ -155,7 +155,7 @@ class setSqlQuery (baseSqlQuery):
         sql += " and owner='" + tableSchema + "'" if tableSchema else ""
         sql += " ORDER BY COLUMN_ID"
 
-        self.connQuery[eConn.ORACLE] = sql
+        self.connQuery[eConn.ORACLE] = str(sql)
 
         ### MYSQL
         sql = """
@@ -163,7 +163,7 @@ class setSqlQuery (baseSqlQuery):
         WHERE table_name='""" + tableName + "' "
         sql += "and TABLE_SCHEMA='" + tableSchema + "';" if tableSchema else ";"
 
-        self.connQuery[eConn.MYSQL] = sql
+        self.connQuery[eConn.MYSQL] = str(sql)
 
         ### VERTICA
         sql = """
@@ -171,7 +171,7 @@ class setSqlQuery (baseSqlQuery):
             WHERE table_name='""" + tableName + "' "
         sql += "and table_schema='" + tableSchema + "';" if tableSchema else ";"
 
-        self.connQuery[eConn.VERTICA] = sql
+        self.connQuery[eConn.VERTICA] = str(sql)
 
     def setSqlMerge (self, dstTable, srcTable, mergeKeys, colList , colFullList):
         ### SQL AND DEFAULT

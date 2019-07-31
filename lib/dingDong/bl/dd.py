@@ -21,6 +21,7 @@ from collections import OrderedDict
 
 from dingDong.config            import config
 from dingDong.misc.logger       import p, LOGGER_OBJECT
+from dingDong.misc.misc         import uniocdeStr
 from dingDong.bl.jsonParser     import jsonParser
 from dingDong.misc.enumsJson    import eJson
 from dingDong.conn.baseConnectorManager   import mngConnectors as conn
@@ -44,6 +45,7 @@ class dingDong:
         if dirLogs or config.LOGS_DIR:
             LOGGER_OBJECT.setLogsFiles (logDir=dirLogs)
 
+
         ## Defualt properties
         self.connDict       = self.jsonParser.connDict
         self.setDefaults()
@@ -53,6 +55,7 @@ class dingDong:
         self.addSourceColumn = True
         self.src = None
         self.tar = None
+        self.onlyTarget = False
         self.mrg = None
         self.execProc = None
 
@@ -69,11 +72,8 @@ class dingDong:
 
         for jsName, jsonNodes in allNodes:
             self.setDefaults()
-
             for jMap in jsonNodes:
-                self.__setSTT(node=jMap)
-                sourceStt = None
-                targetStt = None
+                self.__setSTTandOnlyTarget(node=jMap)
                 for node in jMap:
                     if isinstance(jMap[node], (list, tuple)):
                         self.ding(destList=None, jsName=jsName, jsonNodes=jMap[node])
@@ -88,6 +88,14 @@ class dingDong:
                     if self.src:
                         mergeSource = copy.copy(self.src)
 
+                    if self.tar:
+                        mergeSource = copy.copy(self.tar)
+
+                        if self.onlyTarget:
+                            self.tar.create(stt=self.stt)
+                            self.tar.close()
+                            self.tar = None
+
                     if self.tar and self.src:
                         # convert source data type to target data types
                         targetStt = self.__updateTargetBySourceAndStt(src=self.src, tar=self.tar)
@@ -97,21 +105,16 @@ class dingDong:
                         self.src.close()
                         self.tar.close()
 
-                        sourceStt = None
                         self.src = None
                         self.tar = None
 
-                    elif self.tar and self.stt:
-                        self.tar.create(stt=self.stt)
-                        mergeSource = copy.copy(self.tar)
-                        self.tar.close()
-                        self.tar = None
 
                     if self.mrg and mergeSource:
                         sttMerge = self.__updateTargetBySourceAndStt(src=mergeSource, tar=self.mrg)
                         self.mrg.create(stt=sttMerge)
                         self.mrg.close()
                         self.mrg = None
+
 
         p('FINSHED TO MODEL DATA STRUCURE >>>>>', "i")
         p('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', "ii")
@@ -132,7 +135,7 @@ class dingDong:
             self.addSourceColumn = True
 
             for jMap in jsonNodes:
-                self.__setSTT(node=jMap)
+                self.__setSTTandOnlyTarget(node=jMap)
 
                 for node in jMap:
                     if isinstance(jMap[node], (list, tuple)):
@@ -152,6 +155,7 @@ class dingDong:
                     if self.src and self.tar:
                         """ TRANSFER DATA FROM SOURCE TO TARGET """
                         self.tar.preLoading()
+
                         tarToSrc = self.__mappingLoadingSourceToTarget(src=self.src, tar=self.tar)
                         self.src.extract(tar=self.tar, tarToSrc=tarToSrc, batchRows=10000, addAsTaret=True)
                         self.tar.close()
@@ -172,15 +176,34 @@ class dingDong:
         p('FINISHED TO TRANSFER DATA STRUCURE >>>>>', "i")
         p('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', "ii")
 
+    def setLoggingLevel (self, val):
+        CRITICAL = 50
+        ERROR = 40
+        WARNING = 30
+        INFO = 20
+        DEBUG = 10
+        NOTSET = 0
+
+        if val in (CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET):
+            config.LOGS_DEBUG = val
+            LOGGER_OBJECT.logLevel = val
+            LOGGER_OBJECT.setLogLevel(logLevel=config.LOGS_DEBUG)
+        else:
+            err = "Logging is not valid, valid values: 0,10,20,30,40,50"
+            raise ValueError(err)
+
     """ LOADING BUSINESS LOGIC EXECUTOERS """
-    def execDbSql(self, queries, connName=None, connType=None, connUrl=None, connLoadProp=None):
-        connPropDic = {eJson.jValues.NAME:connName, eJson.jValues.CONN:connType, eJson.jValues.URL:connUrl}
-        connObj = conn(connPropDic=connPropDic, connLoadProp=connLoadProp)
+    def execDbSql(self, queries, connName=None, connType=None, connUrl=None, connPropDic=None):
+        connPropDic = connPropDic if connPropDic else {}
+        if connName : connPropDic[eJson.jValues.NAME] = connName
+        if connType : connPropDic[eJson.jValues.CONN] = connType
+        if connUrl  : connPropDic[eJson.jValues.URL] = connUrl
+
+        connObj = conn(connPropDic=connPropDic , connLoadProp=self.connDict)
         execQuery(sqlWithParamList=queries, connObj=connObj)
 
     def execMicrosoftOLAP (self, serverName, dbName, cubes=[], dims=[], fullProcess=True):
         OLAP_Process(serverName=serverName, dbName=dbName, cubes=cubes, dims=dims, fullProcess=fullProcess)
-
 
     """ Check Source values in STT - remove invalid values """
     def __updateSTTBySource (self, srcStructure, pre="[", pos="]"):
@@ -193,7 +216,7 @@ class dingDong:
                 removeColumns.append (col)
 
         for col in removeColumns:
-            p("STT TAREGT %s HAVE INVALID SOURCE %s --> ignore COLUMN " % (col, self.stt[col][eJson.jSttValues.SOURCE]),"e")
+            p("STT TAREGT %s HAVE INVALID SOURCE %s --> ignore COLUMN " % (col, self.stt[col][eJson.jSttValues.SOURCE]),"w")
             del self.stt[col]
 
     """ Check Taret values in STT - remove invalid values  """
@@ -202,10 +225,10 @@ class dingDong:
         tarStrucureL = {x.replace(pre,"").replace(pos,"").lower():x for x in tarStructure}
         for col in self.stt:
             if col.replace(pre,"").replace(pos,"").lower() not in tarStrucureL:
-                p("STT COLUMN %s NOT EXISTS OBJECT --> ignore COLUMN " %(col) ,"e")
+                p("STT COLUMN %s NOT EXISTS OBJECT --> ignore COLUMN " %(col) ,"w")
                 #del self.stt[col]
 
-    def __setSTT (self, node):
+    def __setSTTandOnlyTarget (self, node):
         if eJson.jKeys.STTONLY in node:
             self.stt            = node[eJson.jKeys.STTONLY]
             self.addSourceColumn= False
@@ -215,6 +238,9 @@ class dingDong:
         else:
             self.stt            = {}
             self.addSourceColumn= True
+
+        if eJson.jKeys.SOURCE not in node and eJson.jKeys.QUERY not in node and self.stt is not None:
+            self.onlyTarget = True
 
     def __setMainProperty (self,key, valDict):
         if eJson.jKeys.EXEC == key or eJson.jKeys.EXEC in valDict:
@@ -247,6 +273,7 @@ class dingDong:
             pass
         else:
             p("IGNORE NODE: KEY:%s, VALUE:%s " % (key,str(valDict)), "e")
+
 
     """ LOADING MODULE: Return mapping between source and target """
     def __mappingLoadingSourceToTarget (self, src, tar):
@@ -311,19 +338,19 @@ class dingDong:
                     tarToSrc[col][eJson.jSttValues.SOURCE].replace(srcPre, "").replace(srcPos, "").lower()] = \
                 tarToSrc[col][eJson.jSttValues.SOURCE]
 
-        columnNotMapped = list([])
+        columnNotMapped = u""
         for col in tarColumns:
             if col not in existsTarColumns:
-                columnNotMapped.append(tarColumns[col])
+                columnNotMapped+=uniocdeStr(tarColumns[col])+u" ; "
         if len(columnNotMapped) > 0:
-            p("TARGET COLUMN NOT MAPPED: %s" % (str(columnNotMapped)), "ii")
+            p(u"TARGET COLUMN NOT MAPPED: %s" % (columnNotMapped), "w")
 
-        columnNotMapped = list([])
+        columnNotMapped = u""
         for col in srcColumns:
             if srcColumns[col].replace(srcPre, "").replace(srcPos, "").lower() not in existsSrcColumns:
-                columnNotMapped.append(srcColumns[col])
+                columnNotMapped+=uniocdeStr(srcColumns[col])+u" ; "
         if len(columnNotMapped) > 0:
-            p("SOURCE COLUMN NOT MAPPED: %s" % (str(columnNotMapped)), "ii")
+            p(u"SOURCE COLUMN NOT MAPPED: %s" % (columnNotMapped), "w")
 
         return tarToSrc
 
@@ -331,7 +358,6 @@ class dingDong:
     def __updateTargetBySourceAndStt(self, src, tar):
         retStrucure = OrderedDict()
         sourceStt   = src.getStructure()
-
         sourceColL  = {x.lower():x for x in sourceStt}
 
         if src.conn == tar.conn:
@@ -360,10 +386,11 @@ class dingDong:
 
                 ## Receive list of all dataType in DataTypes Tree
                 newDataTypeTree     = src.getDataTypeTree (dataType=replaceString.lower(), ret=([]))
-                if not newDataTypeTree:
+                if newDataTypeTree is None:
+                    p("SOURCE CONNECTION: %s, DATA TYPE: %s ; IS NOT EXISTS, WILL USE DEFAULT VALUE" %(src.conn, replaceString),"w")
                     tarType = tar.defDataType
                 else:
-                    targetList = tar.setDataTypeTree (dataTypeTree=newDataTypeTree, allDataTypes=tar.dataTypes, ret=[])
+                    targetList = tar.setDataTypeTree (dataTypeTree=newDataTypeTree, allDataTypes=tar.DATA_TYPES, ret=[])
                     tarType = '%s%s' %(targetList[-1],postType) if targetList and len(targetList)>0 else tar.defDatatType
                 retStrucure[targetColName] = {eJson.jSttValues.TYPE:tarType}
 
@@ -393,7 +420,6 @@ class dingDong:
 
                     if eJson.jSttValues.ALIACE in self.stt[col]:
                         retStrucure[col][eJson.jSttValues.ALIACE] = self.stt[col][eJson.jSttValues.ALIACE]
-
         return retStrucure
 
     def __getNodes(self, destList=None):

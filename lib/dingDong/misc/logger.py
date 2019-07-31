@@ -87,6 +87,10 @@ class __myLogger (object):
             tmpFileErrors.setFormatter(self.logFormatter)
             tmpFileErrors.setLevel(logging.ERROR)
             self.logg.addHandler(tmpFileErrors)
+            try:
+                open(self.logTmpFile, 'w').close()
+            except:
+                p("CANNOT OPEN TEMP FILE %s" %(self.logTmpFile), "e")
 
         if not logErrFile:
             fileHandler = logging.FileHandler(os.path.join(self.logDir, logFile), mode='a')
@@ -135,6 +139,7 @@ def p(msg, ind='I'):
     ind = ind.upper()
     indPrint = {'E': 'ERROR>> ',
                 'I': 'INFO >> ',
+                'W': 'WARNING >>',
                 'II': 'DEBUG>> ',
                 'III': 'Progress>> '}
 
@@ -144,5 +149,7 @@ def p(msg, ind='I'):
         __logg.debug("%s->%s: %s" %(fileName, func.co_name, msg))
     elif 'I' in ind:
         __logg.info("%s->%s: %s" %(fileName, func.co_name, msg))
+    elif 'W' in ind:
+        __logg.warning("%s->%s: %s" % (fileName, func.co_name, msg))
     else:
         __logg.error("%s,%s->%s : %s " % (fileName, func.co_firstlineno, func.co_name,msg))

@@ -30,6 +30,7 @@ else:
 from dingDong.conn.baseBatch  import baseBatch
 from dingDong.conn.baseBatchFunction    import *
 from dingDong.misc.enumsJson  import eConn, eJson
+from dingDong.misc.misc import uniocdeStr
 from dingDong.config          import config
 from dingDong.misc.logger     import p
 
@@ -186,8 +187,8 @@ class connFile (baseBatch):
 
         ## File with header and there is target to source mapping
         if tarToSrc and len(tarToSrc)>0:
-            mappingSourceColumnNotExists = []
-            fileSourceColumnNotExists    = []
+            mappingSourceColumnNotExists = u""
+            fileSourceColumnNotExists    = u""
 
             for i, col in enumerate (tarToSrc):
                 targetColumnList.append(col)
@@ -196,7 +197,7 @@ class connFile (baseBatch):
                     if srcColumnName.lower() in fileStructureL:
                         listOfColumnsL.append(fileStructureL[ srcColumnName.lower() ])
                     else:
-                        mappingSourceColumnNotExists.append (srcColumnName)
+                        mappingSourceColumnNotExists+=uniocdeStr (srcColumnName)+u" ; "
                 else:
                     listOfColumnsL.append(-1)
 
@@ -220,13 +221,13 @@ class connFile (baseBatch):
 
             for colNum in listOfColumnsH:
                 if colNum not in listOfColumnsL:
-                    fileSourceColumnNotExists.append ( listOfColumnsH[colNum] )
+                    fileSourceColumnNotExists+= uniocdeStr( listOfColumnsH[colNum] )+u" ; "
 
             if len(mappingSourceColumnNotExists)>0:
-                p("SOURCE COLUMN EXISTS IN SOURCE TO TARGET MAPPING AND NOT FOUND IN SOURCE FILE: %s" %(str(mappingSourceColumnNotExists)),"e")
+                p("SOURCE COLUMN EXISTS IN SOURCE TO TARGET MAPPING AND NOT FOUND IN SOURCE FILE: %s" %(mappingSourceColumnNotExists),"w")
 
             if len (fileSourceColumnNotExists)>0:
-                p("FILE COLUMN NOT FOUD IN MAPPING: %s" %(str(fileSourceColumnNotExists)),"ii")
+                p("FILE COLUMN NOT FOUD IN MAPPING: %s" %(fileSourceColumnNotExists),"w")
         ## There is no target to source mapping, load file as is
         else:
             for colNum in listOfColumnsH:
@@ -276,7 +277,7 @@ class connFile (baseBatch):
     def load(self, rows, targetColumn):
         totalRows = len(rows) if rows else 0
         if totalRows == 0:
-            p("THERE ARE NO ROWS")
+            p("THERE ARE NO ROWS","w")
             return
 
         if self.append:

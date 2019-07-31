@@ -25,7 +25,7 @@ import multiprocessing
 from collections import OrderedDict
 
 from dingDong.config        import config
-from dingDong.misc.logger   import p
+from dingDong.misc.logger   import p, LOGGER_OBJECT
 
 # sqlWithParamList --> list of tuple (file name, paramas)
 def execQuery (sqlWithParamList, connObj ):
@@ -57,6 +57,7 @@ def execQuery (sqlWithParamList, connObj ):
             break
 
         # sql file is list of all files to execute
+
         if os.path.isdir(locName):
             sqlFiles = [os.path.join(locName, pos_sql)  for pos_sql in os.listdir(locName) if pos_sql.endswith('.sql')]
         elif os.path.isfile(locName):
@@ -88,7 +89,7 @@ def __execParallel (priority, ListOftupleFiles, connObj):
         locParams   = tupleFiles[1]
 
         for sqlScript in sqlFiles:
-            multiProcessParam.append( (sqlScript, locParams, connObj,) )
+            multiProcessParam.append( (sqlScript, locParams, connObj,config.LOGS_DEBUG) )
             multiProcessFiles += "'" + sqlScript + "' ; "
 
     # single process
@@ -107,7 +108,8 @@ def __execParallel (priority, ListOftupleFiles, connObj):
     p("FINISH EXECUTING PRIORITY %s, LOADED FILES: %s >>>> " %(str(priority), str (multiProcessFiles)), "i")
 
 def __execSql ( params ):
-    (sqlScript, locParams, connObj) = params
+    (sqlScript, locParams, connObj, logLevel) = params
+    LOGGER_OBJECT.setLogLevel(logLevel=logLevel)
     connObj.connect()
     def __execEachLine (connObj, sqlTxt):
         sqlQuery = __split_sql_expressions(sqlTxt)
@@ -171,5 +173,3 @@ def __split_sql_removeString (line, remove=False):
     #    line = re.sub(r'\/\*.*', '', line)
     line = line.replace("\n", " ").replace("\t", " ")
     return line, remove
-
-

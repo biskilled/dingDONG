@@ -31,13 +31,10 @@ def replaceStr (sString,findStr, repStr, ignoreCase=True,addQuotes=None):
         res = sString.replace (findStr, repStr)
     return res
 
-def decodePython2Or3 (sObj, un=True):
+def uniocdeStr (sObj, decode=False):
     pVersion = sys.version_info[0]
 
     if 3 == pVersion:
         return sObj
-    else:
-        if un:
-            return unicode (sObj)
-        else:
-            return str(sObj).decode(config.DECODE)
+
+    return unicode (str(sObj).decode(config.DECODE)) if decode else unicode (sObj)

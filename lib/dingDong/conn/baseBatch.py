@@ -19,6 +19,7 @@ import abc
 import six
 import sys
 import re
+import copy
 
 from dingDong.misc.logger import p
 from dingDong.misc.enumsJson import eConn, eJson, findProp
@@ -52,14 +53,13 @@ class baseBatch ():
         if not self.conn:
             self.conn = self.connName
 
-        self.defaults   = DEFAULTS
-        self.dataTypes  = DATA_TYPES
-        self.defDataType = self.defaults[eJson.jValues.DEFAULT_TYPE]
+        self.baseDefaults   = DEFAULTS
+        self.baseDataTypes  = copy.deepcopy(DATA_TYPES)
+        self.baseDefDataType = self.baseDefaults[eJson.jValues.DEFAULT_TYPE]
 
         if not findProp (prop=self.conn, obj=eConn):
             err  = "Connection type is not valid: %s, use valid connection properties" %(str(self.conn))
             raise ValueError(err)
-
 
     """ ABSTRACT METHOD THAT MUST BE IMPLEMETED IN ANY CHILD CLASSES """
     @abc.abstractmethod
@@ -102,38 +102,6 @@ class baseBatch ():
     def merge(self, mergeTable, mergeKeys=None, sourceTable=None):
         pass
 
-    """ PROPERTIES TO USE """
-    @property
-    def DEFAULTS (self):
-        return self.defaults
-
-    @DEFAULTS.setter
-    def DEFAULTS(self, val):
-        defValues = {}
-        if eConn.NONO in val and val[eConn.NONO]:
-            defValues = val[eConn.NONO]
-
-        if self.conn in val and val[self.conn]:
-            defValues.update(val[self.conn])
-        elif len(defValues)==0:
-            defValues = val
-
-        if defValues and isinstance(defValues, dict):
-            for k in defValues:
-                self.defaults[k] = defValues[k]
-        else:
-            p("DEFAULTS VALUES ARE NOT VALID, MUST USE DICT, VALUES: %s " %str(val))
-
-        self.defDataType = self.defaults[eJson.jValues.DEFAULT_TYPE]
-
-    @property
-    def DATA_TYPES(self):
-        return self.dataTypes
-
-    @DATA_TYPES.setter
-    def DATA_TYPES(self, val):
-        self.dataTypes = self.setDataTypes(connDataTypes=val)
-
     """ -----------------   GLOBAL METHODS -------------------------------------"""
     """ General method - implemented localy """
     def dataTransform(self, data, functionDict=None, execDict=None):
@@ -168,24 +136,26 @@ class baseBatch ():
             p("TEST-> FAILED: %s, type: %s " % (self.connName, self.conn))
 
     """ GET DATA TYPE TREE - Return source data types"""
-    def getDataTypeTree (self, dataType,dataTypeTree=None, ret=list([])):
-        dataTypeTree = dataTypeTree if dataTypeTree else self.dataTypes
+    def getDataTypeTree (self, dataType, dataTypeTree=None, ret=list([])):
+        dataTypeTree = dataTypeTree if dataTypeTree else self.baseDataTypes.copy()
         for k in dataTypeTree:
+            k = str(k)
             if isinstance(dataTypeTree[k], dict):
                 retDic = self.getDataTypeTree(dataType=dataType, dataTypeTree=dataTypeTree[k], ret=ret)
                 if retDic:
                     ret.append(k)
                     return ret
             elif isinstance(dataTypeTree[k], list):
-                if dataType in dataTypeTree[k]:
-                    ret.append(dataType)
+                lowerDataType = [x.lower() for x in dataTypeTree[k]]
+                if dataType.lower() in lowerDataType:
+                    ret.append(str(dataType))
                     ret.append(k)
                     return ret
-            elif dataType == dataTypeTree[k]:
-                ret.append(dataType)
+            elif dataType == dataTypeTree[k] or str(dataType).lower() == str(dataTypeTree[k]).lower():
+                ret.append(str(dataType))
                 ret.append(k)
                 return ret
-            elif dataType == k:
+            elif dataType == k or str(dataType).lower() == str(k).lower():
                 ret.append(k)
                 return ret
         return None
@@ -212,14 +182,31 @@ class baseBatch ():
                     return self.setDataTypeTree(dataTypeTree=dataTypeTree, allDataTypes=allDataTypes[k], ret=ret)
         return ret
 
+    """ return default data types dictionary   """
+
+    def setDefaults(self, defaultsDic):
+        defValues = {}
+        if eConn.NONO in defaultsDic and defaultsDic[eConn.NONO]:
+            defValues = defaultsDic[eConn.NONO]
+
+        if self.conn in defaultsDic and defaultsDic[self.conn]:
+            defValues.update(defaultsDic[self.conn])
+        elif len(defValues) == 0:
+            defValues = defaultsDic
+
+        for k in self.baseDefaults:
+            if k not in defValues:
+                defValues[k] = self.baseDefaults[k]
+        return defValues
+
     """ Set DataTypes tree --> Adding new children """
     def setDataTypes (self, connDataTypes, existsDataTypes=None):
-        existsDataTypes = self.dataTypes if not existsDataTypes else existsDataTypes
+        existsDataTypes = self.baseDataTypes.copy() if not existsDataTypes else existsDataTypes
         connDataTypes = connDataTypes[self.conn] if self.conn in connDataTypes else connDataTypes
         if connDataTypes and len(connDataTypes)>0:
             for k in existsDataTypes:
                 if k in connDataTypes:
-                    existsDataTypes[k] = connDataTypes[k]
+                    existsDataTypes[k] = copy.copy(connDataTypes[k])
                 elif existsDataTypes[k] and isinstance(existsDataTypes[k], dict):
                     self.setDataTypes (connDataTypes=connDataTypes, existsDataTypes=existsDataTypes[k])
         return existsDataTypes

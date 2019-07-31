@@ -16,6 +16,7 @@
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
 
 from dingDong.misc.logger import  p
+from dingDong.misc.misc import uniocdeStr
 
 
 def OLAP_Process(serverName,dbName, cubes=[], dims=[], fullProcess=True):
@@ -40,16 +41,16 @@ def OLAP_Process(serverName,dbName, cubes=[], dims=[], fullProcess=True):
         if len(dims)==0 or dim in dims:
             try:
                 dim.Process(processType)
-                p(u"OLAP DB: %s, process DIM %s finish succeffully ... " %(dbName,dim), "i")
+                p(u"OLAP DB: %s, process DIM %s finish succeffully ... " %(uniocdeStr(dbName, decode=True),uniocdeStr(dim, decode=True)), "i")
             except Exception as e:
-                p(u"OLAP DB: %s, ERROR processing DIM %s ... " % (dbName,dim),"e")
+                p(u"OLAP DB: %s, ERROR processing DIM %s ... " % (uniocdeStr(dbName, decode=True),uniocdeStr(dim, decode=True)),"e")
                 p(e,"e")
 
     for cube in amoDb.Cubes:
         if len(cubes)==0 or cube in cubes:
             try:
                 cube.Process(processType)
-                p(u"OLAP DB: %s, CUBE %s finish succeffully ... " %(dbName,cube),"i")
+                p(u"OLAP DB: %s, CUBE %s finish succeffully ... " %(uniocdeStr(dbName, decode=True),uniocdeStr(cube, decode=True)),"i")
             except Exception as e:
-                p(u"OLAP DB: %s, ERROR processing CUBE %s ... " % (dbName, cube),"e")
+                p(u"OLAP DB: %s, ERROR processing CUBE %s ... " % (uniocdeStr(dbName, decode=True), uniocdeStr(cube, decode=True)),"e")
                 p(e,"e")

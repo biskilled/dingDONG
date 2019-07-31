@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # (c) 2017-2019, Tal Shany <tal.shany@biSkilled.com>
 #
 # This file is part of dingDong
@@ -15,8 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
 
-import abc
-import re
 import os
 import sys
 import time
@@ -25,11 +24,16 @@ from collections import OrderedDict
 from dingDong.conn.baseBatch            import baseBatch
 from dingDong.conn.baseBatchFunction    import *
 from dingDong.misc.enumsJson            import eConn, eJson, eSql
-from dingDong.misc.misc                 import decodePython2Or3
+from dingDong.misc.misc                 import uniocdeStr
 from dingDong.config                    import config
 from dingDong.misc.logger               import p
 import dingDong.conn.connGlobalDbQueryParser as qp
 from dingDong.conn.connGlobalDbSqlQueries import setSqlQuery
+
+try:
+    import cx_Oracle  # version : 6.1
+except ImportError:
+    p("cx_Oracle is not installed", "ii")
 
 DEFAULTS = {
             eConn.NONO: {   eJson.jValues.DEFAULT_TYPE:'varchar(100)',eJson.jValues.SCHEMA:'dbo',
@@ -37,7 +41,7 @@ DEFAULTS = {
                             eJson.jValues.SP:{'match':None, 'replace':None}},
 
             eConn.ORACLE: {eJson.jValues.DEFAULT_TYPE: 'varchar(100)', eJson.jValues.SCHEMA: 'dbo',
-                           eJson.jValues.EMPTY: 'Null', eJson.jValues.COLFRAME: ("[", "]"),
+                           eJson.jValues.EMPTY: 'Null', eJson.jValues.COLFRAME: ('"', '"'),
                            eJson.jValues.SP: {'match': r'([@].*[=])(.*?(;|$))', 'replace': r"[=;@\s']"}},
 
             eConn.SQLSERVER: {eJson.jValues.DEFAULT_TYPE: 'varchar(100)', eJson.jValues.SCHEMA: 'dbo',
@@ -50,9 +54,11 @@ DEFAULTS = {
 
 DATA_TYPES = {
     eConn.ORACLE:   { eConn.dataType.DB_DATE:['date','datetime'],
-                        eConn.dataType.DB_VARCHAR:['varchar','varchar2']},
-    eConn.SQLSERVER: {
-                        eConn.dataType.DB_DATE:['smalldatetime','datetime']},
+                        eConn.dataType.DB_VARCHAR:['varchar','varchar2']
+                    },
+    eConn.SQLSERVER:{
+                        eConn.dataType.DB_DATE:['smalldatetime','datetime']
+                    },
 
     eConn.ACCESS: { eConn.dataType.DB_VARCHAR:['varchar', 'longchar', 'bit', 'ntext'],
                     eConn.dataType.DB_INT:['integer', 'counter'],
@@ -69,8 +75,11 @@ class baseGlobalDb (baseBatch):
 
         baseBatch.__init__(self, conn=conn, connName=connName, connPropDict=connPropDict)
 
-        self.DEFAULTS   = DEFAULTS
-        self.DATA_TYPES = DATA_TYPES
+        self.DEFAULTS   = self.setDefaults(defaultsDic=DEFAULTS)
+        self.defDataType = self.DEFAULTS[eJson.jValues.DEFAULT_TYPE]
+
+        self.DATA_TYPES  = self.setDataTypes(connDataTypes=DATA_TYPES)
+
         self.usingSchema= True
 
         """ BASIC PROPERTIES FROM BASECONN """
@@ -88,10 +97,10 @@ class baseGlobalDb (baseBatch):
         self.connIsTar  = self.setProperties (propKey=eJson.jValues.IS_TARGET, propVal=connIsTar)
         self.connIsSql  = self.setProperties (propKey=eJson.jValues.IS_SQL, propVal=connIsSql)
 
-        self.defaultSchema  = self.defaults[eJson.jValues.SCHEMA]
-        self.defaulNull     = self.defaults[eJson.jValues.EMPTY]
-        self.defaultSP      = self.defaults[eJson.jValues.SP]
-        self.columnFrame    = self.defaults[eJson.jValues.COLFRAME]
+        self.defaultSchema  = self.DEFAULTS[eJson.jValues.SCHEMA]
+        self.defaulNull     = self.DEFAULTS[eJson.jValues.EMPTY]
+        self.defaultSP      = self.DEFAULTS[eJson.jValues.SP]
+        self.columnFrame    = self.DEFAULTS[eJson.jValues.COLFRAME]
 
         self.cursor         = None
         self.connDB         = None
@@ -100,8 +109,7 @@ class baseGlobalDb (baseBatch):
         self.parrallelProcessing    = False
 
         if not self.connUrl:
-            err = "baseConn->init: Connection %s, NAME %s, must have VALID URL ! " %(self.conn, self.connName)
-            raise ValueError(err)
+            self.connUrl = connPropDict
 
         if self.connIsSql:
             self.connSql    = self.setQueryWithParams(self.connObj)
@@ -117,7 +125,6 @@ class baseGlobalDb (baseBatch):
             if self.connFilter and len(self.connFilter) > 1:
                 self.connFilter = re.sub(r'WHERE', '', self.connFilter, flags=re.IGNORECASE)
                 self.connSql = '%s WHERE %s' %(self.connSql, self.setQueryWithParams(self.connFilter))
-
 
         objName = "QUERY " if self.connIsSql else "TABLE: %s" %self.connObj
 
@@ -138,7 +145,6 @@ class baseGlobalDb (baseBatch):
                 self.connDB = vertica_python.connect(self.connUrl)
                 self.cursor = self.connDB.cursor()
             elif eConn.ORACLE == self.conn:
-                import cx_Oracle
                 self.connDB = cx_Oracle.connect(self.connUrl['user'], self.connUrl['pass'], self.connUrl['dsn'])
                 if 'nls' in self.connUrl:
                     os.environ["NLS_LANG"] = self.connUrl['nls']
@@ -189,7 +195,7 @@ class baseGlobalDb (baseBatch):
         tableFullName = '%s.%s'%(tableSchema, tableName) if tableSchema else tableName
 
         if not stt or len(stt) == 0:
-            p("baseConnDb->create: TABLE %s NOT MAPPED CORRECLTY " %(self.connObj), "e")
+            p("TABLE %s NOT MAPPED CORRECLTY " %(self.connObj), "e")
             return
         boolToCreate = self.cloneObject(stt, tableSchema, tableName)
 
@@ -205,7 +211,7 @@ class baseGlobalDb (baseBatch):
             sql = sql[:-2]+')'
 
 
-            p("baseConnDb->create: CREATE TABLE: \n" + sql)
+            p("CREATE TABLE: \n" + sql)
             self.exeSQL(sql=sql, commit=True)
 
     """ INTERFACE: baseConn, baseConnDB, IMPLEMENTED: db, Method:getStrucutre - return Structure dictionary 
@@ -407,14 +413,13 @@ class baseGlobalDb (baseBatch):
             sql = [sql]
         try:
             for s in sql:
-                self.cursor.execute(s)  # if 'ceodbc' in odbc.__name__.lower() else self.conn.execute(s)
+                self.cursor.execute(str(s))  # if 'ceodbc' in odbc.__name__.lower() else self.conn.execute(s)
             if commit:
                 self.connDB.commit()  # if 'ceodbc' in odbc.__name__.lower() else self.cursor.commit()
             return True
         except Exception as e:
-            p("baseConnDb->exeSQL:  ERROR: ", "e")
             p(e, "e")
-            p("baseConnDb->exeSQL: ERROR SQL:\n %s " % (str(s)), "e")
+            p("ERROR SQL:\n%s " % (str(s)), "e")
             return False
 
     """ baseConnDB Method - Truncate table """
@@ -431,18 +436,18 @@ class baseGlobalDb (baseBatch):
         self.exeSQL(sql=sql)
         p("TYPE:%s, DELETE FROM TABLE:%s, WHERE:%s" % (self.conn, self.connObj, self.connFilter), "ii")
 
-
     """ Return TABLE STRUCTURE : {ColumnName:{Type:ColumnType, ALIACE: ColumnName} .... } """
     def getDBStructure(self, tableSchema, tableName):
         ret = OrderedDict()
 
         sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.STRUCTURE, tableName=tableName, tableSchema=tableSchema)
+
         self.exeSQL(sql, commit=False)
         rows = self.cursor.fetchall()
 
         for col in rows:
-            colName = decodePython2Or3(col[0], un=True)
-            colType = decodePython2Or3(col[1], un=True)
+            colName = uniocdeStr(col[0])
+            colType = uniocdeStr(col[1])
             val = {eJson.jSttValues.TYPE: colType, eJson.jSttValues.ALIACE: None}
             ret[colName] = val
         return ret
@@ -574,7 +579,7 @@ class baseGlobalDb (baseBatch):
 
 
         if not existStructure or len(existStructure) == 0:
-            p("baseConnDb->cloneObject: TABLE %s NOT EXISTS " %(tableName), "ii")
+            p("TABLE %s NOT EXISTS " %(tableName), "ii")
             return True
 
         existStructureL = {x.replace(pre, "").replace(pos, "").lower(): x for x in existStructure}
@@ -583,22 +588,22 @@ class baseGlobalDb (baseBatch):
             if col in newStructureL:
                 if existStructure[ existStructureL[col] ][eJson.jSttValues.TYPE].lower() != newStructureL[ col ][1].lower():
                     schemaEqual = False
-                    p("TYPE FOR COLUMN %s CHANGED, OLD: %s, NEW: %s" % (col, existStructure[ existStructureL[col] ] [eJson.jSttValues.TYPE] , newStructureL[ col ][1]), "ii")
+                    p("TYPE FOR COLUMN %s CHANGED, OLD: %s, NEW: %s" % (col, existStructure[ existStructureL[col] ] [eJson.jSttValues.TYPE] , newStructureL[ col ][1]), "w")
             else:
                 schemaEqual = False
-                p("TABLE CHANGED REMOVE COLUMN: %s " % (col), "ii")
+                p("TABLE CHANGED REMOVE COLUMN: %s " % (col), "w")
 
         for col in newStructureL:
             if col not in existStructureL:
                 schemaEqual = False
-                p("TABLE CHANGED ADD COLUMN: %s " % (newStructureL[col][0]), "ii")
+                p("TABLE CHANGED ADD COLUMN: %s " % (newStructureL[col][0]), "w")
 
         if schemaEqual:
-            p("baseConnDb->cloneObject: TABLE %s DID NOT CHANGED  >>>>>" % (tableName), "ii")
+            p("TABLE %s DID NOT CHANGED  >>>>>" % (tableName), "ii")
             return False
         else:
             if config.TRACK_HISTORY:
-                p("baseConnDb->cloneObject: Table History is ON ...", "ii")
+                p("TABLE HISTORY IS ON ...", "ii")
                 newHistoryTable = "%s_%s" % (tableName, str(time.strftime('%y%m%d')))
                 if (self.isExists(tableSchema=tableSchema, tableName=tableName)):
                     num = 0
@@ -606,15 +611,15 @@ class baseGlobalDb (baseBatch):
                         num += 1
                         newHistoryTable = "%s_%s_%s" % (tableName, str(time.strftime('%y%m%d')), str(num))
                 if newHistoryTable:
-                    p("baseConnDb->cloneObject: Table History is ON and changed, table %s exists ... will rename to %s" % (str(tableName), str(newHistoryTable)), "ii")
+                    p("TABLE HISTORY IS ON AND CHANGED, TABLE %s EXISTS ... RENAMED TO %s" % (str(tableName), str(newHistoryTable)), "w")
                     sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.RENAME, tableSchema=tableSchema,tableName=tableName, tableNewName=newHistoryTable)
 
                     # sql = eval (self.objType+"_renameTable ("+self.objName+","+oldName+")")
-                    p("baseConnDb->cloneObject: RENAME TABLE SQL:%s" % (str(sql)), "ii")
+                    p("RENAME TABLE SQL:%s" % (str(sql)), "w")
                     self.exeSQL(sql=sql, commit=True)
             else:
                 if existStructure and len(existStructure)>0:
-                    p("baseConnDb->cloneObject: TABLE HISTORY IS OFF AND TABLE EXISTS, CREATE TABLE %s IN NEW STRUCTURE... "%(str(tableName)), "ii")
+                    p("TABLE HISTORY IS OFF AND TABLE EXISTS, CREATE TABLE %s IN NEW STRUCTURE... "%(str(tableName)), "w")
                     sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.DROP,  tableName=tableName, tableSchema=tableSchema)
 
                     self.exeSQL(sql=sql, commit=True)
@@ -695,7 +700,6 @@ class baseGlobalDb (baseBatch):
 
         p("COLUMN %s NOT FOUND IN MAPPING" %(colName))
         return None
-
 
     def minValues (self, colToFilter=None, resolution=None, periods=None, startDate=None):
         raise NotImplementedError("minValues need to be implemented")
