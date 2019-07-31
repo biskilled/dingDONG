@@ -21,11 +21,15 @@ import sys
 import re
 import copy
 
-from dingDong.misc.logger import p
+
+from dingDong.misc.logger   import p
 from dingDong.misc.enumsJson import eConn, eJson, findProp
+from dingDong.misc.misc     import replaceStr, uniocdeStr
+from dingDong.config import config
 
 DEFAULTS    =   {
-                    eJson.jValues.DEFAULT_TYPE:eConn.dataType.B_STR
+                    eJson.jValues.DEFAULT_TYPE:eConn.dataType.B_STR,
+                    eJson.jValues.BATCH_SIZE:250000
                 }
 
 DATA_TYPES = {
@@ -36,7 +40,6 @@ DATA_TYPES = {
     eConn.dataType.B_INT: {eConn.dataType.DB_INT:None,
                            eConn.dataType.DB_BIGINT:None},
     eConn.dataType.B_FLOAT:{eConn.dataType.DB_FLOAT:None,
-                            eConn.dataType.DB_NUMERIC:None,
                             eConn.dataType.DB_DECIMAL:None},
     eConn.dataType.DB_DATE:{eConn.dataType.DB_DATE:None}
 }
@@ -122,9 +125,8 @@ class baseBatch ():
                         for groupNum in range(0, len(match.groups())):
                             colNum = match.group(1).replace('{', '').replace('}', '')
                             colVal = row[int(colNum)]
-                            if isinstance(colVal, str):
-                                colVal = "'%s'" % (colVal) if "'" not in colVal else '"%s"' % (colVal)
-                                newVal.replace(match.group(1), colVal)
+                            colVal = uniocdeStr(colVal,decode=True ) if colVal else ''
+                            newVal = replaceStr(sString=str(newVal), findStr=match.group(1), repStr=colVal, ignoreCase=False, addQuotes=None)
                     row[ind] = newVal
                 data[num] = row
         return data

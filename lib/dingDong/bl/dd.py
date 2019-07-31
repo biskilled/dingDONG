@@ -157,7 +157,7 @@ class dingDong:
                         self.tar.preLoading()
 
                         tarToSrc = self.__mappingLoadingSourceToTarget(src=self.src, tar=self.tar)
-                        self.src.extract(tar=self.tar, tarToSrc=tarToSrc, batchRows=10000, addAsTaret=True)
+                        self.src.extract(tar=self.tar, tarToSrc=tarToSrc, addAsTaret=True)
                         self.tar.close()
                         self.src.close()
 
@@ -370,6 +370,7 @@ class dingDong:
 
         ### Source connection type is different than target connection type
         elif self.addSourceColumn:
+
             for col in sourceStt:
                 targetColName = col
                 if eJson.jSttValues.ALIACE in sourceStt[col] and sourceStt[col][eJson.jSttValues.ALIACE]:
@@ -387,7 +388,7 @@ class dingDong:
                 ## Receive list of all dataType in DataTypes Tree
                 newDataTypeTree     = src.getDataTypeTree (dataType=replaceString.lower(), ret=([]))
                 if newDataTypeTree is None:
-                    p("SOURCE CONNECTION: %s, DATA TYPE: %s ; IS NOT EXISTS, WILL USE DEFAULT VALUE" %(src.conn, replaceString),"w")
+                    p("SOURCE CONNECTION: %s, COLUMN: %s, DATA TYPE: %s ; IS NOT EXISTS, WILL USE DEFAULT VALUE" %(src.conn,col, replaceString),"w")
                     tarType = tar.defDataType
                 else:
                     targetList = tar.setDataTypeTree (dataTypeTree=newDataTypeTree, allDataTypes=tar.DATA_TYPES, ret=[])

@@ -68,7 +68,8 @@ class eJson (object):
         IS_SOURCE   = 'src'
         IS_TARGET   = 'tar'
         IS_SQL      = 'sql'
-        FOLDER      = 'folder'
+        FOLDER      = 'folder',
+        BATCH_SIZE  = 'batch'
 
         eDict = {
             NAME:       [NAME, 'name'],
@@ -78,7 +79,8 @@ class eJson (object):
             IS_CHANGE:  [IS_CHANGE, 'model', 'isCahnged'],
             URL:        [URL],
             URLPARAM:   [URLPARAM, 'extra', 'extraparam'],
-            FOLDER:     [FOLDER, 'files']
+            FOLDER:     [FOLDER, 'files'],
+            BATCH_SIZE: [BATCH_SIZE,'totalrows', 'rows']
 
         }
         DIC   = {   NAME:None,TYPE:None,CONN:None,OBJ:None,

@@ -54,10 +54,12 @@ DEFAULTS = {
 
 DATA_TYPES = {
     eConn.ORACLE:   { eConn.dataType.DB_DATE:['date','datetime'],
-                        eConn.dataType.DB_VARCHAR:['varchar','varchar2']
+                      eConn.dataType.DB_VARCHAR:['varchar','varchar2'],
+                      eConn.dataType.DB_DECIMAL:['number','numeric','dec','decimal']
                     },
     eConn.SQLSERVER:{
-                        eConn.dataType.DB_DATE:['smalldatetime','datetime']
+                        eConn.dataType.DB_DATE:['smalldatetime','datetime'],
+                        eConn.dataType.DB_DECIMAL:['decimal']
                     },
 
     eConn.ACCESS: { eConn.dataType.DB_VARCHAR:['varchar', 'longchar', 'bit', 'ntext'],
@@ -101,6 +103,7 @@ class baseGlobalDb (baseBatch):
         self.defaulNull     = self.DEFAULTS[eJson.jValues.EMPTY]
         self.defaultSP      = self.DEFAULTS[eJson.jValues.SP]
         self.columnFrame    = self.DEFAULTS[eJson.jValues.COLFRAME]
+        self.batchSize      = self.DEFAULTS[eJson.jValues.BATCH_SIZE]
 
         self.cursor         = None
         self.connDB         = None
@@ -259,7 +262,8 @@ class baseGlobalDb (baseBatch):
         else:
             self.truncate(tableName=tableName, tableSchema=tableSchema)
 
-    def extract(self, tar, tarToSrc, batchRows, addAsTaret=True):
+    def extract(self, tar, tarToSrc, batchRows=None, addAsTaret=True):
+        batchRows = batchRows if batchRows else self.batchSize
         fnOnRowsDic     = {}
         execOnRowsDic   = {}
         pre,pos         = self.columnFrame[0],self.columnFrame[1]
@@ -301,11 +305,12 @@ class baseGlobalDb (baseBatch):
                         for groupNum in range(0, len(match.groups())):
                             colName = match.group(1)
                             if colName and len(colName)>0:
-                                colToReplace = self.__isColumnExists (colName=match.group(1), tarToSrc=tarToSrc)
+                                colToReplace = match.group(1).replace("{","").replace("}","")
+                                colToReplace = self.__isColumnExists (colName=colToReplace, tarToSrc=tarToSrc)
                                 if colToReplace:
-                                    colName = colName.replace("{","").replace("}","")
-                                    newExcecFunction.replace(colName,colToReplace)
+                                    newExcecFunction = newExcecFunction.replace(colName,"{"+str(colToReplace)+"}")
                     execOnRowsDic[i] = newExcecFunction
+
 
             columnStr = ",".join(sourceColumnStr)
 
