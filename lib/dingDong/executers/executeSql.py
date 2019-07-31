@@ -21,11 +21,18 @@ __metaclass__ = type
 import os
 import re
 import io
+import sys
 import multiprocessing
 from collections import OrderedDict
 
 from dingDong.config        import config
 from dingDong.misc.logger   import p, LOGGER_OBJECT
+from dingDong.misc.misc     import uniocdeStr
+from dingDong.conn.baseConnectorManager   import mngConnectors as conn
+
+if 2 == sys.version_info[0]:
+    reload(sys)
+    sys.setdefaultencoding("utf8")
 
 # sqlWithParamList --> list of tuple (file name, paramas)
 def execQuery (sqlWithParamList, connObj ):
@@ -36,7 +43,6 @@ def execQuery (sqlWithParamList, connObj ):
     if isinstance(sqlWithParamList, str):
         sqlWithParamList = [sqlWithParamList]
 
-    connObj.connect()
     allFiles    = OrderedDict()
     sqlFiles    = []
     locParams   = {}
@@ -78,18 +84,17 @@ def execQuery (sqlWithParamList, connObj ):
         p ('START EXECUTING PRIORITY %s >>>>>>> ' %str(priority), "ii")
         __execParallel (priority, allFiles[priority], connObj)
 
-    connObj.close()
-
 def __execParallel (priority, ListOftupleFiles, connObj):
     multiProcessParam = []
     multiProcessFiles = ''
+
 
     for tupleFiles in ListOftupleFiles:
         sqlFiles    = tupleFiles[0]
         locParams   = tupleFiles[1]
 
         for sqlScript in sqlFiles:
-            multiProcessParam.append( (sqlScript, locParams, connObj,config.LOGS_DEBUG) )
+            multiProcessParam.append( (sqlScript, locParams, connObj, config.LOGS_DEBUG) )
             multiProcessFiles += "'" + sqlScript + "' ; "
 
     # single process
@@ -109,11 +114,11 @@ def __execParallel (priority, ListOftupleFiles, connObj):
 
 def __execSql ( params ):
     (sqlScript, locParams, connObj, logLevel) = params
+
     LOGGER_OBJECT.setLogLevel(logLevel=logLevel)
-    connObj.connect()
+
     def __execEachLine (connObj, sqlTxt):
         sqlQuery = __split_sql_expressions(sqlTxt)
-
         isParam = True if len(locParams) > 0 else False
         for sql in sqlQuery:
             if isParam:
@@ -122,11 +127,13 @@ def __execSql ( params ):
                 disp = sql.split("'")[1]
                 p('SQL PRINT: ' + disp, "i")
             if len(sql) > 1:
+                sql = str(sql) if connObj.isExtractSqlIsOnlySTR else uniocdeStr (sql)
                 connObj.exeSQL(sql=sql)
-                p ("FINISH EXEC: %s" %sql, "i")
+                p (u"FINISH EXEC: %s" % uniocdeStr(sql), "i")
 
+    connObj.connect()
     if str(sqlScript).endswith(".sql") and os.path.isfile(sqlScript):
-        with io.open(sqlScript, 'r') as inp:
+        with io.open(sqlScript, 'r',  encoding='utf8') as inp:
             __execEachLine(connObj, inp)
 
     else:

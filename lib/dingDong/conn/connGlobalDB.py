@@ -106,6 +106,7 @@ class baseGlobalDb (baseBatch):
         self.connDB         = None
         self.connSql        = None
 
+        self.isExtractSqlIsOnlySTR  = False
         self.parrallelProcessing    = False
 
         if not self.connUrl:
@@ -145,6 +146,7 @@ class baseGlobalDb (baseBatch):
                 self.connDB = vertica_python.connect(self.connUrl)
                 self.cursor = self.connDB.cursor()
             elif eConn.ORACLE == self.conn:
+                self.isExtractSqlIsOnlySTR = True
                 self.connDB = cx_Oracle.connect(self.connUrl['user'], self.connUrl['pass'], self.connUrl['dsn'])
                 if 'nls' in self.connUrl:
                     os.environ["NLS_LANG"] = self.connUrl['nls']
@@ -311,6 +313,7 @@ class baseGlobalDb (baseBatch):
 
 
         """ EXECUTING SOURCE QUERY """
+        sourceSql = str(sourceSql) if self.isExtractSqlIsOnlySTR else sourceSql
         self.exeSQL(sql=sourceSql , commit=False)
 
         if len(targetColumnStr)==0:
@@ -413,13 +416,13 @@ class baseGlobalDb (baseBatch):
             sql = [sql]
         try:
             for s in sql:
-                self.cursor.execute(str(s))  # if 'ceodbc' in odbc.__name__.lower() else self.conn.execute(s)
+                self.cursor.execute(s)  # if 'ceodbc' in odbc.__name__.lower() else self.conn.execute(s)
             if commit:
                 self.connDB.commit()  # if 'ceodbc' in odbc.__name__.lower() else self.cursor.commit()
             return True
         except Exception as e:
             p(e, "e")
-            p("ERROR SQL:\n%s " % (str(s)), "e")
+            p(u"ERROR SQL:\n%s " % (uniocdeStr(s)), "e")
             return False
 
     """ baseConnDB Method - Truncate table """
@@ -658,7 +661,10 @@ class baseGlobalDb (baseBatch):
 
     """ Cnvert all paramters in config.QUERY_PARAMS into variable and add it into SQL QUERY """
     def setQueryWithParams(self, query, queryParams=None):
-        queryParams = queryParams.update (config.QUERY_PARAMS) if queryParams else config.QUERY_PARAMS
+        if queryParams and config.QUERY_PARAMS:
+            queryParams.update(config.QUERY_PARAMS)
+        else:
+            queryParams = config.QUERY_PARAMS
         qRet = u""
         if query and len(query) > 0:
             if isinstance(query, (list, tuple)):
@@ -682,7 +688,9 @@ class baseGlobalDb (baseBatch):
     """ Internal Method for replace paramters in setQueryWithParams Metod """
     def __replaceStr(self, sString, findStr, repStr, ignoreCase=True, addQuotes=None):
         if addQuotes and isinstance(repStr, str):
-            repStr = "%s%s%s" % (addQuotes, repStr, addQuotes)
+            findStrWithQuotes = "%s%s%s" % (addQuotes, findStr, addQuotes)
+            if findStrWithQuotes not in sString:
+                repStr = "%s%s%s" % (addQuotes, repStr, addQuotes)
 
         if ignoreCase:
             pattern = re.compile(re.escape(findStr), re.IGNORECASE)

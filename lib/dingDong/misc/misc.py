@@ -32,9 +32,7 @@ def replaceStr (sString,findStr, repStr, ignoreCase=True,addQuotes=None):
     return res
 
 def uniocdeStr (sObj, decode=False):
-    pVersion = sys.version_info[0]
-
-    if 3 == pVersion:
+    if 3 == sys.version_info[0]:
         return sObj
 
     return unicode (str(sObj).decode(config.DECODE)) if decode else unicode (sObj)
