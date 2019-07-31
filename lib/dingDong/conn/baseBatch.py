@@ -29,7 +29,7 @@ from dingDong.config import config
 
 DEFAULTS    =   {
                     eJson.jValues.DEFAULT_TYPE:eConn.dataType.B_STR,
-                    eJson.jValues.BATCH_SIZE:250000
+                    eJson.jValues.BATCH_SIZE:200000
                 }
 
 DATA_TYPES = {
