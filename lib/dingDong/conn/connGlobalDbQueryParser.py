@@ -52,7 +52,8 @@ def extract_tableAndColumns (sql, pre="[", pos="]"):
     statement = sqlparse.parse(sql)[0]
     allColumns = extractSQLColumns(sqlStr=sql, pre=pre, pos=pos)
 
-    allTables = None
+
+    allTables = []
     if statement.get_type() != 'UNKNOWN':
         stream = __extract_from_part(statement)
         allTables = __extract_table_identifiers(stream)
@@ -103,6 +104,7 @@ def extract_TargetColumn (sql, pre="[", pos="]"):
         print (col)
 
 def __extract_table_identifiers(token_stream):
+    ret = []
     for item in token_stream:
         if isinstance(item, IdentifierList):
             for identifier in item.get_identifiers():
@@ -114,7 +116,7 @@ def __extract_table_identifiers(token_stream):
                 if isinstance(identifier.token_first(), Parenthesis):
                     value[2] = ''
 
-            yield {TABLE_ALIAS:value[0], TABLE_SCHEMA:value[1], TABLE_NAME:value[2]}
+                ret.append ({TABLE_ALIAS:value[0], TABLE_SCHEMA:value[1], TABLE_NAME:value[2]})
 
         elif isinstance(item, Identifier):
             value = (item.get_alias(), item._get_first_name(), item.get_real_name())
@@ -124,7 +126,8 @@ def __extract_table_identifiers(token_stream):
             if isinstance(item.token_first(), Parenthesis):
                 value[2] = ''
 
-            yield {TABLE_ALIAS:value[0], TABLE_SCHEMA:value[1], TABLE_NAME:value[2]}
+            ret.append ({TABLE_ALIAS:value[0], TABLE_SCHEMA:value[1], TABLE_NAME:value[2]})
+    return ret
 
 def __extract_from_part(parsed):
     from_seen = False
