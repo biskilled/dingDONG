@@ -33,10 +33,11 @@ DEFAULTS    =   {
                 }
 
 DATA_TYPES = {
-    eConn.dataType.B_STR: {eConn.dataType.DB_VARCHAR:None,
-                           eConn.dataType.DB_NVARCHAR:None,
-                           eConn.dataType.DB_CHAR:None,
-                           eConn.dataType.DB_BLOB:None},
+    eConn.dataType.B_STR: { eConn.dataType.B_DEFAULT:'nvarchar(200)',
+                            eConn.dataType.DB_VARCHAR:None,
+                            eConn.dataType.DB_NVARCHAR:None,
+                            eConn.dataType.DB_CHAR:None,
+                            eConn.dataType.DB_BLOB:None},
     eConn.dataType.B_INT: {eConn.dataType.DB_INT:None,
                            eConn.dataType.DB_BIGINT:None},
     eConn.dataType.B_FLOAT:{eConn.dataType.DB_FLOAT:None,
@@ -47,7 +48,7 @@ DATA_TYPES = {
 """ baseConn -- get connection propertirs : conn, connUrl,  connExtraUrl, connName,connDataTypes, connDefaultType, connPropDic"""
 @six.add_metaclass(abc.ABCMeta)
 class baseBatch ():
-    def __init__ (self, conn=None, connName=None, connPropDict=None):
+    def __init__ (self, conn=None, connName=None, connPropDict=None, defaults=None, dataType=None):
         self.connPropDict   = connPropDict
         self.conn           = self.setProperties (propKey=eJson.jValues.CONN, propVal=conn)
         self.connName       = self.setProperties (propKey=eJson.jValues.NAME, propVal=connName)
@@ -56,9 +57,16 @@ class baseBatch ():
         if not self.conn:
             self.conn = self.connName
 
+
         self.baseDefaults   = DEFAULTS
         self.baseDataTypes  = copy.deepcopy(DATA_TYPES)
         self.baseDefDataType = self.baseDefaults[eJson.jValues.DEFAULT_TYPE]
+
+        self.DEFAULTS   = self.setDefaults(defaultsDic=defaults)
+        self.defDataType= self.DEFAULTS[eJson.jValues.DEFAULT_TYPE]
+
+        self.DATA_TYPES = self.setDataTypes(connDataTypes=dataType)
+        self.batchSize  = self.DEFAULTS[eJson.jValues.BATCH_SIZE]
 
         if not findProp (prop=self.conn, obj=eConn):
             err  = "Connection type is not valid: %s, use valid connection properties" %(str(self.conn))
@@ -98,7 +106,7 @@ class baseBatch ():
         pass
 
     @abc.abstractmethod
-    def execMethod(self):
+    def execMethod(self, method=None):
         pass
 
     @abc.abstractmethod
@@ -139,9 +147,12 @@ class baseBatch ():
 
     """ GET DATA TYPE TREE - Return source data types"""
     def getDataTypeTree (self, dataType, dataTypeTree=None, ret=list([])):
-        dataTypeTree = dataTypeTree if dataTypeTree else self.baseDataTypes.copy()
+        dataTypeTree = dataTypeTree if dataTypeTree else  copy.copy(self.DATA_TYPES)
         for k in dataTypeTree:
             k = str(k)
+            if k.lower() == dataType.lower():
+                ret.append(k)
+                return ret
             if isinstance(dataTypeTree[k], dict):
                 retDic = self.getDataTypeTree(dataType=dataType, dataTypeTree=dataTypeTree[k], ret=ret)
                 if retDic:
@@ -180,6 +191,9 @@ class baseBatch ():
             for k in allDataTypes:
                 if k in dataTypeTree:
                     ret.append(k)
+                    if allDataTypes[k] and eConn.dataType.B_DEFAULT in allDataTypes[k]:
+                        ret.append(allDataTypes[k][eConn.dataType.B_DEFAULT])
+
                     dataTypeTree.remove(k)
                     return self.setDataTypeTree(dataTypeTree=dataTypeTree, allDataTypes=allDataTypes[k], ret=ret)
         return ret
@@ -188,12 +202,13 @@ class baseBatch ():
 
     def setDefaults(self, defaultsDic):
         defValues = {}
-        if eConn.NONO in defaultsDic and defaultsDic[eConn.NONO]:
+        if defaultsDic and eConn.NONO in defaultsDic and defaultsDic[eConn.NONO]:
             defValues = defaultsDic[eConn.NONO]
 
-        if self.conn in defaultsDic and defaultsDic[self.conn]:
+        if defaultsDic and self.conn in defaultsDic and defaultsDic[self.conn]:
             defValues.update(defaultsDic[self.conn])
-        elif len(defValues) == 0:
+
+        elif defaultsDic and len(defValues) == 0:
             defValues = defaultsDic
 
         for k in self.baseDefaults:

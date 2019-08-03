@@ -60,14 +60,11 @@ class connFile (baseBatch):
 
 
         self.conn = eConn.FILE
-        baseBatch.__init__(self, conn=self.conn, connPropDict=connPropDict)
-        self.DEFAULTS   = DEFAULTS
-        self.DATA_TYPES = DATA_TYPES
+        baseBatch.__init__(self, conn=self.conn, connPropDict=connPropDict, defaults=DEFAULTS, dataType=DATA_TYPES)
         self.usingSchema = False
 
         """ BASIC PROPERTIES FROM BASECONN """
         self.connName       = self.connName
-        self.defDataType    = self.defDataType
 
         """ FILE DEFAULTS PROPERTIES """
 
@@ -169,7 +166,8 @@ class connFile (baseBatch):
         if self.isExists() and self.append:
             p("FILE %s EXISTS WILL APPEND DATA " % (self.fileFullName))
 
-    def extract(self, tar, tarToSrc, batchRows, addAsTaret=True):
+    def extract(self, tar, tarToSrc, batchRows=None, addAsTaret=True):
+        batchRows = batchRows if batchRows else self.batchSize
         fnOnRowsDic     = {}
         execOnRowsDic   = {}
 

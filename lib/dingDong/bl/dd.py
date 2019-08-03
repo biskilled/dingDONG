@@ -34,13 +34,14 @@ from dingDong.executers.executeMicrosoftOLAP import OLAP_Process
 class dingDong:
     def __init__ (self,  dicObj=None, filePath=None,
                 dirData=None, includeFiles=None, notIncludeFiles=None,
-                dirLogs=None,connDict=None):
+                dirLogs=None,connDict=None, processes=None):
 
         self.jsonParser = jsonParser(dicObj=dicObj, filePath=filePath,
                                      dirData=dirData, includeFiles=includeFiles, notIncludeFiles=notIncludeFiles,
                                      connDict=connDict)
 
         self.msg = executeAddMsg()
+        self.propcesses = processes if processes else config.NUM_OF_PROCESSES
 
         if dirLogs or config.LOGS_DIR:
             LOGGER_OBJECT.setLogsFiles (logDir=dirLogs)

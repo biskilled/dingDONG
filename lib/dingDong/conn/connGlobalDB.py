@@ -75,13 +75,7 @@ class baseGlobalDb (baseBatch):
                   connName=None,connObj=None,  connFilter=None, connIsTar=None,
                   connIsSrc=None, connIsSql=None):
 
-        baseBatch.__init__(self, conn=conn, connName=connName, connPropDict=connPropDict)
-
-        self.DEFAULTS   = self.setDefaults(defaultsDic=DEFAULTS)
-        self.defDataType = self.DEFAULTS[eJson.jValues.DEFAULT_TYPE]
-
-        self.DATA_TYPES  = self.setDataTypes(connDataTypes=DATA_TYPES)
-
+        baseBatch.__init__(self, conn=conn, connName=connName, connPropDict=connPropDict, defaults=DEFAULTS, dataType=DATA_TYPES)
         self.usingSchema= True
 
         """ BASIC PROPERTIES FROM BASECONN """
@@ -103,7 +97,6 @@ class baseGlobalDb (baseBatch):
         self.defaulNull     = self.DEFAULTS[eJson.jValues.EMPTY]
         self.defaultSP      = self.DEFAULTS[eJson.jValues.SP]
         self.columnFrame    = self.DEFAULTS[eJson.jValues.COLFRAME]
-        self.batchSize      = self.DEFAULTS[eJson.jValues.BATCH_SIZE]
 
         self.cursor         = None
         self.connDB         = None
@@ -249,7 +242,7 @@ class baseGlobalDb (baseBatch):
         sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.ISEXISTS, tableName=tableName, tableSchema=tableSchema)
         self.cursor.execute(sql)
         row = self.cursor.fetchone()
-        if row[0]:
+        if row and row[0]:
             p("baseConnDb->isExists SCHEMA:%s, TABLE:%s EXISTS" %(tableSchema, tableName), "ii")
             return True
         p("baseConnDb->isExists: SCHEMA:%s, TABLE:%s NOT EXISTS" % (tableSchema, tableName), "ii")
@@ -410,8 +403,12 @@ class baseGlobalDb (baseBatch):
                 for err in errDict:
                     p("TOTAL ERRORS: %s, MSG: %s: " % (str(err), str(errDict[err])), "e")
 
-    def execMethod(self):
-        pass
+    def execMethod(self, method=None):
+        method = method if method else self.connSql
+        if method and len(method)>0:
+            p("CONN:%s, EXEC METHOD:\n%s" %(self.conn, method), "i")
+            self.exeSQL(sql=method, commit=True)
+
 
     """ PUBLIC METHOD FOR DB MANIPULATION  """
 

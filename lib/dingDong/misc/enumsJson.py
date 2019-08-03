@@ -132,6 +132,7 @@ class eConn (object):
         B_FLOAT     = 'float'
         B_LONG_STR  = 'text'
         B_BLOB      = 'blob'
+        B_DEFAULT   = 'default'
 
         DB_VARCHAR  = 'varchar'
         DB_VARCHAR_MAX='varchar(MAX)'
