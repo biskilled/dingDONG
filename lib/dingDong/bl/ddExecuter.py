@@ -69,7 +69,7 @@ class dingDong:
 
     ## There is parrallel processing option
     def dong (self, destList=None, jsName=None, jsonNodes=None):
-        p('FINISHED TO EXTRACT AND LOAD >>>>>', "i")
+        p('STARTING TO EXTRACT AND LOAD >>>>>', "i")
         allNodes = self.__getNodes(destList=destList, jsName=jsName, jsonNodes=jsonNodes)
         processList = []
 

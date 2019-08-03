@@ -183,7 +183,7 @@ def extractSQLColumns (sqlStr, pre="[", pos="]"):
     # remove trailing -- and # comments
     q = " ".join([re.split("--|#", line)[0] for line in lines])
     # split on blanks, parens and semicolons
-    tokens = re.split(r"GO|;", q, re.IGNORECASE)
+    tokens = re.split(r"^GO|;", q, re.IGNORECASE)
 
     for tok in tokens:
         ### 3 Gropus: Select .... , Colums ....., From .....
