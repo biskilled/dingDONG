@@ -69,22 +69,23 @@ class dingDong:
 
     ## There is parrallel processing option
     def dong (self, destList=None, jsName=None, jsonNodes=None):
-        p('STARTING TO TRANSFER DATA STRUCURE >>>>>', "i")
+        p('FINISHED TO EXTRACT AND LOAD >>>>>', "i")
         allNodes = self.__getNodes(destList=destList, jsName=jsName, jsonNodes=jsonNodes)
         processList = []
 
         for jsName, jsonNodes in allNodes:
             procTotal = len(jsonNodes)
             for procNum, jMap in  enumerate (jsonNodes):
-                if self.propcesses<2:
-                    dingObject = ddManager(node=jMap)
-                    dingObject.dong()
-                else:
-                    processList.append ( (jMap, procNum, procTotal) )
+                processList.append((jMap, procNum, procTotal))
 
-        numOfProcesses = len(processList) if len(processList) < self.propcesses else self.propcesses
 
-        if numOfProcesses > 1:
+        numOfProcesses = min (len(processList), self.propcesses)
+
+        if numOfProcesses==1:
+            dingObject = ddManager(node=processList[0][0])
+            dingObject.dong()
+
+        elif numOfProcesses > 1:
             q = queue.Queue(maxsize=0)
             for i, processParams in enumerate (processList):
                 q.put(processParams)
@@ -100,7 +101,9 @@ class dingDong:
                 worker.setDaemon(True)
                 worker.start()
             q.join()
-        p('FINISHED TO TRANSFER DATA STRUCURE >>>>>', "i")
+        else:
+            p("THERE IS NO MODEL TO EXTRACT", "w")
+        p('FINISHED TO EXTRACT AND LOAD >>>>>', "i")
         p('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', "ii")
 
     def execDong (self, q):

@@ -20,7 +20,7 @@ __metaclass__ = type
 
 import os
 import sqlite3
-from lib.dingDong.misc.logger import p
+from dingDong.misc.logger import p
 
 class sqlLite ():
     def __init__(self, connFile):

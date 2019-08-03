@@ -723,7 +723,7 @@ class baseGlobalDb (baseBatch):
 
         mrgStructureL   = {x.lower():x for x in mrgStructure}
         srcStructureL   = {x.lower():x for x in srcStructure}
-        mergeKeysL      = [x.lower() for x in mergeKeys]
+        mergeKeysL      = [self.wrapColName(col=x.lower(), remove=False) for x in mergeKeys]
 
         ### MERGE IDENTICAL COLUMN ONLY
         updateColumns       = []

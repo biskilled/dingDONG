@@ -94,6 +94,9 @@ class ddManager (object):
 
                     elif eJson.jKeys.MERGE == k or eJson.jKeys.MERGE in node[k]:
                         modelDict[eJson.jKeys.MERGE] = node[k]
+
+                    elif eJson.jKeys.STT == k or eJson.jKeys.STTONLY==k:
+                        pass
                     else:
                         p("IGNORE NODE: KEY:%s, VALUE:%s " % (k, str(node[k])), "e")
                 orderedNodes.append(modelDict)
@@ -287,11 +290,11 @@ class ddManager (object):
 
                     if eJson.jKeys.SOURCE == k:
                         src = node[k]
-                        mrgSource = copy.copy(node[k])
+                        mrgSource = src
 
                     elif eJson.jKeys.TARGET == k:
                         tar = node[k]
-                        mrgSource = copy.copy(node[k])
+                        mrgSource = tar
 
                     elif eJson.jKeys.MERGE == k:
                         mrg = node[k]
@@ -299,39 +302,38 @@ class ddManager (object):
                     if src and tar:
                         """ TRANSFER DATA FROM SOURCE TO TARGET """
                         tar.preLoading()
-
+                        mrgSource = tar
                         tarToSrc = self.mappingLoadingSourceToTarget(src=src, tar=tar)
                         src.extract(tar=tar, tarToSrc=tarToSrc, addAsTaret=True)
                         tar.close()
                         src.close()
                         src = None
-                        tar = None
 
                     """ MERGE DATA BETWEEN SOURCE AND TARGET TABLES """
                     if mrg and mrgSource:
+                        mrgSource.connect()
                         mergeTarget = mrg[eJson.jMergeValues.TARGET]
                         mergeKeys   = mrg[eJson.jMergeValues.MERGE]
-                        mergeTarget.merge(mergeTable=mergeTarget, mergeKeys=mergeKeys, sourceTable=None)
-                        mergeTarget.close()
+                        mrgSource.merge(mergeTable=mergeTarget, mergeKeys=mergeKeys, sourceTable=None)
+                        mrgSource.close()
 
     def ding(self):
         if self.nodes and len(self.nodes) > 0:
             src         = None
             tar         = None
-            mrg         = None
             mrgSource   = None
             for node in self.nodes:
                 for k in node:
                     if eJson.jKeys.SOURCE == k:
                         src = node[k]
-                        mrgSource = copy.copy(node[k])
+                        mrgSource = src
 
                     elif eJson.jKeys.TARGET == k:
                         tar = node[k]
-                        mrgSource = copy.copy(node[k])
+                        mrgSource = tar
 
 
-                        if  src is None:
+                        if  eJson.jKeys.SOURCE not in node:
                             tar.create(stt=self.stt)
                             tar.close()
                             tar = None
@@ -340,14 +342,20 @@ class ddManager (object):
                         # convert source data type to target data types
                         targetStt = self.updateTargetBySourceAndStt(src=src, tar=tar)
                         tar.create(stt=targetStt)
-                        mrgSource = copy.copy(tar)
+                        mrgSource = tar
                         src.close()
                         tar.close()
                         src = None
-                        tar = None
 
-                    if mrg and mrgSource:
-                        sttMerge = self.updateTargetBySourceAndStt(src=mrgSource, tar=mrg)
-                        mrgSource.create(stt=sttMerge)
+                    if eJson.jKeys.MERGE == k and mrgSource:
+                        mrgTarget = copy.copy(mrgSource)
+                        mrgSource.connect()
+                        mrgTarget.connect()
+                        mrgTarget.connObj   = node[k][eJson.jMergeValues.TARGET]
+                        mrgTarget.connIsTar = True
+                        mrgTarget.connIsSrc = False
+                        sttMerge = self.updateTargetBySourceAndStt(src=mrgSource, tar=mrgTarget)
+                        mrgTarget.create(stt=sttMerge)
+                        mrgTarget.close()
                         mrgSource.close()
                         mrgSource = None
