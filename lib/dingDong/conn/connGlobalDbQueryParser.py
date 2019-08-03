@@ -157,7 +157,7 @@ def replaceSQLColumns (sqlStr, columnStr):
     sqlStr = re.sub(r"\s+", " ",sqlStr)
     ## Search : Select [top xx] [col1, col2.....] from [tables...]
 
-    regSql    = r"(.*?select\s+(?:top\s+\d+){0,1})(.*?)(\s+from\s+.*)"
+    regSql    = r"(.*?select\s+(?:top\s+\d+\s+){0,1}(?:distinct\s+){0,1})(.*?)(\s+from\s+.*)"
 
     #sqlGrouping = re.search(regexSql, sqlStr, re.IGNORECASE | re.MULTILINE)
     sqlGrouping = re.search(regSql, sqlStr, re.UNICODE | re.MULTILINE | re.S | re.I)

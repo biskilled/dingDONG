@@ -235,7 +235,9 @@ class ddManager (object):
                         del retStrucure[retStrucureL[sourceName.lower()]]
 
                 if col.lower() in sourceColL and eJson.jSttValues.TYPE in self.stt[col] and self.stt[col][eJson.jSttValues.TYPE]:
-                    retStrucure[sourceColL[ col.lower() ]][eJson.jSttValues.TYPE] = self.stt[col][eJson.jSttValues.TYPE]
+                    if sourceColL[ col.lower() ] not in retStrucure:
+                        retStrucure[ sourceColL[ col.lower() ] ] = {}
+                    retStrucure[sourceColL[ col.lower() ]] [eJson.jSttValues.TYPE] = self.stt[col][eJson.jSttValues.TYPE]
 
                     if eJson.jSttValues.ALIACE in self.stt[col]:
                         retStrucure[sourceColL[col.lower()]][eJson.jSttValues.ALIACE] = self.stt[col][
@@ -245,7 +247,7 @@ class ddManager (object):
                     if eJson.jSttValues.TYPE in self.stt[col] and self.stt[col][eJson.jSttValues.TYPE]:
                         retStrucure[col] = {eJson.jSttValues.TYPE: self.stt[col][eJson.jSttValues.TYPE]}
                     else:
-                        retStrucure[col] = {eJson.jSttValues.TYPE: self.tar.defDataType}
+                        retStrucure[col] = {eJson.jSttValues.TYPE: tar.defDataType}
 
                         if eJson.jSttValues.ALIACE in self.stt[col]:
                             retStrucure[col][eJson.jSttValues.ALIACE] = self.stt[col][eJson.jSttValues.ALIACE]
