@@ -191,7 +191,7 @@ def extractSQLColumns (sqlStr, pre="[", pos="]"):
         if column and len(column.groups())>0:
             colStr = column.group(2).strip()
             # remove TAB, NEW LINE OR top(...)
-            colStr = re.sub(r"^\s*top\s*[0-9]*|\t|\n", "", colStr, re.IGNORECASE | re.MULTILINE)
+            colStr = re.sub(r"^\s*top\s*[0-9]*|\t|\n|distinct\s+", "", colStr, re.IGNORECASE | re.MULTILINE)
             colParentesis   = []
             colName = ''
             sqlBruckets = False
