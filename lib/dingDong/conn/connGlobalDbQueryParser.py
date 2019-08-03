@@ -190,6 +190,7 @@ def extractSQLColumns (sqlStr, pre="[", pos="]"):
         column = re.search(r"(select\s+)(.*?)[\s\n\t](from\s+.*)", tok, re.IGNORECASE | re.MULTILINE)
         if column and len(column.groups())>0:
             colStr = column.group(2).strip()
+
             # remove TAB, NEW LINE OR top(...)
             colStr = re.sub(r"^\s*top\s*[0-9]*|\t|\n|distinct\s+", "", colStr, re.IGNORECASE | re.MULTILINE)
             colParentesis   = []
@@ -231,6 +232,7 @@ def extractSQLColumns (sqlStr, pre="[", pos="]"):
         if col.lower().find(" as") > 0:
             colAlias = col[col.lower().find(" as")+4:].strip()
             colName = col[:col.lower().find(" as ")].strip()
+
         for i in colName:
             if pre and pre==i:
                 sqlBruckets.append(pre)
@@ -264,7 +266,7 @@ def extractSQLColumns (sqlStr, pre="[", pos="]"):
         if not colRName:
             colRName = cn
         else:
-            if cn and len(cn)>0:
+            if cn and len(cn)>0 and colAlias is None or len(colAlias)==0:
                 colAlias = cn
 
         retColList.append ({COLUMN_NAME:colRName, COLUMN_TABLE:colTable, COLUMN_ALIAS:colAlias, COLUMN_SCHEMA:colSchema})
@@ -273,6 +275,7 @@ def extractSQLColumns (sqlStr, pre="[", pos="]"):
 def existsColumnInQuery (sqlStr, pre="[", pos="]"):
     ret = OrderedDict()
     existsColumns = extractSQLColumns (sqlStr, pre=pre, pos=pos)
+    print ("TAL", existsColumns)
 
     for col in existsColumns:
         colName     = col[COLUMN_NAME].replace(pre,"").replace(pos,"").lower()
