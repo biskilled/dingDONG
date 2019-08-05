@@ -23,7 +23,7 @@ from sqlparse.sql       import IdentifierList, Identifier, Parenthesis
 from sqlparse.tokens    import Keyword, DML
 
 from dingDong.misc.logger import p
-from dingDong.misc.misc import replaceStr
+from dingDong.misc.misc import replaceStr, uniocdeStr
 from dingDong.config import config
 
 QUERY_COLUMNS_KEY       = '~'
@@ -137,41 +137,51 @@ def extract_select_part (parsed):
     columnDic           = {allColumnSign:[],targetColumnNames:[]}
     col                 = None
     addToken            = False
+    preSql              = ""
+    postSql             = ""
+    isPost              = False
 
     for item in parsed.tokens:
+        if not addToken and not isPost:
+            preSql+=uniocdeStr(item.value)
         if item.ttype is DML and item.value.upper() == 'SELECT':
             addToken = True
 
         elif item.ttype is Keyword and item.value.upper() == 'FROM':
             addToken = False
-            break
-        else:
-            if addToken:
-                dicKey  = None
-                dicValue= None
+            isPost   = True
+            postSql += uniocdeStr(item.value)
 
-                if isinstance(item, IdentifierList):
-                    for identifier in item.get_identifiers():
-                        identifier = str(identifier)
-                        srcName = identifier
+        elif addToken:
+            dicKey  = None
+            dicValue= None
 
-                        if identifier.lower().rfind(" as") > 0:
-                            srcName = identifier[:identifier.lower().rfind(" as")].strip()
-                            tarName = identifier[identifier.lower().rfind(" as")+3:].strip()
-                        else:
-                            tarName = srcName.split(".")
-                            tarName = tarName[1] if len(tarName)>1 else tarName[0]
+            if isinstance(item, IdentifierList):
+                for identifier in item.get_identifiers():
+                    identifier = str(identifier)
+                    srcName = identifier
 
-                        columnList.append( (srcName.split(".") , tarName) )
-                elif isinstance(item, Identifier):
-                    item = str(item)
-                    srcName = item
-                    if item.lower().find(" as") > 0:
-                        srcName = item[:item.lower().find(" as")].strip()
-                        tarName = item[item.lower().find(" as")+3:].strip()
+                    if identifier.lower().rfind(" as") > 0:
+                        srcName = identifier[:identifier.lower().rfind(" as")].strip()
+                        tarName = identifier[identifier.lower().rfind(" as")+3:].strip()
                     else:
-                        tarName = srcName
+                        tarName = srcName.split(".")
+                        tarName = tarName[1] if len(tarName)>1 else tarName[0]
+
                     columnList.append( (srcName.split(".") , tarName) )
+            elif isinstance(item, Identifier):
+                item = str(item)
+                srcName = item
+                if item.lower().find(" as") > 0:
+                    srcName = item[:item.lower().find(" as")].strip()
+                    tarName = item[item.lower().find(" as")+3:].strip()
+                else:
+                    tarName = srcName
+                columnList.append( (srcName.split(".") , tarName) )
+            elif not isPost:
+                preSql += uniocdeStr(item.value)
+        elif isPost:
+            postSql +=uniocdeStr(item.value)
 
     for tupCol in columnList:
         col     = tupCol[0]
@@ -194,6 +204,10 @@ def extract_select_part (parsed):
         if dicKey and dicKey not in columnDic:
                 columnDic[dicKey] = []
         columnDic[dicKey].append (dicValue)
+
+    print ("TAL")
+    print (postSql)
+    print (preSql)
 
     return columnDic
 
@@ -327,13 +341,13 @@ def __replaceProp(allQueries, dicProp):
         ret.append(tupRet)
     return ret
 
-sql = """SELECT t.*, t.CLASS AS INTSugMev, t.CLASS AS KUKU,t.CLASS,
+sql = """SELECT top 100 t.*, t.CLASS AS INTSugMev, t.CLASS AS KUKU,t.CLASS,
 t.CKTXT AS UNSugMevDescr,CASE t.CLASS WHEN '0002' THEN 'BBB' ELSE t.CKTXT END AS Test,
 CAST(t.CKTXT AS varchar(100)) As test2,
 (SELECT SYSDATE FROM dual)  As gggg
 FROM SAPR3.TNP01T t, SAPR3.TNP01 p where t.SPRAS = 'B' and t.CLASS = p.CLASS"""
 xx = extract_tableAndColumns (sql)
 
-print ("TAL")
+print ("TAL 1234")
 for x in xx:
     print (x, xx[x])
