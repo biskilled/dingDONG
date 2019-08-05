@@ -171,9 +171,9 @@ def extract_select_part (parsed):
                     identifier = str(identifier)
                     srcName = identifier
 
-                    if identifier.lower().rfind(" as") > 0:
-                        srcName = identifier[:identifier.lower().rfind(" as")].strip()
-                        tarName = identifier[identifier.lower().rfind(" as")+3:].strip()
+                    if identifier.lower().rfind(" as ") > 0:
+                        srcName = identifier[:identifier.lower().rfind(" as ")].strip()
+                        tarName = identifier[identifier.lower().rfind(" as ")+4:].strip()
                     else:
                         tarName = srcName.split(".")
                         tarName = tarName[1] if len(tarName)>1 else tarName[0]

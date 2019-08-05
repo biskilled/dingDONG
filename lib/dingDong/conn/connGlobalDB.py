@@ -234,7 +234,7 @@ class baseGlobalDb (baseBatch):
 
         finallStructure = OrderedDict()
         for col in  retStructure:
-            col = col.replace (pre,"").replace(pos,"")
+            #col = col.replace (pre,"").replace(pos,"")
             finallStructure[col] = retStructure[col]
 
             if eJson.jSttValues.ALIACE in finallStructure[col] and finallStructure[col][eJson.jSttValues.ALIACE] is not None:
