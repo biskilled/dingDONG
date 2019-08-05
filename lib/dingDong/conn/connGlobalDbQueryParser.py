@@ -205,7 +205,7 @@ def extract_select_part (parsed):
                 columnDic[dicKey] = []
         columnDic[dicKey].append (dicValue)
 
-    print ("TAL 123456")
+    print ("TAL 123456 78")
     print (postSql)
     print (preSql)
 
