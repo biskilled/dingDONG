@@ -29,6 +29,8 @@ class config:
                    }
 
     QUERY_PARAMS    = {}
+    SQL_FOLDER_DIR  = None
+    PARSER_SQL_MAIN_KEY = "dingDong"
 
     DECODE          = "windows-1255"
     TRACK_HISTORY   = True

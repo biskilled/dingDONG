@@ -23,121 +23,95 @@ from sqlparse.sql       import IdentifierList, Identifier, Parenthesis
 from sqlparse.tokens    import Keyword, DML
 
 from dingDong.misc.logger import p
-from dingDong.misc.enumsJson import eJson
+from dingDong.misc.misc import replaceStr
+from dingDong.config import config
 
-
-COLUMNS   = '~COLUMNS'          # --> Dictionary : {columnName:TargetName, ...}
-TABLES     = '~TABLES'          # --> Dictionary : {tableName:[column Names ... , '':[Columns Names ....]]
-
-DIC = {COLUMNS:{}, TABLES:{}}
+QUERY_COLUMNS_KEY       = '~'
+QUERY_NO_TABLE          = '~notFound~'
+QUERY_ALL_COLUMNS_KEY   = '~allcol~'
+QUERY_TARGET_COLUMNS    = '~target~'
 
 TABLE_ALIAS = 'alias'
 TABLE_SCHEMA= 'schema'
 TABLE_NAME  = 'tbl'
 TABLE_COLUMN= 'column'
 
-COLUMN_NAME= 'name'
-COLUMN_ALIAS='alias'
-COLUMN_TABLE='tbl'
-COLUMN_SCHEMA='sc'
-
 ## extract_tableAndColumns -->
 ##      Using extract_tables which return Dictionary : {'Columns': {ColName:ColTargetName....}, 'Tables':{tableName: [Columns ....]}}
 ##      Using extract_table_identifiers which return list of [(table aliace, table schema, table Name) ...]
+def extract_tableAndColumns (sql):
+    ret = {}
+    tblTupe , columns = extract_tables(sql)
 
-def extract_tableAndColumns (sql, pre="[", pos="]"):
-    columnInTablesDict  = {'':[]}
-    tableDict           = {}
-    # let's handle multiple statements in one sql string
-    statement = sqlparse.parse(sql)[0]
-    allColumns = extractSQLColumns(sqlStr=sql, pre=pre, pos=pos)
+    if QUERY_ALL_COLUMNS_KEY in columns and QUERY_TARGET_COLUMNS in columns:
+        ret[QUERY_COLUMNS_KEY] = {}
+
+        for i,col in enumerate (columns[QUERY_ALL_COLUMNS_KEY]):
+            ret[QUERY_COLUMNS_KEY][col] = columns[QUERY_TARGET_COLUMNS][i]
+        del columns[QUERY_ALL_COLUMNS_KEY]
+        del columns[QUERY_TARGET_COLUMNS]
+
+    # merge table to columns
+
+    tableAliasVsName = {}
+    foundTables = []
+    for tbl in tblTupe:
+        alias       = tbl[0]
+        schamenName = tbl[1]
+        tableName   = tbl[2]
+
+        aliasTbl = alias if alias is not None and len(alias)>0 else tableName
+        tableAliasVsName[aliasTbl] = tableName
+
+        if tableName not in ret:
+            ret[tableName] = {TABLE_ALIAS:alias, TABLE_SCHEMA:None if schamenName==tableName else schamenName}
+
+        if columns and len (columns)>0:
+            ret[tableName][TABLE_COLUMN] = []
+
+            for col in columns:
+                if str(col) in [tableName,alias]:
+                    ret[tableName][TABLE_COLUMN].extend  (columns[col])
+                    foundTables.append (col)
 
 
-    allTables = []
-    if statement.get_type() != 'UNKNOWN':
-        stream = __extract_from_part(statement)
-        allTables = __extract_table_identifiers(stream)
-
-    for tb in allTables:
-        tblName     = tb[TABLE_NAME] if tb[TABLE_NAME] else ''
-        tblSchema   = tb[TABLE_SCHEMA]
-        tblAlias    = tb[TABLE_ALIAS] if tb[TABLE_ALIAS] else None
-        fullTable   = '%s.%s' %(tblSchema, tblName) if tblSchema else tblName
-
-        tableDict[fullTable] = [tblName.lower()]
-
-        if tblAlias:
-            tableDict[fullTable].append (tblAlias.lower())
-
-        if tblSchema and len(tblSchema)>0:
-            tableDict[fullTable].append(tblSchema.lower())
-
-        columnInTablesDict[fullTable] = []
-
-    for col in allColumns:
-        colName     = col[COLUMN_NAME]
-        colSchema   = col[COLUMN_SCHEMA]
-        colTable    = col[COLUMN_TABLE]
-        colAlias    = col[COLUMN_ALIAS]
-        inTable     = False
-
-        for tbl in tableDict:
-            if colTable and colTable.lower() in tableDict[tbl]:
-                if colSchema and len(colSchema)>0:
-                    if colSchema.lower() in tableDict[tbl]:
-                        columnInTablesDict[tbl].append({eJson.jSttValues.SOURCE:colName, eJson.jSttValues.ALIACE:colAlias}  )
-                        inTable = True
-                        break
-                else:
-                    columnInTablesDict[tbl].append({eJson.jSttValues.SOURCE:colName, eJson.jSttValues.ALIACE:colAlias})
-                    inTable = True
-                    break
-        if not inTable:
-            columnInTablesDict[''].append({eJson.jSttValues.SOURCE:colName, eJson.jSttValues.ALIACE:colAlias})
-
-    return columnInTablesDict
-
-def extract_TargetColumn (sql, pre="[", pos="]"):
-    retColumn = []
-    allColumns = extractSQLColumns(sqlStr=sql, pre=pre, pos=pos)
-    for col in allColumns:
-        print (col)
-
-def __extract_table_identifiers(token_stream):
-    ret = []
-    for item in token_stream:
-        if isinstance(item, IdentifierList):
-            for identifier in item.get_identifiers():
-                value = ( identifier.get_alias() , identifier._get_first_name(), identifier.get_real_name())
-                value = [x.replace('"', '').replace("'", "") if x else None for x in  value]
-                value[1] = None if value[1]==value[2] else value[1]
-
-                ## internal Query
-                if isinstance(identifier.token_first(), Parenthesis):
-                    value[2] = ''
-
-                ret.append ({TABLE_ALIAS:value[0], TABLE_SCHEMA:value[1], TABLE_NAME:value[2]})
-
-        elif isinstance(item, Identifier):
-            value = (item.get_alias(), item._get_first_name(), item.get_real_name())
-            value = [x.replace('"', '').replace("'", "") if x else None for x in value]
-            value[1] = None if value[1] == value[2] else value[1]
-            ## internal Query
-            if isinstance(item.token_first(), Parenthesis):
-                value[2] = ''
-
-            ret.append ({TABLE_ALIAS:value[0], TABLE_SCHEMA:value[1], TABLE_NAME:value[2]})
+    for tbl in columns:
+        if tbl not in foundTables:
+            if QUERY_NO_TABLE not in ret:
+                ret[QUERY_NO_TABLE] = {TABLE_ALIAS:None, TABLE_SCHEMA:None,TABLE_COLUMN:[]}
+            ret[QUERY_NO_TABLE][TABLE_COLUMN].extend ( columns[tbl] )
     return ret
 
-def __extract_from_part(parsed):
+def extract_tables(sql):
+    # let's handle multiple statements in one sql string
+    extracted_tables = []
+    extracted_last_tables_Tuple = None
+    extracted_last_columns_Dic = None
+    # replacements to SQL queries
+    sql = replaceStr (sString=sql,findStr="ISNULL (", repStr="ISNULL(", ignoreCase=True,addQuotes=None)
+    sql = replaceStr(sString=sql, findStr="CONVERT (",repStr="CONVERT(", ignoreCase=True, addQuotes=None)
+    sql = sql.replace("\t"," ")
+    statements = list(sqlparse.parse(sql))
+
+    for statement in statements:
+        if statement.get_type() != 'UNKNOWN':
+            stream = extract_from_part(statement)
+            # will get only last table column definistion !
+            extracted_last_columns_Dic  = extract_select_part(statement)
+            extracted_last_tables_Tuple = list (extract_table_identifiers(stream))
+            #extracted_tables.append(list(extract_table_identifiers(stream)))
+    #return list(itertools.chain(*extracted_tables))
+    return (extracted_last_tables_Tuple , extracted_last_columns_Dic)
+
+def extract_from_part(parsed):
     from_seen = False
     for item in parsed.tokens:
         if item.is_group:
-            for x in __extract_from_part(item):
+            for x in extract_from_part(item):
                 yield x
         if from_seen:
-            if __is_subselect(item):
-                for x in __extract_from_part(item):
+            if is_subselect(item):
+                for x in extract_from_part(item):
                     yield x
             elif item.ttype is Keyword and item.value.upper() in ['ORDER', 'GROUP', 'BY', 'HAVING']:
                 from_seen = False
@@ -147,7 +121,7 @@ def __extract_from_part(parsed):
         if item.ttype is Keyword and item.value.upper() == 'FROM':
             from_seen = True
 
-def __is_subselect(parsed):
+def is_subselect(parsed):
     if not parsed.is_group:
         return False
     for item in parsed.tokens:
@@ -155,148 +129,14 @@ def __is_subselect(parsed):
             return True
     return False
 
-def replaceSQLColumns (sqlStr, columnStr):
-    sqlStr = re.sub(r"/\*[^*]*\*+(?:[^*/][^*]*\*+)*/", "", sqlStr)
-    sqlStr = re.sub(r"\s+", " ",sqlStr)
-    ## Search : Select [top xx] [col1, col2.....] from [tables...]
-
-    regSql    = r"(.*?select\s+(?:top\s+\d+\s+){0,1}(?:distinct\s+){0,1})(.*?)(\s+from\s+.*)"
-
-    #sqlGrouping = re.search(regexSql, sqlStr, re.IGNORECASE | re.MULTILINE)
-    sqlGrouping = re.search(regSql, sqlStr, re.UNICODE | re.MULTILINE | re.S | re.I)
-    if sqlGrouping:
-        return '%s %s %s' %(sqlGrouping.group(1), columnStr, sqlGrouping.group(3))
-
-    return sqlStr
-
-
-""" Tal: My new masterpiece .... recieving SQL string, extract all columns and split it into
-    alias name, table name (if exists) and column name"""
-def extractSQLColumns (sqlStr, pre="[", pos="]"):
-    colList = []
-    retColList = []
-    # remove the /* */ comments
-    q = re.sub(r"/\*[^*]*\*+(?:[^*/][^*]*\*+)*/", "", sqlStr)
-
-    # remove whole line -- and # comments
-    lines = [line for line in q.splitlines() if not re.match("^\s*(--|#)", line)]
-    # remove trailing -- and # comments
-    q = " ".join([re.split("--|#", line)[0] for line in lines])
-    # split on blanks, parens and semicolons
-    tokens = re.split(r"^GO|;", q, re.IGNORECASE)
-
-    for tok in tokens:
-        ### 3 Gropus: Select .... , Colums ....., From .....
-        column = re.search(r"(select\s+)(.*?)[\s\n\t](from\s+.*)", tok, re.IGNORECASE | re.MULTILINE)
-        if column and len(column.groups())>0:
-            colStr = column.group(2).strip()
-
-            # remove TAB, NEW LINE OR top(...)
-            colStr = re.sub(r"^\s*top\s*[0-9]*|\t|\n|distinct\s+", "", colStr, re.IGNORECASE | re.MULTILINE)
-            colParentesis   = []
-            colName = ''
-            sqlBruckets = False
-            for i in colStr:
-                if pre and pre == i:
-                    sqlBruckets = True
-                    colName += i
-                elif pos and pos == i:
-                    sqlBruckets = False
-                    colName += i
-                elif '(' == i and not sqlBruckets:
-                    colParentesis.append('p')
-                    colName += i
-                elif ')' == i and not sqlBruckets:
-                    colParentesis = colParentesis[:-1]
-                    colName += i
-                elif ',' == i and len(colParentesis)==0:
-                    colList.append(colName.strip())
-                    colName = ''
-                else:
-                    colName+=i
-            if colName:
-                colList.append(colName.strip())
-
-    ## Extract All column
-    for col in colList:
-        cn = ""
-        colTable = None
-        colRName = None
-        colAlias = None
-        colSchema= None
-        colName  = col
-
-        sqlBruckets     = []
-        sqlParentesist  = []
-
-        if col.lower().find(" as") > 0:
-            colAlias = col[col.lower().find(" as")+4:].strip()
-            colName = col[:col.lower().find(" as ")].strip()
-
-        for i in colName:
-            if pre and pre==i:
-                sqlBruckets.append(pre)
-                cn+=i
-            elif pos and pos==i:
-                sqlBruckets.append(pos)
-                cn+=i
-            elif "("==i and len(sqlBruckets)==0:
-                sqlParentesist.append ("(")
-                cn += i
-            elif ")"==i and len(sqlBruckets)==0:
-                sqlParentesist.append (")")
-                cn += i
-            elif "." == i and len(sqlParentesist)==0:
-                if colTable:
-                    colSchema = colTable
-                colTable = cn
-                cn = ""
-            elif " " == i and len(sqlBruckets)%2==0:
-                t1 = 0
-                t2 = 0
-                for x in sqlParentesist:
-                    if "(" == x: t1+=1
-                    if ")" == x: t2+=1
-
-                if t1==t2:
-                    colRName=cn
-                    cn = ""
-            else:
-                cn += i
-        if not colRName:
-            colRName = cn
-        else:
-            if cn and len(cn)>0 and colAlias is None or len(colAlias)==0:
-                colAlias = cn
-
-        retColList.append ({COLUMN_NAME:colRName, COLUMN_TABLE:colTable, COLUMN_ALIAS:colAlias, COLUMN_SCHEMA:colSchema})
-    return retColList
-
-def existsColumnInQuery (sqlStr, pre="[", pos="]"):
-    ret = OrderedDict()
-    existsColumns = extractSQLColumns (sqlStr, pre=pre, pos=pos)
-    print ("TAL", existsColumns)
-
-    for col in existsColumns:
-        colName     = col[COLUMN_NAME].replace(pre,"").replace(pos,"").lower()
-        colValue    = col[COLUMN_NAME]
-        if COLUMN_TABLE in col and col[COLUMN_TABLE] and len(col[COLUMN_TABLE])>0:
-            colValue= '%s.%s' %(col[COLUMN_TABLE],colValue)
-        if COLUMN_SCHEMA in col and col[COLUMN_SCHEMA] and len(col[COLUMN_SCHEMA])>0:
-            colValue= '%s.%s' %(col[COLUMN_SCHEMA],colValue)
-        ret[colName] = colValue
-    return ret
-
-
-##########  OLD FUNCTION #########################################3
-## HELP FUNCTION : Return Dictioanry
-#### {Columns: {src col:col name in target}}, Tables:{TableName:[All columns], '':[All column not identified in tables]}
-def __extract_select_part (parsed):
-    ret         = DIC.copy()
-    columnList  = []
-    columnDic   = DIC.copy()
-    addToken    = False
-    colNum      = 1
+def extract_select_part (parsed):
+    allColumnSign       = QUERY_ALL_COLUMNS_KEY
+    nonColumnSign       = QUERY_NO_TABLE
+    targetColumnNames   = QUERY_TARGET_COLUMNS
+    columnList          = []
+    columnDic           = {allColumnSign:[],targetColumnNames:[]}
+    col                 = None
+    addToken            = False
 
     for item in parsed.tokens:
         if item.ttype is DML and item.value.upper() == 'SELECT':
@@ -312,18 +152,17 @@ def __extract_select_part (parsed):
 
                 if isinstance(item, IdentifierList):
                     for identifier in item.get_identifiers():
-
                         identifier = str(identifier)
                         srcName = identifier
 
-                        if identifier.lower().find(" as ") > 0:
-                            srcName = identifier[:identifier.lower().find(" as ")].strip()
-                            tarName = identifier[identifier.lower().find(" as ")+4:].strip()
+                        if identifier.lower().rfind(" as") > 0:
+                            srcName = identifier[:identifier.lower().rfind(" as")].strip()
+                            tarName = identifier[identifier.lower().rfind(" as")+3:].strip()
                         else:
                             tarName = srcName.split(".")
                             tarName = tarName[1] if len(tarName)>1 else tarName[0]
 
-                            columnList.append( (srcName.split(".") , tarName) )
+                        columnList.append( (srcName.split(".") , tarName) )
                 elif isinstance(item, Identifier):
                     item = str(item)
                     srcName = item
@@ -331,40 +170,170 @@ def __extract_select_part (parsed):
                         srcName = item[:item.lower().find(" as")].strip()
                         tarName = item[item.lower().find(" as")+3:].strip()
                     else:
-                        tarName = srcName.split(".")
-                        tarName = tarName[1] if len(tarName) > 1 else tarName[0]
+                        tarName = srcName
                     columnList.append( (srcName.split(".") , tarName) )
-                elif str(item) == '*':
-                    columnList.append((['*'], '*'))
-
 
     for tupCol in columnList:
-
         col     = tupCol[0]
         tarName = tupCol[1]
         if col and len (col) == 1:
-            dicKey = ''
+            dicKey = nonColumnSign
             dicValue = col[0]
         elif col and len (col) >= 2:
             dicKey = col[0]
             dicValue = ".".join(col)
             dicValue = dicValue.replace("\n", " ")
+            if dicKey not in columnDic:
+                columnDic[dicKey] = []
         else:
-            p("dbQueryParser->extract_select_part: ERROR Loading column identifier, will ignore column %s" % str(col), "i")
+            p("ERROR Loading column identifier, will ignore column %s" % str(col), "i")
             continue
 
-        dicValue = dicValue.split('.')
-        dicValue = dicValue[1] if len(dicValue)==2 else dicValue[0]
-
-        columnDic[COLUMNS][dicValue]=tarName
-
-        if dicKey not in columnDic[TABLES]:
-            columnDic[TABLES][dicKey] = []
-
-        columnDic[TABLES][dicKey].append (dicValue)
+        columnDic[allColumnSign].append( dicValue )
+        columnDic[targetColumnNames].append (tarName)
+        if dicKey and dicKey not in columnDic:
+                columnDic[dicKey] = []
+        columnDic[dicKey].append (dicValue)
 
     return columnDic
 
+def extract_table_identifiers(token_stream):
+    for item in token_stream:
+        if isinstance(item, IdentifierList):
+            for identifier in item.get_identifiers():
+                value = ( identifier.get_alias() , identifier._get_first_name(), identifier.get_real_name())
+                value = [x.replace('"', '').replace("'", "") if x else None for x in  value]
+                value = tuple( value )
+                yield value
 
+        elif isinstance(item, Identifier):
+            value = (item.get_alias(), item._get_first_name(), item.get_real_name())
+            value = [x.replace('"', '').replace("'", "") if x else None for x in value]
+            value = tuple(value)
+            yield value
 
-#extract_TargetColumn (sql, pre="[", pos="]")
+""" PARSE QUERY --> GET QUERIES BY USING REGEX """
+def querySqriptParserIntoList(sqlScript, getPython=True, removeContent=True, dicProp=None):
+    if isinstance(sqlScript, (tuple, list)):
+        sqlScript = "".join(sqlScript)
+    # return list of sql (splitted by list of params)
+    allQueries = __getAllQuery(longStr=sqlScript)
+    if getPython:
+        allQueries = __getPythonParam(allQueries, mWorld=config.PARSER_SQL_MAIN_KEY)
+
+    if removeContent:
+        allQueries = __removeComments(allQueries)
+
+    if dicProp:
+        allQueries = __replaceProp(allQueries, dicProp)
+
+    return allQueries
+
+def __getAllQuery(longStr, splitParam=['GO', u';']):
+    sqlList = []
+    for splP in splitParam:
+        if len(sqlList) == 0:
+            sqlList = longStr.split(splP)
+        else:
+            tmpList = list([])
+            for sql in sqlList:
+                tmpList.extend(sql.split(splP))
+            sqlList = tmpList
+    return sqlList
+
+def __getPythonParam(queryList, mWorld):
+    ret = []
+    for query in queryList:
+        # Delete all rows which are not relevant
+        # Regex : <!popEtl XXXX/>
+        # fPythonNot = re.search(r"<!%s([^>].*)/>" % (mWorld), query,flags=re.IGNORECASE | re.MULTILINE | re.UNICODE | re.DOTALL | re.S)
+        # Regex : <!popEtl> ......... </!popEtl>
+        reg = re.finditer(r"<!%s(.+?)</!%s>" % (mWorld, mWorld), query,
+                          flags=re.IGNORECASE | re.MULTILINE | re.UNICODE | re.DOTALL | re.S)
+        if reg:
+            for regRemove in reg:
+                query = query.replace(regRemove.group(0), "")
+
+        # Add python queries into return list
+        # Regex : <popEtl STRING_NAME> ....... </popEtl>
+        # fPython2    = re.search(r"<%s.*/%s>" % (mWorld,mWorld),   query, flags = re.IGNORECASE | re.MULTILINE | re.UNICODE | re.DOTALL | re.S)
+
+        # Regex : <popEtl STRING_NAME>......</popEtl> --> Take string to the end
+        reg = re.finditer(r"<%s(.+?)>(.+?)</%s>" % (mWorld, mWorld), query,flags=re.IGNORECASE | re.MULTILINE | re.UNICODE | re.DOTALL | re.S)
+        if reg:
+
+            for i, regFind in enumerate(reg):
+                pythonSeq = regFind.group(0)
+                pythonVar = regFind.group(1).strip()
+                querySql = regFind.group(2).strip()
+
+                if i == 0 and regFind.start() > 0:
+                    queryStart = query[: query.find(pythonSeq)].strip()
+                    if queryStart and len(queryStart) > 0:
+                        ret.append((None, queryStart))
+
+                ret.append((pythonVar, querySql))
+        else:
+            if query and len(query.strip()) > 0:
+                ret.append((None, query.strip()))
+    return ret
+
+def __removeComments(listQuery, endOfLine='\n'):
+    retList = []
+    for s in listQuery:
+        isTup = False
+        if isinstance(s, (tuple, list)):
+            pre = s[0].strip() if s[0] else None
+            post = s[1].strip()
+            isTup = True
+        else:
+            post = s.strip()
+
+        post = re.sub(r"--.*$", r"", post, flags=re.IGNORECASE | re.MULTILINE | re.UNICODE).replace("--", "")
+        post = re.sub(r'\/\*.*\*\/', "", post, flags=re.IGNORECASE | re.MULTILINE | re.UNICODE | re.DOTALL)
+        post = re.sub(r"print .*$", r"", post, flags=re.IGNORECASE | re.MULTILINE | re.UNICODE).replace("print ",
+                                                                                                        "")
+
+        if endOfLine:
+            while len(post) > 1 and post[0:1] == "\n":
+                post = post[1:]
+
+            while len(post) > 1 and post[-1:] == "\n":
+                post = post[:-1]
+
+        if not post or len(post) == 0:
+            continue
+        else:
+            if isTup:
+                retList.append((pre, post,))
+            else:
+                retList.append(post)
+
+    return retList
+
+def __replaceProp(allQueries, dicProp):
+    ret = []
+    for query in allQueries:
+        if isinstance(query, (list, tuple)):
+            pr1 = query[0]
+            pr2 = query[1]
+        else:
+            pr2 = query
+        if not pr1 or pr1 and pr1 != "~":
+            for prop in dicProp:
+                pr2 = (replaceStr(sString=pr2, findStr=prop, repStr=dicProp[prop], ignoreCase=True))
+
+        tupRet = (pr1, pr2,) if isinstance(query, (list, tuple)) else pr2
+        ret.append(tupRet)
+    return ret
+
+sql = """SELECT t.*, t.CLASS AS INTSugMev, t.CLASS AS KUKU,t.CLASS,
+t.CKTXT AS UNSugMevDescr,CASE t.CLASS WHEN '0002' THEN 'BBB' ELSE t.CKTXT END AS Test,
+CAST(t.CKTXT AS varchar(100)) As test2,
+(SELECT SYSDATE FROM dual)  As gggg
+FROM SAPR3.TNP01T t, SAPR3.TNP01 p where t.SPRAS = 'B' and t.CLASS = p.CLASS"""
+xx = extract_tableAndColumns (sql)
+
+print ("TAL")
+for x in xx:
+    print (x, xx[x])

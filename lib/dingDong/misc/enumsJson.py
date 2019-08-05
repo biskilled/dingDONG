@@ -32,7 +32,6 @@ class eJson (object):
         COLUMNS     = 'col'
         PARTITION   = 'par'           # not inplemented
         INC         = 'inc'           # not implemented
-        EXEC        = 'exec'
         NONO        = 'internal'
 
         eDict = {
@@ -68,7 +67,7 @@ class eJson (object):
         IS_SOURCE   = 'src'
         IS_TARGET   = 'tar'
         IS_SQL      = 'sql'
-        FOLDER      = 'folder',
+        FOLDER      = 'folder'
         BATCH_SIZE  = 'batch'
 
         eDict = {
@@ -80,7 +79,8 @@ class eJson (object):
             URL:        [URL],
             URLPARAM:   [URLPARAM, 'extra', 'extraparam'],
             FOLDER:     [FOLDER, 'files'],
-            BATCH_SIZE: [BATCH_SIZE,'totalrows', 'rows']
+            BATCH_SIZE: [BATCH_SIZE,'totalrows', 'rows'],
+            URL_FILE  : [URL_FILE, 'file']
 
         }
         DIC   = {   NAME:None,TYPE:None,CONN:None,OBJ:None,

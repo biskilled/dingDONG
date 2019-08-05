@@ -40,10 +40,7 @@ def addPropToDict (existsDict, newProp):
                 existsDict = addPropToDict (existsDict, newProp=newProp[k])
             elif k not in existsDict:
                 existsDict[k] = newProp[k]
-            elif k in existsDict and not existsDict[k]:
-                existsDict[k] = newProp[k]
-            elif k in existsDict and existsDict[k] and existsDict[k]!=newProp[k]:
-                p("connectorMng->addPropToDict: values change from %s to %s for prop: %s " %(str(existsDict[k]),str(newProp[k]), str(k)),"ii")
+            elif k in existsDict and existsDict[k] is None:
                 existsDict[k] = newProp[k]
     elif isinstance(newProp,str):
         existsDict[eJson.jValues.URL] = newProp
@@ -55,16 +52,14 @@ def addPropToDict (existsDict, newProp):
 def mngConnectors(connPropDic, connLoadProp=None):
     connLoadProp = connLoadProp if connLoadProp else config.CONN_URL
 
-    if connLoadProp:
-        if eJson.jValues.NAME in connPropDic and connPropDic[eJson.jValues.NAME] in connLoadProp :
-            connPropDic = addPropToDict(existsDict=connPropDic, newProp=connLoadProp[connPropDic[eJson.jValues.NAME]])
+    if eJson.jValues.NAME in connPropDic and connPropDic[eJson.jValues.NAME] in connLoadProp :
+        connPropDic = addPropToDict(existsDict=connPropDic, newProp=connLoadProp[connPropDic[eJson.jValues.NAME]])
 
-        elif eJson.jValues.TYPE in connPropDic and connPropDic[eJson.jValues.TYPE] in connLoadProp :
-            connPropDic = addPropToDict(existsDict=connPropDic, newProp=connLoadProp[connPropDic[eJson.jValues.TYPE]])
+    elif eJson.jValues.TYPE in connPropDic and connPropDic[eJson.jValues.TYPE] in connLoadProp :
+        connPropDic = addPropToDict(existsDict=connPropDic, newProp=connLoadProp[connPropDic[eJson.jValues.TYPE]])
 
-        elif eJson.jValues.CONN in connPropDic and connPropDic[eJson.jValues.CONN] in connLoadProp :
-            connPropDic = addPropToDict(existsDict=connPropDic, newProp=connLoadProp[connPropDic[eJson.jValues.CONN]])
-
+    elif eJson.jValues.CONN in connPropDic and connPropDic[eJson.jValues.CONN] in connLoadProp :
+        connPropDic = addPropToDict(existsDict=connPropDic, newProp=connLoadProp[connPropDic[eJson.jValues.CONN]])
     if connPropDic and isinstance(connPropDic, dict) and eJson.jValues.CONN in connPropDic:
         cType = connPropDic[eJson.jValues.CONN]
         if cType in CLASS_TO_LOAD:

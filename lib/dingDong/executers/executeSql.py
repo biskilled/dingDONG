@@ -28,7 +28,6 @@ from collections import OrderedDict
 from dingDong.config        import config
 from dingDong.misc.logger   import p, LOGGER_OBJECT
 from dingDong.misc.misc     import uniocdeStr
-from dingDong.conn.baseConnectorManager   import mngConnectors as conn
 
 if 2 == sys.version_info[0]:
     reload(sys)
@@ -40,8 +39,8 @@ def execQuery (sqlWithParamList, connObj ):
         p("NOT RECIAVE ANY SQL STATEMENT")
         return
 
-    if isinstance(sqlWithParamList, str):
-        sqlWithParamList = [sqlWithParamList]
+    if isinstance(sqlWithParamList, basestring):
+        sqlWithParamList = [(sqlWithParamList,{})]
 
     allFiles    = OrderedDict()
     sqlFiles    = []
@@ -93,6 +92,7 @@ def __execParallel (priority, ListOftupleFiles, connObj):
         sqlFiles    = tupleFiles[0]
         locParams   = tupleFiles[1]
 
+
         for sqlScript in sqlFiles:
             multiProcessParam.append( (sqlScript, locParams, connObj, config.LOGS_DEBUG) )
             multiProcessFiles += "'" + sqlScript + "' ; "
@@ -141,7 +141,7 @@ def __execSql ( params ):
     connObj.close()
 
 def __split_sql_expressions(text):
-    if (isinstance(text, str)):
+    if (isinstance(text, basestring)):
         return [text]
     results = []
     tup = ''

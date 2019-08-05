@@ -38,11 +38,12 @@ from dingDong.executers.executeMicrosoftOLAP import OLAP_Process
 class dingDong:
     def __init__ (self,  dicObj=None, filePath=None,
                 dirData=None, includeFiles=None, notIncludeFiles=None,
-                dirLogs=None,connDict=None, processes=None):
+                dirLogs=None,connDict=None, processes=None, sqlFolder=None):
 
+        self.sqlFolder = sqlFolder if sqlFolder else config.SQL_FOLDER_DIR
         self.jsonParser = jsonParser(dicObj=dicObj, filePath=filePath,
                                      dirData=dirData, includeFiles=includeFiles, notIncludeFiles=notIncludeFiles,
-                                     connDict=connDict)
+                                     connDict=connDict, sqlFolder=self.sqlFolder)
 
         self.msg = executeAddMsg()
         self.propcesses = processes if processes else config.NUM_OF_PROCESSES
@@ -61,7 +62,7 @@ class dingDong:
         for jsName, jsonNodes in allNodes:
             ## ALL On all nodes
             for jMap in jsonNodes:
-                dingObject = ddManager(node=jMap)
+                dingObject = ddManager(node=jMap, connDict=self.connDict)
                 dingObject.ding()
 
         p('FINSHED TO MODEL DATA STRUCURE >>>>>', "i")
@@ -82,7 +83,7 @@ class dingDong:
         numOfProcesses = min (len(processList), self.propcesses)
 
         if numOfProcesses==1:
-            dingObject = ddManager(node=processList[0][0])
+            dingObject = ddManager(node=processList[0][0], connDict=self.connDict)
             dingObject.dong()
 
         elif numOfProcesses > 1:

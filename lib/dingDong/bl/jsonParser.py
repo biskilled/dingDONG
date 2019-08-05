@@ -33,12 +33,13 @@ class jsonParser (object):
 
     """ Create list of node to load and init all connection dictionary """
     def __init__ (self, dicObj=None, filePath=None,
-                  dirData=None, includeFiles=None, notIncludeFiles=None, connDict=None):
+                  dirData=None, includeFiles=None, notIncludeFiles=None, connDict=None, sqlFolder=None):
 
         if connDict and isinstance(connDict ,(dict, OrderedDict)):
             config.CONN_URL.update(connDict)
 
         self.connDict = config.CONN_URL
+        self.sqlFolder= sqlFolder
         self.__initConnDict ()
         self.listObj    = []
         self.listFiles  = []
@@ -125,7 +126,10 @@ class jsonParser (object):
 
             if isinstance( self.connDict[conn], dict ):
                 for k in self.connDict[conn]:
-                    if k.lower() in newConnDict:
+                    origK = findProp(prop=k, obj=eJson.jValues )
+                    if origK:
+                        dictProp[origK] = self.connDict[conn][k]
+                    elif k.lower() in newConnDict:
                         dictProp[k.lower()] = self.connDict[conn][k]
                     else:
                         dictProp[k] = self.connDict[conn][k]
@@ -142,7 +146,6 @@ class jsonParser (object):
                     errConn.append (conn)
             for err in errConn:
                 del newConnDict[err]
-
         self.connDict = newConnDict
 
     # parse Json file into internal Json format
@@ -157,7 +160,6 @@ class jsonParser (object):
 
                 for prop in node:
                     k =  findProp (prop=prop.lower(), obj=eJson.jKeys, dictProp=node[prop])
-
                     if k:
                         if eJson.jKeys.SOURCE  in newDict and k == eJson.jKeys.QUERY:
                             p("Source and Query exists - Will use Query", "ii")
@@ -320,16 +322,26 @@ class jsonParser (object):
     # Special connection execution
     # list - ]
     def __uniqueProc(self, propVal):
-        ret= {eJson.jValues.TYPE:None, eJson.jValues.OBJ:None}
+        ret= {}
         if isinstance(propVal ,list) and len(propVal)==2:
-            ret[eJson.jValues.TYPE] = propVal[0]
-            ret[eJson.jValues.OBJ]  = propVal[1]
-            return ret
-        elif isinstance(propVal ,dict) and eJson.jValues.TYPE in propVal and eJson.jValues.OBJ in propVal:
-            return ret
+            ret[eJson.jValues.CONN]     = propVal[0]
+            ret[eJson.jValues.OBJ]      = propVal[1]
+            ret[eJson.jValues.FOLDER]   = self.sqlFolder
 
-        p ("Error parsing %s must have conn, exec or dictionary " %(str(propVal)),"e")
-        return {}
+        elif isinstance(propVal ,dict) and eJson.jValues.CONN in propVal and eJson.jValues.OBJ in propVal:
+            ret = propVal
+
+        if eJson.jValues.OBJ in ret and ret[eJson.jValues.OBJ] is not None and '.sql' in ret[eJson.jValues.OBJ]:
+            fileName = ret[eJson.jValues.OBJ]
+            if os.path.isfile(fileName):
+                ret[eJson.jValues.FILE] = fileName
+            if eJson.jValues.FOLDER in ret and ret[eJson.jValues.FOLDER] is not None:
+                folderPath = ret[eJson.jValues.FOLDER]
+                if os.path.isfile( os.path.join(folderPath, fileName)):
+                    ret[eJson.jValues.FILE] = os.path.join(folderPath, fileName)
+
+        return ret
+
 
     def __notVaildProp(self, propDic, newPropDic, propFullName):
         for k in newPropDic:

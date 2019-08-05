@@ -17,6 +17,7 @@
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import io
 import sys
 import time
 from collections import OrderedDict
@@ -29,6 +30,7 @@ from dingDong.config                    import config
 from dingDong.misc.logger               import p
 import dingDong.conn.connGlobalDbQueryParser as qp
 from dingDong.conn.connGlobalDbSqlQueries import setSqlQuery
+from dingDong.executers.executeSql import execQuery
 
 try:
     import cx_Oracle  # version : 6.1
@@ -74,7 +76,6 @@ class baseGlobalDb (baseBatch):
     def __init__ (self, connPropDict=None, conn=None, connUrl=None, connExtraUrl=None,
                   connName=None,connObj=None,  connFilter=None, connIsTar=None,
                   connIsSrc=None, connIsSql=None):
-
         baseBatch.__init__(self, conn=conn, connName=connName, connPropDict=connPropDict, defaults=DEFAULTS, dataType=DATA_TYPES)
         self.usingSchema= True
 
@@ -92,6 +93,8 @@ class baseGlobalDb (baseBatch):
         self.connIsSrc  = self.setProperties (propKey=eJson.jValues.IS_SOURCE, propVal=connIsSrc)
         self.connIsTar  = self.setProperties (propKey=eJson.jValues.IS_TARGET, propVal=connIsTar)
         self.connIsSql  = self.setProperties (propKey=eJson.jValues.IS_SQL, propVal=connIsSql)
+        self.sqlFolder  = self.setProperties (propKey=eJson.jValues.FOLDER, propVal=None)
+        self.sqlFullFile= self.setProperties(propKey=eJson.jValues.URL_FILE, propVal=None)
 
         self.defaultSchema  = self.DEFAULTS[eJson.jValues.SCHEMA]
         self.defaulNull     = self.DEFAULTS[eJson.jValues.EMPTY]
@@ -112,7 +115,7 @@ class baseGlobalDb (baseBatch):
             self.connSql    = self.setQueryWithParams(self.connObj)
             self.connObj    = self.connSql
 
-        elif self.connObj and len(self.connObj)>0:
+        elif self.connObj and len(self.connObj)>0 and '.sql' not in self.connObj and not self.sqlFullFile:
             self.connSql = "SELECT * FROM %s" %self.connObj
 
             self.connObj        = self.wrapColName(col=self.connObj, remove=True).split(".")
@@ -123,6 +126,7 @@ class baseGlobalDb (baseBatch):
                 self.connFilter = re.sub(r'WHERE', '', self.connFilter, flags=re.IGNORECASE)
                 self.connSql = '%s WHERE %s' %(self.connSql, self.setQueryWithParams(self.connFilter))
 
+        self.__mapObjectToFile()
         objName = "QUERY " if self.connIsSql else "TABLE: %s" %self.connObj
 
         self.connect()
@@ -264,8 +268,14 @@ class baseGlobalDb (baseBatch):
         targetColumnStr = []
         sourceSql       = self.connSql
 
-        existingColumns = qp.existsColumnInQuery (sqlStr=sourceSql, pre=pre, pos=pos)
+        #existingColumns = qp.existsColumnInQuery (sqlStr=sourceSql, pre=pre, pos=pos)
+        existingColumns = qp.extract_tableAndColumns(sql=sourceSql)
 
+        # lowerColumnName: ( OrigColumnName, FullColumnName )
+        columnsNames = {existingColumns[x]:x for x in existingColumns}
+
+        print ("TAL 66", columnsNames)
+        print ("TAL 55", tarToSrc)
         ## There is Source And Target column mapping
         if tarToSrc and len (tarToSrc)>0:
             for i,col in  enumerate (tarToSrc):
@@ -273,8 +283,8 @@ class baseGlobalDb (baseBatch):
 
                 if eJson.jSttValues.SOURCE in tarToSrc[col] and tarToSrc[col][eJson.jSttValues.SOURCE]:
                     srcNameL = tarToSrc[col][eJson.jSttValues.SOURCE].replace(pre,"").replace(pos,"").lower()
-                    if srcNameL in existingColumns:
-                        colSrcName = existingColumns[ srcNameL ]
+                    if srcNameL in columnsNames:
+                        colSrcName = columnsNames[ srcNameL ][1]
                     else:
                         colSrcName = '%s%s%s' % (pre, tarToSrc[col][eJson.jSttValues.SOURCE].replace(pre, "").replace(pos, ""), pos)
                         colSrcName = '%s As %s' %(colSrcName, colTarName) if addAsTaret else colSrcName
@@ -303,10 +313,9 @@ class baseGlobalDb (baseBatch):
                                 if colToReplace:
                                     newExcecFunction = newExcecFunction.replace(colName,"{"+str(colToReplace)+"}")
                     execOnRowsDic[i] = newExcecFunction
-
-
             columnStr = ",".join(sourceColumnStr)
 
+            print ("TAL", columnStr)
             sourceSql = qp.replaceSQLColumns(sqlStr=self.connSql, columnStr=columnStr)
 
 
@@ -404,11 +413,12 @@ class baseGlobalDb (baseBatch):
                     p("TOTAL ERRORS: %s, MSG: %s: " % (str(err), str(errDict[err])), "e")
 
     def execMethod(self, method=None):
-        method = method if method else self.connSql
+        method = method if method else self.connObj
+
         if method and len(method)>0:
             p("CONN:%s, EXEC METHOD:\n%s" %(self.conn, method), "i")
-            self.exeSQL(sql=method, commit=True)
-
+            methodTup = [(1,method,{})]
+            execQuery(sqlWithParamList=method, connObj=self)
 
     """ PUBLIC METHOD FOR DB MANIPULATION  """
 
@@ -473,49 +483,45 @@ class baseGlobalDb (baseBatch):
 
         ### Return dictionary : {Table Name:[{SOURCE:ColumnName, ALIASE: column aliase}, ....]}
         ### And empty table -> all column that not related to any table '':[{SOURCE:columnName, ALIASE: .... } ...]
-        queryTableAndColunDic = qp.extract_tableAndColumns(sql=sqlQuery, pre=pre, pos=pos)
+        queryTableAndColunDic = qp.extract_tableAndColumns(sql=sqlQuery)
+        mapColumnToAlias = {}
+        notFoundColumns  = {}
+        if qp.QUERY_COLUMNS_KEY in queryTableAndColunDic:
+            mapColumnToAlias = queryTableAndColunDic[qp.QUERY_COLUMNS_KEY]
+            del queryTableAndColunDic[qp.QUERY_COLUMNS_KEY]
 
-        ## load all tables without any mapped column
-        for tbl in queryTableAndColunDic:
-            if not queryTableAndColunDic[tbl] or len(queryTableAndColunDic[tbl]) == 0:
-                noColumnsTables.append(tbl)
-
-        ## remove those table from main dictionary
-        for tbl in noColumnsTables:
-            del queryTableAndColunDic[tbl]
-
-        ## find all column without any mapping table
-        if '' in queryTableAndColunDic:
-            for colD in queryTableAndColunDic['']:
-                colName = colD[eJson.jSttValues.SOURCE]
-                colAlias = colD[eJson.jSttValues.ALIACE]
-                noMappingColumnsL[colName.replace(pre, "").replace(pos, "").lower()] = (colName, colAlias)
-            del queryTableAndColunDic['']
+        if qp.QUERY_NO_TABLE in queryTableAndColunDic:
+            notFoundColumns = queryTableAndColunDic[qp.QUERY_NO_TABLE]
+            del queryTableAndColunDic[qp.QUERY_NO_TABLE]
 
         # update allTableStrucure dictionary : {tblName:{col name : ([original col name] , [tbl name] , [col structure])}}
         for tbl in queryTableAndColunDic:
             colDict = OrderedDict()
-            tableNameList = tbl.split(".")
-            tableName = tableNameList[0] if len(tableNameList) == 1 else tableNameList[1]
-            tableSchema = tableNameList[0] if len(tableNameList) == 2 else self.defaultSchema
-            for colD in queryTableAndColunDic[tbl]:
-                colName = colD[eJson.jSttValues.SOURCE]
-                colAlias = colD[eJson.jSttValues.ALIACE]
-                colDict[colName.replace(pre, "").replace(pos, "").lower()] = (colName, colAlias,)
+            tableName = tbl
+            tableSchema = queryTableAndColunDic[tbl][qp.TABLE_SCHEMA]
+            for colD in queryTableAndColunDic[tbl][qp.TABLE_COLUMN]:
+                colList = colD.split('.')
+                colName = colList[-1]
+                colAlias = mapColumnToAlias[colD] if colD in mapColumnToAlias else None
+                colDict[colD.lower()] = (colD, colName, colAlias,)
 
             tableStrucure = self.getDBStructure(tableSchema=tableSchema, tableName=tableName)
-
             tableColL = {x.replace(pre, "").replace(pos, "").lower(): x for x in tableStrucure}
 
             if '*' in colDict:
                 ret.update(tableStrucure)
 
             for col in colDict:
-                if col in tableColL:
-                    ret[tableColL[col]] = tableStrucure[tableColL[col]]
-                    ret[tableColL[col]][eJson.jSttValues.ALIACE] = colDict[col][1]
-                else:
-                    p("COLUMN %s NOT FOUND IN TABLE %s " % (tableColL[col], tbl), "ii")
+                isFound = False
+                for colTbl in tableColL:
+                    if col in colTbl:
+                        ret[tableColL[col][2]] = {eJson.jSttValues.SOURCE:tableColL[col][2], eJson.jSttValues.TYPE:tableStrucure[tableColL[col]]}
+                        isFound = True
+                        break
+
+                if not isFound:
+                    p("COLUMN %s NOT FOUND IN TABLE %s USING DEFAULT %s" % (tableColL[col], tbl, self.defDataType), "ii")
+                    ret[tableColL[col][2]] = {eJson.jSttValues.SOURCE: tableColL[col][2],eJson.jSttValues.TYPE: self.defDataType}
 
             ## Search for Column that ther is no table mapping
             for col in noMappingColumnsL:
@@ -710,6 +716,36 @@ class baseGlobalDb (baseBatch):
 
         p("COLUMN %s NOT FOUND IN MAPPING" %(colName))
         return None
+
+    def __mapObjectToFile (self):
+        fullFilePath = None
+        if self.sqlFullFile and os.path.isfile(self.sqlFullFile):
+            fullFilePath = self.sqlFullFile
+        elif self.sqlFolder and self.sqlFullFile and  os.path.isfile( os.path.join (self.sqlFolder,self.sqlFullFile)):
+            fullFilePath = os.path.join (self.sqlFolder,self.sqlFullFile)
+        elif self.sqlFolder and os.path.isfile(os.path.join(self.sqlFolder, self.connObj)):
+            fullFilePath = self.sqlFullFile(os.path.join(self.sqlFolder, self.connObj))
+
+        if fullFilePath:
+            foundQuery= False
+            allParams = []
+            if '.sql' in self.connObj:
+                self.connObj = fullFilePath
+            else:
+                with io.open(fullFilePath, 'r', encoding='utf8') as inp:
+                    sqlScript = inp.readlines()
+                    allQueries = qp.querySqriptParserIntoList(sqlScript, getPython=True, removeContent=True, dicProp=None)
+
+                    for q in allQueries:
+                        allParams.append(q[1])
+                        if q[0] and q[0].lower() == str(self.connObj).lower():
+                            p("USING %s AS SQL QUERY " %(q[0]),"ii")
+                            self.connObj = q[1]
+                            self.connIsSql = True
+                            foundQuery = True
+                            break
+                    else:
+                        p("USING %s DIRECTLY, NOT FOUND IN %s" %(self.connObj,fullFilePath), "ii")
 
     def minValues (self, colToFilter=None, resolution=None, periods=None, startDate=None):
         raise NotImplementedError("minValues need to be implemented")
