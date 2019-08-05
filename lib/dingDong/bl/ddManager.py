@@ -116,10 +116,8 @@ class ddManager (object):
             tarPre, tarPos = tar.columnFrame[0], tar.columnFrame[1]
 
         # remove from STT column that not exists in Target OBJECT OR Source OBJECT
-        if tar.usingSchema:
-            self.__updateSTTByTarget(tarStructure=tarStructure, pre=tarPre, pos=tarPos)
-        self.__updateSTTBySource(srcStructure=srcStructure, pre=srcPre, pos=srcPos)
 
+        self.__updateSTTBySourceOrTarget(srcStructure=srcStructure, pre=srcPre, pos=srcPos)
         srcColumns = OrderedDict()
         tarColumns = OrderedDict({x.replace(tarPre, "").replace(tarPos, "").lower(): x for x in tarStructure})
 
@@ -127,9 +125,9 @@ class ddManager (object):
 
         ## {srcName in Target: Source column }
         for col in srcStructure:
-            colAlias= srcStructure[col][eJson.jSttValues.ALIACE] if eJson.jSttValues.ALIACE in srcStructure[col] else None
-            colName = colAlias if colAlias else col
-            srcColumns[colName.replace(srcPre, "").replace(srcPos, "").lower()] = col
+            colAlias= col.replace(srcPre, "").replace(srcPos, "").lower()
+            colName = srcStructure[col][eJson.jSttValues.SOURCE] if eJson.jSttValues.SOURCE in srcStructure[col] else col
+            srcColumns[colAlias] = colName
 
         # There is no target schema --> using all source and STT
         if tar.usingSchema and self.addSourceColumn:
@@ -158,11 +156,11 @@ class ddManager (object):
         existsSrcColumns = {}
 
         for col in tarToSrc:
-            existsTarColumns[col.replace(tarPre, "").replace(tarPos, "").lower()] = col
+            colL = col.replace(tarPre, "").replace(tarPos, "").lower()
+            existsTarColumns[colL] = col
             if eJson.jSttValues.SOURCE in tarToSrc[col] and tarToSrc[col][eJson.jSttValues.SOURCE]:
-                existsSrcColumns[
-                    tarToSrc[col][eJson.jSttValues.SOURCE].replace(srcPre, "").replace(srcPos, "").lower()] = \
-                tarToSrc[col][eJson.jSttValues.SOURCE]
+                srcL = tarToSrc[col][eJson.jSttValues.SOURCE].replace(srcPre, "").replace(srcPos, "").lower()
+                existsSrcColumns[srcL] = tarToSrc[col][eJson.jSttValues.SOURCE]
 
         columnNotMapped = u""
         for col in tarColumns:
@@ -253,29 +251,23 @@ class ddManager (object):
         return retStrucure
 
     """ Check Source values in STT - remove invalid values """
-    def __updateSTTBySource (self, srcStructure, pre="[", pos="]"):
+    def __updateSTTBySourceOrTarget (self, srcStructure, pre="[", pos="]"):
         # Check if ther are sourcea in STT that not defined
-        srcStrucureL = {x.replace(pre,"").replace(pos,"").lower():x for x in srcStructure}
+        srcStrucureL = []
+        for col in  srcStructure:
+            srcStrucureL.append (col.replace(pre,"").replace(pos,"").lower())
+            if eJson.jSttValues.SOURCE in srcStructure[col] and srcStructure[col][eJson.jSttValues.SOURCE]:
+                srcStrucureL.append(srcStructure[col][eJson.jSttValues.SOURCE].replace(pre, "").replace(pos, "").lower())
 
-        removeColumns = []
+        removeColumnsSrc = []
         if self.stt:
             for col in self.stt:
                 if eJson.jSttValues.SOURCE in self.stt[col] and self.stt[col][eJson.jSttValues.SOURCE].replace(pre,"").replace(pos,"").lower() not in srcStrucureL:
-                    removeColumns.append (col)
+                    removeColumnsSrc.append (col)
 
-            for col in removeColumns:
+            for col in removeColumnsSrc:
                 p("STT TAREGT %s HAVE INVALID SOURCE %s --> ignore COLUMN " % (col, self.stt[col][eJson.jSttValues.SOURCE]),"w")
                 del self.stt[col]
-
-    """ Check Taret values in STT - remove invalid values  """
-    def __updateSTTByTarget (self, tarStructure, pre="[", pos="]"):
-        # Check if ther are sourcea in STT that not defined
-        tarStrucureL = {x.replace(pre,"").replace(pos,"").lower():x for x in tarStructure}
-        if self.stt:
-            for col in self.stt:
-                if col.replace(pre,"").replace(pos,"").lower() not in tarStrucureL:
-                    p("STT COLUMN %s NOT EXISTS OBJECT --> ignore COLUMN " %(col) ,"w")
-                    #del self.stt[col]
 
     def dong(self):
         if self.nodes and len(self.nodes)>0:

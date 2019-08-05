@@ -269,24 +269,30 @@ class baseGlobalDb (baseBatch):
         sourceSql       = self.connSql
 
         #existingColumns = qp.existsColumnInQuery (sqlStr=sourceSql, pre=pre, pos=pos)
-        existingColumns = qp.extract_tableAndColumns(sql=sourceSql)
+        existingColumns = qp.extract_tableAndColumns (sql=sourceSql)
 
-        # lowerColumnName: ( OrigColumnName, FullColumnName )
-        columnsNames = {existingColumns[x]:x for x in existingColumns}
+        preSql = existingColumns[qp.QUERY_PRE]
+        postsql= existingColumns[qp.QUERY_POST]
+        del existingColumns[qp.QUERY_PRE]
+        del existingColumns[qp.QUERY_POST]
 
-        print ("TAL 66", columnsNames)
-        print ("TAL 55", tarToSrc)
+        existingColumnsDic = {}
+        for tbl in existingColumns:
+            if qp.TABLE_COLUMN in existingColumns[tbl] and len(existingColumns[tbl][qp.TABLE_COLUMN])>0:
+                for col in existingColumns[tbl][qp.TABLE_COLUMN]:
+                    existingColumnsDic[col[1].lower()] = ".".join(col[0])
+
         ## There is Source And Target column mapping
         if tarToSrc and len (tarToSrc)>0:
             for i,col in  enumerate (tarToSrc):
                 colTarName = '%s%s%s' % (pre, col.replace(pre, "").replace(pos, ""), pos)
 
                 if eJson.jSttValues.SOURCE in tarToSrc[col] and tarToSrc[col][eJson.jSttValues.SOURCE]:
-                    srcNameL = tarToSrc[col][eJson.jSttValues.SOURCE].replace(pre,"").replace(pos,"").lower()
-                    if srcNameL in columnsNames:
-                        colSrcName = columnsNames[ srcNameL ][1]
+                    srcNameL = tarToSrc[col][eJson.jSttValues.SOURCE].lower()
+                    if srcNameL in existingColumnsDic:
+                        colSrcName = existingColumnsDic[ srcNameL ]
                     else:
-                        colSrcName = '%s%s%s' % (pre, tarToSrc[col][eJson.jSttValues.SOURCE].replace(pre, "").replace(pos, ""), pos)
+                        colSrcName = tarToSrc[col][eJson.jSttValues.SOURCE]
                         colSrcName = '%s As %s' %(colSrcName, colTarName) if addAsTaret else colSrcName
                 else:
                     colSrcName =  "'' As %s" %(colTarName) if addAsTaret else ''
@@ -315,8 +321,8 @@ class baseGlobalDb (baseBatch):
                     execOnRowsDic[i] = newExcecFunction
             columnStr = ",".join(sourceColumnStr)
 
-            print ("TAL", columnStr)
-            sourceSql = qp.replaceSQLColumns(sqlStr=self.connSql, columnStr=columnStr)
+
+            sourceSql = '%s %s %s' %(preSql,columnStr,postsql)
 
 
         """ EXECUTING SOURCE QUERY """
@@ -472,11 +478,11 @@ class baseGlobalDb (baseBatch):
 
         sqlQuery = sqlQuery if sqlQuery else self.connSql
         ret = OrderedDict()
-        foundColumn = []
         pre = self.columnFrame[0]
         pos = self.columnFrame[1]
-        noColumnsTables = []
-        noMappingColumnsL = OrderedDict()
+
+        notFoundColumns = {}
+        foundColumns = []
 
         if not sqlQuery or len(sqlQuery) < 1:
             return ret
@@ -484,88 +490,79 @@ class baseGlobalDb (baseBatch):
         ### Return dictionary : {Table Name:[{SOURCE:ColumnName, ALIASE: column aliase}, ....]}
         ### And empty table -> all column that not related to any table '':[{SOURCE:columnName, ALIASE: .... } ...]
         queryTableAndColunDic = qp.extract_tableAndColumns(sql=sqlQuery)
-        mapColumnToAlias = {}
-        notFoundColumns  = {}
-        if qp.QUERY_COLUMNS_KEY in queryTableAndColunDic:
-            mapColumnToAlias = queryTableAndColunDic[qp.QUERY_COLUMNS_KEY]
-            del queryTableAndColunDic[qp.QUERY_COLUMNS_KEY]
 
         if qp.QUERY_NO_TABLE in queryTableAndColunDic:
-            notFoundColumns = queryTableAndColunDic[qp.QUERY_NO_TABLE]
+            for colD in queryTableAndColunDic[qp.QUERY_NO_TABLE][qp.TABLE_COLUMN]:
+                colTupleName = colD[0]
+                colTargetName= colD[1]
+                colName = colTupleName[-1]
+                colFullName =".".join(colTupleName)
+                notFoundColumns[colTargetName] = (colName, colFullName, )
+
+
             del queryTableAndColunDic[qp.QUERY_NO_TABLE]
+
+        if qp.QUERY_POST in queryTableAndColunDic:
+            del queryTableAndColunDic[qp.QUERY_POST]
+
+        if qp.QUERY_PRE in queryTableAndColunDic:
+            del queryTableAndColunDic[qp.QUERY_PRE]
 
         # update allTableStrucure dictionary : {tblName:{col name : ([original col name] , [tbl name] , [col structure])}}
         for tbl in queryTableAndColunDic:
             colDict = OrderedDict()
             tableName = tbl
             tableSchema = queryTableAndColunDic[tbl][qp.TABLE_SCHEMA]
-            for colD in queryTableAndColunDic[tbl][qp.TABLE_COLUMN]:
-                colList = colD.split('.')
-                colName = colList[-1]
-                colAlias = mapColumnToAlias[colD] if colD in mapColumnToAlias else None
-                colDict[colD.lower()] = (colD, colName, colAlias,)
+            tableColumns= queryTableAndColunDic[tbl][qp.TABLE_COLUMN]
+
+
+            for colD in tableColumns:
+                colTupleName = colD[0]
+                colTargetName= colD[1]
+                colName = colTupleName[-1]
+                colFullName =".".join(colTupleName)
+                colDict[colTargetName] = (colName, colFullName)
 
             tableStrucure = self.getDBStructure(tableSchema=tableSchema, tableName=tableName)
             tableColL = {x.replace(pre, "").replace(pos, "").lower(): x for x in tableStrucure}
 
-            if '*' in colDict:
-                ret.update(tableStrucure)
-
             for col in colDict:
+                colTarName = col
+                colSName = colDict[col][0]
+                colLName = colDict[col][1]
                 isFound = False
-                for colTbl in tableColL:
-                    if col in colTbl:
-                        ret[tableColL[col][2]] = {eJson.jSttValues.SOURCE:tableColL[col][2], eJson.jSttValues.TYPE:tableStrucure[tableColL[col]]}
-                        isFound = True
-                        break
+                if '*' in colSName:
+                    isFound = True
+                    ret.update(tableStrucure)
+                else:
+                    for colTbl in tableColL:
+                        if colTbl.lower() in colSName.lower():
+                            ret[colTarName] = {eJson.jSttValues.SOURCE:tableColL[colTbl], eJson.jSttValues.TYPE:tableStrucure[tableColL[colTbl]][eJson.jSttValues.TYPE]}
+                            isFound = True
+                            break
 
                 if not isFound:
-                    p("COLUMN %s NOT FOUND IN TABLE %s USING DEFAULT %s" % (tableColL[col], tbl, self.defDataType), "ii")
-                    ret[tableColL[col][2]] = {eJson.jSttValues.SOURCE: tableColL[col][2],eJson.jSttValues.TYPE: self.defDataType}
+                    p("COLUMN %s NOT FOUND IN TABLE %s USING DEFAULT %s" % (col, tbl, self.defDataType), "ii")
+                    ret[colTarName] = {eJson.jSttValues.SOURCE: colLName,eJson.jSttValues.TYPE: self.defDataType}
 
             ## Search for Column that ther is no table mapping
-            for col in noMappingColumnsL:
-                if col in tableColL:
-                    ret[tableColL[col]] = tableStrucure[tableColL[col]]
-                    ret[tableColL[col]][eJson.jSttValues.ALIACE] = noMappingColumnsL[col][1]
-                    foundColumn.append(col)
+            for col in notFoundColumns:
+                colTarName = col
+                colSName = notFoundColumns[col][0]
+                colLName = notFoundColumns[col][1]
+                for colTbl in tableColL:
+                    if colTbl.lower() in colSName.lower():
+                        ret[colTarName] = {eJson.jSttValues.SOURCE: colLName,eJson.jSttValues.TYPE: tableStrucure[tableColL[colTbl]][eJson.jSttValues.TYPE]}
+                        foundColumns.append (colLName)
+                        break
 
-            ## Delete Column that has data type
-            for col in foundColumn:
-                if col in noMappingColumnsL:
-                    del noMappingColumnsL[col]
-            foundColumn = list([])
-
-        # loop on all tables with no column and try to find match
-        if noMappingColumnsL and len(noMappingColumnsL) > 0:
-            for tbl in noColumnsTables:
-                tableNameList = tbl.split(".")
-                tableName = tableNameList[0] if len(tableNameList) == 1 else tableNameList[1]
-                tableSchema = tableNameList[0] if len(tableNameList) == 2 else self.defaultSchema
-                tableStrucure = self.getDBStructure(tableSchema=tableSchema, tableName=tableName)
-
-                tableColL = {x.replace(pre, "").replace(pos, "").lower(): x for x in tableStrucure}
-
-                if '*' in noMappingColumnsL:
-                    ret.update(tableStrucure)
-                    foundColumn.append('*')
-
-                for col in noMappingColumnsL:
-                    if col in tableColL:
-                        ret[tableColL[col]] = tableStrucure[tableColL[col]]
-                        ret[tableColL[col]][eJson.jSttValues.ALIACE] = noMappingColumnsL[col][1]
-                        foundColumn.append(col)
-
-                for col in foundColumn:
-                    if col in noMappingColumnsL:
-                        del noMappingColumnsL[col]
-                foundColumn = list([])
-
-            ## Add remaining column in not defined column types
-            for col in noMappingColumnsL:
-                colName = noMappingColumnsL[col][0]
-                colAlias = noMappingColumnsL[col][1]
-                ret[colName] = {eJson.jSttValues.TYPE: self.defDataType, eJson.jSttValues.ALIACE: colAlias}
+        for col in notFoundColumns:
+            colTarName = col
+            colSName = notFoundColumns[col][0]
+            colLName = notFoundColumns[col][1]
+            if colLName not in foundColumns:
+                p("COLUMN %s NOT FOUND IN ANY TABLE, USING DEFAULT %s" % (colLName,  self.defDataType), "ii")
+                ret[colTarName] = {eJson.jSttValues.SOURCE: colLName,eJson.jSttValues.TYPE: self.defDataType}
 
         return ret
 

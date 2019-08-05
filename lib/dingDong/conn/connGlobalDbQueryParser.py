@@ -28,8 +28,8 @@ from dingDong.config import config
 
 QUERY_COLUMNS_KEY       = '~'
 QUERY_NO_TABLE          = '~notFound~'
-QUERY_ALL_COLUMNS_KEY   = '~allcol~'
-QUERY_TARGET_COLUMNS    = '~target~'
+QUERY_PRE               = '~pre~'
+QUERY_POST              = '~post~'
 
 TABLE_ALIAS = 'alias'
 TABLE_SCHEMA= 'schema'
@@ -40,16 +40,11 @@ TABLE_COLUMN= 'column'
 ##      Using extract_tables which return Dictionary : {'Columns': {ColName:ColTargetName....}, 'Tables':{tableName: [Columns ....]}}
 ##      Using extract_table_identifiers which return list of [(table aliace, table schema, table Name) ...]
 def extract_tableAndColumns (sql):
-    ret = {}
-    tblTupe , columns = extract_tables(sql)
+    sql, pre = removeProps (sql=sql)
+    tblTupe , columns, sqlPre, sqlPost = extract_tables(sql)
+    pre = pre if pre and len(pre)>0 else sqlPre
 
-    if QUERY_ALL_COLUMNS_KEY in columns and QUERY_TARGET_COLUMNS in columns:
-        ret[QUERY_COLUMNS_KEY] = {}
-
-        for i,col in enumerate (columns[QUERY_ALL_COLUMNS_KEY]):
-            ret[QUERY_COLUMNS_KEY][col] = columns[QUERY_TARGET_COLUMNS][i]
-        del columns[QUERY_ALL_COLUMNS_KEY]
-        del columns[QUERY_TARGET_COLUMNS]
+    ret = {QUERY_PRE:pre, QUERY_POST:sqlPost}
 
     # merge table to columns
 
@@ -82,11 +77,28 @@ def extract_tableAndColumns (sql):
             ret[QUERY_NO_TABLE][TABLE_COLUMN].extend ( columns[tbl] )
     return ret
 
+def removeProps (sql):
+    sql = re.sub(r"/\*[^*]*\*+(?:[^*/][^*]*\*+)*/", "", sql)
+    sql = re.sub(r"\s+", " ", sql)
+    pre = ""
+
+    regSql = r"(.*?select\s+(?:top\s+\d+\s+){0,1}(?:distinct\s+){0,1})(.*)"
+
+    # sqlGrouping = re.search(regexSql, sqlStr, re.IGNORECASE | re.MULTILINE)
+    sqlGrouping = re.search(regSql, sql, re.UNICODE | re.MULTILINE | re.S | re.I)
+    if sqlGrouping:
+        pre = sqlGrouping.group(1)
+        sql = '%s %s'  %('SELECT', sqlGrouping.group(2))
+    return sql, pre
+
+
 def extract_tables(sql):
     # let's handle multiple statements in one sql string
     extracted_tables = []
     extracted_last_tables_Tuple = None
     extracted_last_columns_Dic = None
+    preSql = ""
+    postSql= ""
     # replacements to SQL queries
     sql = replaceStr (sString=sql,findStr="ISNULL (", repStr="ISNULL(", ignoreCase=True,addQuotes=None)
     sql = replaceStr(sString=sql, findStr="CONVERT (",repStr="CONVERT(", ignoreCase=True, addQuotes=None)
@@ -97,11 +109,11 @@ def extract_tables(sql):
         if statement.get_type() != 'UNKNOWN':
             stream = extract_from_part(statement)
             # will get only last table column definistion !
-            extracted_last_columns_Dic  = extract_select_part(statement)
+            extracted_last_columns_Dic,preSql,postSql  = extract_select_part(statement)
             extracted_last_tables_Tuple = list (extract_table_identifiers(stream))
             #extracted_tables.append(list(extract_table_identifiers(stream)))
     #return list(itertools.chain(*extracted_tables))
-    return (extracted_last_tables_Tuple , extracted_last_columns_Dic)
+    return (extracted_last_tables_Tuple , extracted_last_columns_Dic,preSql,postSql)
 
 def extract_from_part(parsed):
     from_seen = False
@@ -130,11 +142,9 @@ def is_subselect(parsed):
     return False
 
 def extract_select_part (parsed):
-    allColumnSign       = QUERY_ALL_COLUMNS_KEY
     nonColumnSign       = QUERY_NO_TABLE
-    targetColumnNames   = QUERY_TARGET_COLUMNS
     columnList          = []
-    columnDic           = {allColumnSign:[],targetColumnNames:[]}
+    columnDic           = {}
     col                 = None
     addToken            = False
     preSql              = ""
@@ -168,7 +178,7 @@ def extract_select_part (parsed):
                         tarName = srcName.split(".")
                         tarName = tarName[1] if len(tarName)>1 else tarName[0]
 
-                    columnList.append( (srcName.split(".") , tarName) )
+                    columnList.append( (srcName.replace("\n", " ").split(".") , tarName) )
             elif isinstance(item, Identifier):
                 item = str(item)
                 srcName = item
@@ -177,7 +187,7 @@ def extract_select_part (parsed):
                     tarName = item[item.lower().find(" as")+3:].strip()
                 else:
                     tarName = srcName
-                columnList.append( (srcName.split(".") , tarName) )
+                columnList.append( (srcName.replace("\n", " ").split(".") , tarName) )
             elif not isPost:
                 preSql += uniocdeStr(item.value)
         elif isPost:
@@ -191,25 +201,20 @@ def extract_select_part (parsed):
             dicValue = col[0]
         elif col and len (col) >= 2:
             dicKey = col[0]
-            dicValue = ".".join(col)
-            dicValue = dicValue.replace("\n", " ")
+            dicValue = col
             if dicKey not in columnDic:
                 columnDic[dicKey] = []
         else:
             p("ERROR Loading column identifier, will ignore column %s" % str(col), "i")
             continue
 
-        columnDic[allColumnSign].append( dicValue )
-        columnDic[targetColumnNames].append (tarName)
         if dicKey and dicKey not in columnDic:
                 columnDic[dicKey] = []
-        columnDic[dicKey].append (dicValue)
+        dicValue = tuple(dicValue) if isinstance(dicValue,list) else dicValue
+        dicValue = (dicValue,) if isinstance(dicValue,basestring) else dicValue
+        columnDic[dicKey].append ((dicValue,tarName))
 
-    print ("TAL 123456 78")
-    print (postSql)
-    print (preSql)
-
-    return columnDic
+    return columnDic, preSql, postSql
 
 def extract_table_identifiers(token_stream):
     for item in token_stream:
@@ -341,13 +346,13 @@ def __replaceProp(allQueries, dicProp):
         ret.append(tupRet)
     return ret
 
-sql = """SELECT top 100 t.*, t.CLASS AS INTSugMev, t.CLASS AS KUKU,t.CLASS,
+sql = """SELECT Top 1000 t.*, t.CLASS AS INTSugMev, t.CLASS AS KUKU,t.CLASS,
 t.CKTXT AS UNSugMevDescr,CASE t.CLASS WHEN '0002' THEN 'BBB' ELSE t.CKTXT END AS Test,
 CAST(t.CKTXT AS varchar(100)) As test2,
 (SELECT SYSDATE FROM dual)  As gggg
 FROM SAPR3.TNP01T t, SAPR3.TNP01 p where t.SPRAS = 'B' and t.CLASS = p.CLASS"""
-xx = extract_tableAndColumns (sql)
+#xx = extract_tableAndColumns (sql)
 
-print ("TAL 1234")
-for x in xx:
-    print (x, xx[x])
+#print ("TAL 1234")
+#for x in xx:
+#    print (x, xx[x])
