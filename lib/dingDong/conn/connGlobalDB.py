@@ -334,7 +334,6 @@ class baseGlobalDb (baseBatch):
                     rows = self.cursor.fetchmany( batchRows )
                     if not rows or len(rows) < 1:
                         break
-
                     rows = self.dataTransform(data=rows, functionDict=fnOnRowsDic, execDict=execOnRowsDic)
                     tar.load (rows=rows, targetColumn = targetColumnStr)
             else:

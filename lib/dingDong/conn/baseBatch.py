@@ -141,7 +141,7 @@ class baseBatch ():
         ## ceOBDC - convert data to None
         if self.conn == eConn.SQLSERVER:
             for num, row in enumerate(data):
-                data[num] = [i if len(i)>0 else None for i in row]
+                data[num] = [i if i!='' else None for i in row]
         return data
 
     def test(self):
