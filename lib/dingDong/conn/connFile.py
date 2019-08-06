@@ -143,14 +143,14 @@ class connFile (baseBatch):
                     if headers and len(headers) > 0:
                         for i, col in enumerate(headers):
                             colStr = '%s%s' %(self.colPref, str(i))
-                            ret[colStr] = {eJson.jSttValues.TYPE: self.defDataType, eJson.jSttValues.ALIACE: None}
+                            ret[colStr] = {eJson.jSttValues.TYPE: self.defDataType, eJson.jSttValues.SOURCE: colStr}
                 else:
                     for i, line in enumerate(f):
                         if self.header-1 == i:
                             headers = line.strip(self.endOfLine).split(self.delimiter)
                             if headers and len(headers) > 0:
                                 for i, col in enumerate(headers):
-                                    ret[col] = {eJson.jSttValues.TYPE: self.defDataType, eJson.jSttValues.ALIACE: None}
+                                    ret[col] = {eJson.jSttValues.TYPE: self.defDataType, eJson.jSttValues.SOURCE: col}
 
                             break
         else:

@@ -50,7 +50,15 @@ def addPropToDict (existsDict, newProp):
     return existsDict
 
 def mngConnectors(connPropDic, connLoadProp=None):
+
     connLoadProp = connLoadProp if connLoadProp else config.CONN_URL
+
+    ## Merge by CONNECTION
+    if eJson.jValues.CONN in connPropDic and connPropDic[eJson.jValues.CONN] in connLoadProp:
+        connPropDic = addPropToDict(existsDict=connPropDic, newProp=connLoadProp[connPropDic[eJson.jValues.CONN]])
+        # update Connection type
+        if eJson.jValues.CONN in connLoadProp[connPropDic[eJson.jValues.CONN]] and connLoadProp[connPropDic[eJson.jValues.CONN]][eJson.jValues.CONN] is not None:
+            connPropDic[eJson.jValues.CONN] = connLoadProp[connPropDic[eJson.jValues.CONN]][eJson.jValues.CONN]
 
     if eJson.jValues.NAME in connPropDic and connPropDic[eJson.jValues.NAME] in connLoadProp :
         connPropDic = addPropToDict(existsDict=connPropDic, newProp=connLoadProp[connPropDic[eJson.jValues.NAME]])
@@ -58,8 +66,10 @@ def mngConnectors(connPropDic, connLoadProp=None):
     elif eJson.jValues.TYPE in connPropDic and connPropDic[eJson.jValues.TYPE] in connLoadProp :
         connPropDic = addPropToDict(existsDict=connPropDic, newProp=connLoadProp[connPropDic[eJson.jValues.TYPE]])
 
-    elif eJson.jValues.CONN in connPropDic and connPropDic[eJson.jValues.CONN] in connLoadProp :
-        connPropDic = addPropToDict(existsDict=connPropDic, newProp=connLoadProp[connPropDic[eJson.jValues.CONN]])
+
+    if connPropDic[eJson.jValues.NAME] is None:
+        connPropDic[eJson.jValues.NAME] = connPropDic[eJson.jValues.CONN]
+
     if connPropDic and isinstance(connPropDic, dict) and eJson.jValues.CONN in connPropDic:
         cType = connPropDic[eJson.jValues.CONN]
         if cType in CLASS_TO_LOAD:

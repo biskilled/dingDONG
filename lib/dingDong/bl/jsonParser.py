@@ -76,11 +76,11 @@ class jsonParser (object):
                     notIncludeDict = {x.lower().replace(".json", ""): x for x in notIncludeFiles}
                     for f in jsonFilesDic:
                         if f in notIncludeDict:
-                            p('NOT INCLUDE: Folder:%s, file: %s NOT IN USED, REMOVED >>>>' % (str(dirData), f), "ii")
+                            p('NOT INCLUDE: File:%s, file: NOT IN USED, REMOVED >>>>' % (str( os.path.join(dirData,f) ) ), "ii")
                             jsonFiles.remove(jsonFilesDic[f])
                     for f in notIncludeDict:
                         if f not in jsonFilesDic:
-                            p('NOT INCLUDE: Folder: %s, file: %s not exists.. Ignoring>>>>>' % ( str(dirData), f), "ii")
+                            p('NOT INCLUDE: File: %s, NOT EXISTS.Ignoring>>>>>' % ( str(os.path.join(dirData, f))), "ii")
 
                 if includeFiles:
                     includeDict = {x.lower().replace(".json", ""): x for x in includeFiles}

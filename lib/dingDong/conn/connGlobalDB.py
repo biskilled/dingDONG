@@ -205,9 +205,9 @@ class baseGlobalDb (baseBatch):
             sql = "CREATE TABLE %s \n (" %(tableFullName)
             for col in stt:
                 if eJson.jSttValues.ALIACE in stt[col] and stt[col][eJson.jSttValues.ALIACE] and len (stt[col][eJson.jSttValues.ALIACE])>0:
-                    colName = self.wrapColName (col=stt[col][eJson.jSttValues.ALIACE], remove=False)
+                    colName = self.wrapColName (col=stt[col][eJson.jSttValues.ALIACE], remove=True)
                 else:
-                    colName =  self.wrapColName (col=col, remove=False)
+                    colName =  self.wrapColName (col=col, remove=True)
                 colType =  stt[col][eJson.jSttValues.TYPE]
                 sql += '\t%s\t%s,\n' %(colName, colType)
             sql = sql[:-2]+')'
@@ -286,14 +286,9 @@ class baseGlobalDb (baseBatch):
         if tarToSrc and len (tarToSrc)>0:
             for i,col in  enumerate (tarToSrc):
                 colTarName = '%s%s%s' % (pre, col.replace(pre, "").replace(pos, ""), pos)
-
-                if eJson.jSttValues.SOURCE in tarToSrc[col] and tarToSrc[col][eJson.jSttValues.SOURCE]:
-                    srcNameL = tarToSrc[col][eJson.jSttValues.SOURCE].lower()
-                    if srcNameL in existingColumnsDic:
-                        colSrcName = existingColumnsDic[ srcNameL ]
-                    else:
-                        colSrcName = tarToSrc[col][eJson.jSttValues.SOURCE]
-                        colSrcName = '%s As %s' %(colSrcName, colTarName) if addAsTaret else colSrcName
+                if col in existingColumnsDic:
+                    colSrcName = existingColumnsDic[col]
+                    colSrcName = '%s As %s' % (colSrcName, colTarName) if addAsTaret else colSrcName
                 else:
                     colSrcName =  "'' As %s" %(colTarName) if addAsTaret else ''
 
@@ -339,14 +334,13 @@ class baseGlobalDb (baseBatch):
                     rows = self.cursor.fetchmany( batchRows )
                     if not rows or len(rows) < 1:
                         break
+
                     rows = self.dataTransform(data=rows, functionDict=fnOnRowsDic, execDict=execOnRowsDic)
                     tar.load (rows=rows, targetColumn = targetColumnStr)
             else:
                 rows = self.cursor.fetchall()
-                if fnOnRowsDic and len(fnOnRowsDic)>0:
-                    rows = self.dataTransform(data=rows, functionDict=fnOnRowsDic)
-
-                    tar.load(rows, targetColumn = targetColumnStr)
+                rows = self.dataTransform(data=rows, functionDict=fnOnRowsDic)
+                tar.load(rows, targetColumn = targetColumnStr)
         except Exception as e:
             p("TYPE:%s, OBJECT:%s ERROR FATCHING DATA" % (self.conn, str(self.connObj)), "e")
             p(str(e), "e")

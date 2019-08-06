@@ -25,7 +25,7 @@ import copy
 from dingDong.misc.logger   import p
 from dingDong.misc.enumsJson import eConn, eJson, findProp
 from dingDong.misc.misc     import replaceStr, uniocdeStr
-from dingDong.config import config
+
 
 DEFAULTS    =   {
                     eJson.jValues.DEFAULT_TYPE:eConn.dataType.B_STR,
@@ -137,6 +137,11 @@ class baseBatch ():
                             newVal = replaceStr(sString=str(newVal), findStr=match.group(1), repStr=colVal, ignoreCase=False, addQuotes=None)
                     row[ind] = newVal
                 data[num] = row
+
+        ## ceOBDC - convert data to None
+        if self.conn == eConn.SQLSERVER:
+            for num, row in enumerate(data):
+                data[num] = [i if len(i)>0 else None for i in row]
         return data
 
     def test(self):

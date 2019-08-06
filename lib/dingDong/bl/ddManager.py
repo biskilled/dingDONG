@@ -66,15 +66,12 @@ class ddManager (object):
                     self.addSourceColumn = True
 
                     if eJson.jKeys.STTONLY in node:
-                        p("CANNOT HAVE STT AND STT ONLY - WILL USE STT")
-
+                        self.addSourceColumn = False
                         for k in node[eJson.jKeys.STTONLY]:
-                            if k not in modelDict[eJson.jKeys.STT]:
+                            if k not in self.stt:
                                 self.stt[k] = node[eJson.jKeys.STTONLY][k]
                             else:
                                 self.stt[k].update ( node[eJson.jKeys.STTONLY][k] )
-
-                        modelDict[eJson.jKeys.STT].update (node[eJson.jKeys.STTONLY])
 
                 for i,k in enumerate (node):
                     if eJson.jKeys.SOURCE == k or eJson.jKeys.SOURCE in node[k]:
@@ -254,16 +251,20 @@ class ddManager (object):
     def __updateSTTBySourceOrTarget (self, srcStructure, pre="[", pos="]"):
         # Check if ther are sourcea in STT that not defined
         srcStrucureL = []
+        srcColumns = {}
+
         for col in  srcStructure:
             srcStrucureL.append (col.replace(pre,"").replace(pos,"").lower())
             if eJson.jSttValues.SOURCE in srcStructure[col] and srcStructure[col][eJson.jSttValues.SOURCE]:
-                srcStrucureL.append(srcStructure[col][eJson.jSttValues.SOURCE].replace(pre, "").replace(pos, "").lower())
+                srcStrucureL.append(uniocdeStr(srcStructure[col][eJson.jSttValues.SOURCE]))
+                srcColumns[srcStructure[col][eJson.jSttValues.SOURCE]] = None
 
         removeColumnsSrc = []
         if self.stt:
             for col in self.stt:
-                if eJson.jSttValues.SOURCE in self.stt[col] and self.stt[col][eJson.jSttValues.SOURCE].replace(pre,"").replace(pos,"").lower() not in srcStrucureL:
-                    removeColumnsSrc.append (col)
+                if eJson.jSttValues.SOURCE in self.stt[col] and self.stt[col][eJson.jSttValues.SOURCE] not in srcColumns:
+                    if self.stt[col][eJson.jSttValues.SOURCE].replace(pre,"").replace(pos,"").lower() not in srcStrucureL:
+                        removeColumnsSrc.append (col)
 
             for col in removeColumnsSrc:
                 p("STT TAREGT %s HAVE INVALID SOURCE %s --> ignore COLUMN " % (col, self.stt[col][eJson.jSttValues.SOURCE]),"w")
