@@ -200,9 +200,9 @@ class baseGlobalDb (baseBatch):
         if not stt or len(stt) == 0:
             p("TABLE %s NOT MAPPED CORRECLTY " %(self.connObj), "e")
             return
-        boolToCreate, newHistoryTable = self.cloneObject(stt, tableSchema, tableName)
+        isNew,isExists, newHistoryTable = self.cloneObject(stt, tableSchema, tableName)
 
-        if boolToCreate and self.update<2:
+        if isNew or  (isExists and self.update<2):
             sql = "CREATE TABLE %s \n (" %(tableFullName)
             for col in stt:
                 if eJson.jSttValues.ALIACE in stt[col] and stt[col][eJson.jSttValues.ALIACE] and len (stt[col][eJson.jSttValues.ALIACE])>0:
@@ -308,8 +308,8 @@ class baseGlobalDb (baseBatch):
 
             for i,col in  enumerate (tarToSrc):
                 colTarName = '%s%s%s' % (pre, col.replace(pre, "").replace(pos, ""), pos)
-                if col in existingColumnsDic:
-                    colSrcName = existingColumnsDic[col]
+                if col.replace(pre,"").replace(pos,"").lower() in existingColumnsDic:
+                    colSrcName = existingColumnsDic[col.replace(pre,"").replace(pos,"").lower()]
                     colSrcName = '%s As %s' % (colSrcName, colTarName) if addAsTaret else colSrcName
                 else:
                     colSrcName =  "'' As %s" %(colTarName) if addAsTaret else ''
@@ -343,16 +343,17 @@ class baseGlobalDb (baseBatch):
         """ EXECUTING SOURCE QUERY """
         sourceSql = str(sourceSql) if self.isExtractSqlIsOnlySTR else sourceSql
 
-        print ("TAL---->>> ", sourceSql)
         self.exeSQL(sql=sourceSql , commit=False)
+        p("EXTRACTING SQL:\n %s" %sourceSql,"ii")
 
-        if len(targetColumnStr)==0:
+        if len(targetColumnStr) == 0:
             targetColumnStr = [col[0] for col in self.cursor.description]
-        rows = None
 
+        rows = None
         try:
             if batchRows and batchRows>0:
                 while True:
+
                     rows = self.cursor.fetchmany( batchRows )
                     if not rows or len(rows) < 1:
                         break
@@ -635,7 +636,7 @@ class baseGlobalDb (baseBatch):
 
         if not existStructure or len(existStructure) == 0:
             p("TABLE %s NOT EXISTS " %(tableName), "ii")
-            return True
+            return True,False, newHistoryTable
 
         updateDesc = 'UPDATE' if self.update == 1 else 'DROP CREATE' if self.update < 1 else 'WARNIN, NO UPDATE'
 
@@ -663,11 +664,11 @@ class baseGlobalDb (baseBatch):
 
         if schemaEqual:
             p("TABLE %s DID NOT CHANGED  >>>>>" % (tableName), "ii")
-            return False, newHistoryTable
+            return False,False, newHistoryTable
         else:
             if self.update>1:
                 p("TABLE STRUCTURE CHANGED, UPDATE IS NOT ALLOWED, NO CHANGE","w")
-                return False, newHistoryTable
+                return False,True, newHistoryTable
             else:
                 if config.TRACK_HISTORY:
                     p("TABLE HISTORY IS ON ...", "ii")
@@ -689,7 +690,7 @@ class baseGlobalDb (baseBatch):
                         p("TABLE HISTORY IS OFF AND TABLE EXISTS, DROP -> CREATE TABLE %s IN NEW STRUCTURE... "%(str(tableName)), "w")
                         sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.DROP,  tableName=tableName, tableSchema=tableSchema)
                         self.exeSQL(sql=sql, commit=True)
-        return True, newHistoryTable
+        return False,True, newHistoryTable
 
     """ Return tableSchema, tableName From table name and schema 
         WrapTable=True will return with DB wrapping for example Sql server colum yoyo will be [yoyo] """
