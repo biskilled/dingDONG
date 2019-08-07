@@ -142,7 +142,7 @@ class jsonParser (object):
             errConn = []
             for conn in newConnDict:
                 if not findProp(prop=newConnDict[conn][eJson.jValues.CONN], obj=eConn):
-                    p("jsonParser->__initConnDict: Remove Connection %s becouse prop: %s  is NOT VALID !!" %(str(conn), str(newConnDict[conn][eJson.jValues.CONN])), "e")
+                    p("Remove Connection %s becouse prop: %s  is NOT VALID !!" %(str(conn), str(newConnDict[conn][eJson.jValues.CONN])), "e")
                     errConn.append (conn)
             for err in errConn:
                 del newConnDict[err]
@@ -229,7 +229,17 @@ class jsonParser (object):
             elif len(propVal) == 3:
                 ret[eJson.jValues.CONN]  = propVal[0]
                 ret[eJson.jValues.OBJ]   = propVal[1]
-                ret[eJson.jValues.FILTER]= propVal[2]
+
+                if str(propVal[2]).isdigit():
+                    ret[eJson.jValues.UPDATE] =  self.__setUpdate (propVal[2])
+                else:
+                    ret[eJson.jValues.FILTER]= propVal[2]
+            elif len(propVal) == 4:
+                ret[eJson.jValues.CONN]     = propVal[0]
+                ret[eJson.jValues.OBJ]      = propVal[1]
+                ret[eJson.jValues.FILTER]   = propVal[2]
+                ret[eJson.jValues.UPDATE]   = self.__setUpdate (propVal[3])
+
             else:
                 p("%s: Not valid list valuues, must 1,2 or 3" % (str(propFullName)), "e")
         elif isinstance(propVal, dict):
@@ -266,8 +276,6 @@ class jsonParser (object):
         ret[eJson.jValues.URLPARAM]     = srcConn[eJson.jValues.URLPARAM]
         ret[eJson.jValues.URL_FILE]     = srcConn[eJson.jValues.URL_FILE]
 
-
-
         if isinstance(propVal, str):
             ret[eJson.jValues.NAME]         = propFullName
             ret[eJson.jMergeValues.TARGET]  = propVal[0]
@@ -278,7 +286,14 @@ class jsonParser (object):
                 ret[eJson.jMergeValues.TARGET]  = propVal[0]
             elif len(propVal) == 2:
                 ret[eJson.jMergeValues.TARGET] = propVal[0]
-                ret[eJson.jMergeValues.MERGE]  = propVal[1]
+                if str(propVal).isdigit():
+                    ret[eJson.jValues.UPDATE] = self.__setUpdate(propVal[2])
+                else:
+                    ret[eJson.jMergeValues.MERGE]  = propVal[1]
+            elif len(propVal) == 3:
+                ret[eJson.jMergeValues.TARGET]  = propVal[0]
+                ret[eJson.jMergeValues.MERGE]   = propVal[1]
+                ret[eJson.jValues.UPDATE]       = self.__setUpdate (propVal[2])
             else:
                 p("%s: Not valid merge valuues, must have obj and merge key..." % (str(propVal)), "e")
         elif isinstance(propVal, dict):
@@ -289,6 +304,14 @@ class jsonParser (object):
         ret[eJson.jValues.OBJ] = ret[eJson.jMergeValues.TARGET]
 
         return ret
+
+    def __setUpdate (self, val):
+        if str(val).isdigit():
+            if findProp(prop=val, obj=eJson.jUpdate):
+                return val
+            else:
+                p("THERE IS %s WHICH IS MAPPED TO UPDATE PROPERTY, MUST HAVE -1(drop), 1(UPDATE), 2(NO_UPDATE), USING -1 DROP--> CREATE METHOD ")
+        return -1
 
     # Insert into STT Column mapping
     def __sttAddColumns(self, stt, propVal):

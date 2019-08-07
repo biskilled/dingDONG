@@ -67,7 +67,7 @@ def mngConnectors(connPropDic, connLoadProp=None):
         connPropDic = addPropToDict(existsDict=connPropDic, newProp=connLoadProp[connPropDic[eJson.jValues.TYPE]])
 
 
-    if connPropDic[eJson.jValues.NAME] is None:
+    if eJson.jValues.NAME not in connPropDic or connPropDic[eJson.jValues.NAME] is None:
         connPropDic[eJson.jValues.NAME] = connPropDic[eJson.jValues.CONN]
 
     if connPropDic and isinstance(connPropDic, dict) and eJson.jValues.CONN in connPropDic:

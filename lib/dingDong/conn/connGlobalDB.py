@@ -83,6 +83,7 @@ class baseGlobalDb (baseBatch):
         self.conn           = self.conn
         self.connName       = self.connName
         self.defDataType    = self.defDataType
+        self.update         = self.update
 
         """ DB PROPERTIES """
         self.connUrl = self.setProperties(propKey=eJson.jValues.URL, propVal=connUrl)
@@ -199,9 +200,9 @@ class baseGlobalDb (baseBatch):
         if not stt or len(stt) == 0:
             p("TABLE %s NOT MAPPED CORRECLTY " %(self.connObj), "e")
             return
-        boolToCreate = self.cloneObject(stt, tableSchema, tableName)
+        boolToCreate, newHistoryTable = self.cloneObject(stt, tableSchema, tableName)
 
-        if boolToCreate:
+        if boolToCreate and self.update<2:
             sql = "CREATE TABLE %s \n (" %(tableFullName)
             for col in stt:
                 if eJson.jSttValues.ALIACE in stt[col] and stt[col][eJson.jSttValues.ALIACE] and len (stt[col][eJson.jSttValues.ALIACE])>0:
@@ -216,6 +217,25 @@ class baseGlobalDb (baseBatch):
             p("CREATE TABLE: \n" + sql)
             self.exeSQL(sql=sql, commit=True)
 
+        if self.update == 1:
+            if newHistoryTable and len (newHistoryTable)>0:
+                columns = []
+                pre, pos = self.columnFrame[0], self.columnFrame[1]
+                oldStructure = self.getStructure(tableName=newHistoryTable, tableSchema=tableSchema, sqlQuery=None)
+                newStructure = self.getStructure(tableName=tableName, tableSchema=tableSchema, sqlQuery=None)
+
+                oldStructureL = {x.replace(pre, "").replace(pos, "").lower(): x for x in oldStructure}
+                newStructureL = {x.replace(pre, "").replace(pos, "").lower(): x for x in newStructure}
+
+                for col in oldStructureL:
+                    if col in newStructureL:
+                        columns.append (self.wrapColName(col, remove=False))
+
+                if len (columns)>0:
+                    sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.TABLE_COPY_BY_COLUMN, tableName=tableName,tableSchema=tableSchema, srcTableName=newHistoryTable, columns=columns )
+                    self.exeSQL(sql=sql)
+                    p("ADD ROWS TO %s FROM %s, UPDATED COLUMNS:\n%s" %(tableName, newHistoryTable, ",".join(columns)), "w")
+
     """ INTERFACE: baseConn, baseConnDB, IMPLEMENTED: db, Method:getStrucutre - return Structure dictionary 
         Strucutre Dictinary: {Column Name: {ColumnType:XXXXX, ColumnAliace: NewColumns } .... } 
         Help methods: __getAccessStructure (db), getQueryStructure (baseConnDB), getDBStructure (baseConnDB)"""
@@ -224,6 +244,7 @@ class baseGlobalDb (baseBatch):
         tableSchema, tableName = self.setTableAndSchema (tableName=tableName, tableSchema=tableSchema)
         retStructure = None
         pre,pos = self.columnFrame[0],self.columnFrame[1]
+
 
         # If there is query and there is internal maaping in query - will add this mapping to mappingColum dictionary
         if self.connIsSql:
@@ -268,22 +289,23 @@ class baseGlobalDb (baseBatch):
         targetColumnStr = []
         sourceSql       = self.connSql
 
-        #existingColumns = qp.existsColumnInQuery (sqlStr=sourceSql, pre=pre, pos=pos)
-        existingColumns = qp.extract_tableAndColumns (sql=sourceSql)
-
-        preSql = existingColumns[qp.QUERY_PRE]
-        postsql= existingColumns[qp.QUERY_POST]
-        del existingColumns[qp.QUERY_PRE]
-        del existingColumns[qp.QUERY_POST]
-
-        existingColumnsDic = {}
-        for tbl in existingColumns:
-            if qp.TABLE_COLUMN in existingColumns[tbl] and len(existingColumns[tbl][qp.TABLE_COLUMN])>0:
-                for col in existingColumns[tbl][qp.TABLE_COLUMN]:
-                    existingColumnsDic[col[1].lower()] = ".".join(col[0])
-
         ## There is Source And Target column mapping
         if tarToSrc and len (tarToSrc)>0:
+            existingColumnsDic = OrderedDict()
+            existingColumns = qp.extract_tableAndColumns(sql=sourceSql)
+            preSql = existingColumns[qp.QUERY_PRE]
+            postsql = existingColumns[qp.QUERY_POST]
+            if self.connIsSql:
+                allColumns  = existingColumns[qp.QUERY_COLUMNS_KEY]
+                pre, pos = self.columnFrame[0], self.columnFrame[1]
+
+                for col in allColumns:
+                    existingColumnsDic[col[1].replace(pre,"").replace(pos,"").lower()] = ".".join(col[0])
+            else:
+                allColumns = self.getStructure()
+                for col in allColumns:
+                    existingColumnsDic[col.replace(pre,"").replace(pos,"").lower()] = col
+
             for i,col in  enumerate (tarToSrc):
                 colTarName = '%s%s%s' % (pre, col.replace(pre, "").replace(pos, ""), pos)
                 if col in existingColumnsDic:
@@ -314,14 +336,14 @@ class baseGlobalDb (baseBatch):
                                 if colToReplace:
                                     newExcecFunction = newExcecFunction.replace(colName,"{"+str(colToReplace)+"}")
                     execOnRowsDic[i] = newExcecFunction
+
             columnStr = ",".join(sourceColumnStr)
-
-
             sourceSql = '%s %s %s' %(preSql,columnStr,postsql)
-
 
         """ EXECUTING SOURCE QUERY """
         sourceSql = str(sourceSql) if self.isExtractSqlIsOnlySTR else sourceSql
+
+        print ("TAL---->>> ", sourceSql)
         self.exeSQL(sql=sourceSql , commit=False)
 
         if len(targetColumnStr)==0:
@@ -354,6 +376,23 @@ class baseGlobalDb (baseBatch):
         pre, pos = self.columnFrame[0], self.columnFrame[1]
         colList = []
         colInsert = []
+        ## Compare existint target strucutre
+        tarStrucutre = self.getStructure(tableName=self.connObj, tableSchema=self.defaultSchema, sqlQuery=None)
+        tarStrucutreL= {x.replace(pre, "").replace(pos, "").lower(): x for x in tarStrucutre}
+
+        removeCol = {}
+        for i, col in enumerate (targetColumn):
+            if col.replace(pre, "").replace(pos, "").lower() not in tarStrucutreL:
+                removeCol[i] = col
+        if len (removeCol)>0:
+            for num in removeCol:
+                p("COLUMN NUMBER %s, NAME: %s NOT EXISTS IN TARGET TABLE, IGNORE COLUMN" %(num,removeCol[num]), "w")
+                targetColumn.remove(removeCol[num])
+
+                for i, r in enumerate (rows):
+                    rows[i] = list(r)
+                    del rows[i][num]
+
         for col in targetColumn:
             colName = '%s%s%s' % (pre, col, pos)
             colList.append(colName)
@@ -420,7 +459,6 @@ class baseGlobalDb (baseBatch):
             execQuery(sqlWithParamList=method, connObj=self)
 
     """ PUBLIC METHOD FOR DB MANIPULATION  """
-
     def exeSQL(self, sql, commit=True):
         s = ''
         if not (isinstance(sql, (list, tuple))):
@@ -475,6 +513,7 @@ class baseGlobalDb (baseBatch):
         pos = self.columnFrame[1]
 
         notFoundColumns = {}
+        allFoundColumns = []
         foundColumns = []
 
         if not sqlQuery or len(sqlQuery) < 1:
@@ -483,6 +522,11 @@ class baseGlobalDb (baseBatch):
         ### Return dictionary : {Table Name:[{SOURCE:ColumnName, ALIASE: column aliase}, ....]}
         ### And empty table -> all column that not related to any table '':[{SOURCE:columnName, ALIASE: .... } ...]
         queryTableAndColunDic = qp.extract_tableAndColumns(sql=sqlQuery)
+
+        if qp.QUERY_COLUMNS_KEY in queryTableAndColunDic:
+            allFoundColumns = queryTableAndColunDic[qp.QUERY_COLUMNS_KEY]
+            del queryTableAndColunDic[qp.QUERY_COLUMNS_KEY]
+
 
         if qp.QUERY_NO_TABLE in queryTableAndColunDic:
             for colD in queryTableAndColunDic[qp.QUERY_NO_TABLE][qp.TABLE_COLUMN]:
@@ -557,6 +601,16 @@ class baseGlobalDb (baseBatch):
                 p("COLUMN %s NOT FOUND IN ANY TABLE, USING DEFAULT %s" % (colLName,  self.defDataType), "ii")
                 ret[colTarName] = {eJson.jSttValues.SOURCE: colLName,eJson.jSttValues.TYPE: self.defDataType}
 
+        retOrder = OrderedDict()
+        for col in allFoundColumns:
+            if col[1] in ret:
+                retOrder[col[1]] = ret[col[1]]
+            else:
+                p("!!!!ERROR: COLUMN %s NOT FOUND " %col[1],"w")
+        for col in ret:
+            if col not in retOrder:
+                p("!!!!ERROR: COLUMN %s NOT FOUND " % col, "w")
+
         return ret
 
     """ INTERNAL USED for create method
@@ -566,6 +620,7 @@ class baseGlobalDb (baseBatch):
         tableSchema, tableName = self.setTableAndSchema(tableName=tableName, tableSchema=tableSchema, wrapTable=False)
         schemaEqual = True
         newStructureL = OrderedDict()
+        newHistoryTable = None
         pre,pos = self.columnFrame[0], self.columnFrame[1]
 
         for col in newStructure:
@@ -578,53 +633,63 @@ class baseGlobalDb (baseBatch):
 
         existStructure = self.getStructure (tableName=tableName, tableSchema=tableSchema,sqlQuery=None)
 
-
         if not existStructure or len(existStructure) == 0:
             p("TABLE %s NOT EXISTS " %(tableName), "ii")
             return True
 
-        existStructureL = {x.replace(pre, "").replace(pos, "").lower(): x for x in existStructure}
+        updateDesc = 'UPDATE' if self.update == 1 else 'DROP CREATE' if self.update < 1 else 'WARNIN, NO UPDATE'
 
+        existStructureL = {x.replace(pre, "").replace(pos, "").lower(): x for x in existStructure}
         for col in existStructureL:
             if col in newStructureL:
-                if existStructure[ existStructureL[col] ][eJson.jSttValues.TYPE].lower() != newStructureL[ col ][1].lower():
+                if existStructure[existStructureL[col]][eJson.jSttValues.TYPE].lower() != newStructureL[col][1].lower():
                     schemaEqual = False
-                    p("TYPE FOR COLUMN %s CHANGED, OLD: %s, NEW: %s" % (col, existStructure[ existStructureL[col] ] [eJson.jSttValues.TYPE] , newStructureL[ col ][1]), "w")
+                    if self.update == 1:
+                        sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.TABLE_CHANGE_COLUMN,
+                                                   tableName=tableName, tableSchema=tableSchema, columnName=col,
+                                                   columnType=newStructureL[col][1])
+                        self.exeSQL(sql=sql)
+
+                    p("%s: CONN:%s, TABLE: %s, COLUMN %s, TYPE CHANGED, OLD: %s, NEW: %s" % (updateDesc, self.conn, tableName, col, existStructure[existStructureL[col]][eJson.jSttValues.TYPE],newStructureL[col][1]), "w")
+
             else:
                 schemaEqual = False
-                p("TABLE CHANGED REMOVE COLUMN: %s " % (col), "w")
+                p("CONN:%s, TABLE: %s, REMOVING COLUMN: %s " % (self.conn, tableName, col), "w")
 
         for col in newStructureL:
             if col not in existStructureL:
                 schemaEqual = False
-                p("TABLE CHANGED ADD COLUMN: %s " % (newStructureL[col][0]), "w")
+                p("CONN:%s, TABLE: %s, ADD COLUMN: %s " % (self.conn, tableName, newStructureL[col][0]), "w")
 
         if schemaEqual:
             p("TABLE %s DID NOT CHANGED  >>>>>" % (tableName), "ii")
-            return False
+            return False, newHistoryTable
         else:
-            if config.TRACK_HISTORY:
-                p("TABLE HISTORY IS ON ...", "ii")
-                newHistoryTable = "%s_%s" % (tableName, str(time.strftime('%y%m%d')))
-                if (self.isExists(tableSchema=tableSchema, tableName=tableName)):
-                    num = 0
-                    while (self.isExists(tableSchema=tableSchema, tableName=newHistoryTable)):
-                        num += 1
-                        newHistoryTable = "%s_%s_%s" % (tableName, str(time.strftime('%y%m%d')), str(num))
-                if newHistoryTable:
-                    p("TABLE HISTORY IS ON AND CHANGED, TABLE %s EXISTS ... RENAMED TO %s" % (str(tableName), str(newHistoryTable)), "w")
-                    sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.RENAME, tableSchema=tableSchema,tableName=tableName, tableNewName=newHistoryTable)
-
-                    # sql = eval (self.objType+"_renameTable ("+self.objName+","+oldName+")")
-                    p("RENAME TABLE SQL:%s" % (str(sql)), "w")
-                    self.exeSQL(sql=sql, commit=True)
+            if self.update>1:
+                p("TABLE STRUCTURE CHANGED, UPDATE IS NOT ALLOWED, NO CHANGE","w")
+                return False, newHistoryTable
             else:
-                if existStructure and len(existStructure)>0:
-                    p("TABLE HISTORY IS OFF AND TABLE EXISTS, CREATE TABLE %s IN NEW STRUCTURE... "%(str(tableName)), "w")
-                    sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.DROP,  tableName=tableName, tableSchema=tableSchema)
+                if config.TRACK_HISTORY:
+                    p("TABLE HISTORY IS ON ...", "ii")
+                    newHistoryTable = "%s_%s" % (tableName, str(time.strftime('%y%m%d')))
+                    if (self.isExists(tableSchema=tableSchema, tableName=tableName)):
+                        num = 0
+                        while (self.isExists(tableSchema=tableSchema, tableName=newHistoryTable)):
+                            num += 1
+                            newHistoryTable = "%s_%s_%s" % (tableName, str(time.strftime('%y%m%d')), str(num))
+                    if newHistoryTable:
+                        p("TABLE HISTORY IS ON AND CHANGED, TABLE %s EXISTS ... RENAMED TO %s" % (str(tableName), str(newHistoryTable)), "w")
+                        sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.RENAME, tableSchema=tableSchema,tableName=tableName, tableNewName=newHistoryTable)
 
-                    self.exeSQL(sql=sql, commit=True)
-        return True
+                        # sql = eval (self.objType+"_renameTable ("+self.objName+","+oldName+")")
+                        p("RENAME TABLE SQL:%s" % (str(sql)), "w")
+                        self.exeSQL(sql=sql, commit=True)
+                else:
+                    if existStructure and len(existStructure)>0:
+                        p("TABLE HISTORY IS OFF AND TABLE EXISTS, DROP -> CREATE TABLE %s IN NEW STRUCTURE... "%(str(tableName)), "w")
+                        sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.DROP,  tableName=tableName, tableSchema=tableSchema)
+                        self.exeSQL(sql=sql, commit=True)
+        return True, newHistoryTable
 
     """ Return tableSchema, tableName From table name and schema 
         WrapTable=True will return with DB wrapping for example Sql server colum yoyo will be [yoyo] """

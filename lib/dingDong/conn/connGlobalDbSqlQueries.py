@@ -47,6 +47,8 @@ class baseSqlQuery (object):
         elif eSql.MERGE     == sqlType: self.setSqlMerge(**args)
         elif eSql.ISEXISTS  == sqlType: self.setSqlIsExists(**args)
         elif eSql.DELETE    == sqlType: self.setSqlDelete(**args)
+        elif eSql.TABLE_COPY_BY_COLUMN    == sqlType: self.tblCopyByColumn(**args)
+
         else:
             p("baseConnDbSqlQueries->getSql: %s IS NOT DEFINED  !" % (sqlType.upper()), "e")
             return None
@@ -82,6 +84,8 @@ class baseSqlQuery (object):
     def setSqlDelete (self, sqlFilter, tableName, tableSchema):
         pass
 
+    def tblCopyByColumn(self, tableName, tableSchema, srcTableName, columns):
+        pass
 
 
 class setSqlQuery (baseSqlQuery):
@@ -196,119 +200,17 @@ class setSqlQuery (baseSqlQuery):
         self.connQuery[eConn.SQLSERVER] = sql
         self.connQuery[eConn.LITE] = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = '%s';" %(fullTableName)
 
-
-
     def setSqlDelete (self, sqlFilter, tableName, tableSchema):
         fullTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
         sql ="Delete From %s where %s " %(fullTableName, sqlFilter)
         self.default = sql
         self.connQuery[eConn.SQLSERVER] = sql
 
-################################################################################################
-###################   OLD VERSION - TAL 2019/05/29 --> NEED TO DELETE
-################################################################################################
+    def tblCopyByColumn(self, tableName, tableSchema, srcTableName, columns):
+        sourceTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else srcTableName
+        targetTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
+        columns= ",".join(columns)
 
-######### SQL : COLUMN NAMES : column name
-def sql_columnsNames ( tbl , schema ):
-
-    if schema:
-        sql = "select column_name from information_schema.columns where table_name='" + tbl + "' And table_schema='" + schema + "' order by ordinal_position"
-    else:
-        sql = "select column_name from information_schema.columns where table_name='" + tbl + "' order by ordinal_position"
-    return sql
-
-def oracle_columnsNames (tblName, tblSchema=None):
-    if not tblSchema:
-        endSchema = tblName.find(".", 0)
-        if endSchema > 0:
-            tblSchema = tblName[0:endSchema]
-            tblName = tblName[endSchema + 1:]
-    if tblSchema:
-        sql = "select column_name from information_schema.columns where table_name='" + tblName + "' And table_schema='" + tblSchema + "' order by ordinal_position"
-    else:
-        sql = "select column_name from information_schema.columns where table_name='" + tblName + "' order by ordinal_position"
-    return sql
-
-######### SQL : DATABASE STRUCURE
-def sql_objectStrucute (filterDic):
-    typesObj    = "'BASE TABLE','VIEW'"
-    likeStr     = None
-    sql         = ""
-    if filterDic:
-        if 'type' in filterDic:
-            typesObj = ",".join([ "'"+x.replace ('"','').replace("'","")+"'" for x in filterDic['type']])
-        if 'like' in filterDic:
-            likeStr = " TABLE_NAME like ('%"+filterDic['like'].replace("'","").replace('"','')+"%') "
-    # select type_desc,type, name from sys.objects WHERE type in ( %s ) AND %s order by name
-    # SELECT TABLE_SCHEMA+'.'+TABLE_NAME FROM INFORMATION_SCHEMA.TABLES Where TABLE_TYPE in ('BASE TABLE','VIEW')
-    if  likeStr:
-        sql = "SELECT TABLE_SCHEMA+'.'+TABLE_NAME, TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES Where TABLE_TYPE in ( %s ) AND %s " %( typesObj , likeStr)
-    else:
-        sql = "SELECT TABLE_SCHEMA+'.'+TABLE_NAME, TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES Where TABLE_TYPE in ( %s ) " % (typesObj)
-    sql+=" ORDER BY TABLE_SCHEMA+'.'+TABLE_NAME"
-    return sql
-
-######### SQL : MINIMUN VALUE : tblName, tblSchema, resolution, periods, col=None, startDate=None
-def sql_minValue (tblName, tblSchema, resolution,periods,col=None, startDate=None):
-    sql = ""
-    dDate = " getdate() "
-    if startDate:
-        dDate = (" Convert (smalldatetime '%s') " %str(startDate))
-    if col:
-        sql = "Select CONVERT (DATE, MIN (%s)) FROM " % str (col)
-        if tblSchema:
-            sql += tblSchema + "." + tblName
-        else:
-            sql += tblName
-    else:
-        sql = "Select convert (date, dataadd (%s, %s, %s))" %(str(resolution),str(periods),dDate)
-    return sql
-
-def mysql_minValue (tblName, tblSchema, resolution,periods,col=None, startDate=None):
-    sql = ""
-    if 'd' == resolution: resolution = "DAY"
-    if 'm' == resolution: resolution = "MONTH"
-    if 'y' == resolution: resolution = "YEAR"
-
-    dDate = " CURDATE() "
-    if startDate:
-        dDate = (" '%s' " %str(startDate))
-    if col:
-        sql = "Select DATE ( MIN (%s)) FROM " % str (col)
-        if tblSchema:
-            sql += tblSchema + "." + tblName
-        else:
-            sql += tblName
-    else:
-        sql = "Select DATE ( DATE_ADD(%s, INTERVAL %s %s))" %(dDate,str(periods),str(resolution))
-    return sql
-
-def oracle_minValue (tblName, tblSchema, resolution,periods,col=None, startDate=None ):
-    sql = ""
-    dDate = " getdate() "
-    if startDate:
-        dDate = (" TO_DATE ('%s') " % str(startDate))
-    if col:
-        sql = "Select trunc (MIN (%s) ) FROM " % str (col)
-        if tblSchema:
-            sql += "`"+tblSchema + "`" + "." + "`" + tblName + "`"
-        else:
-            sql += "`" + tblName + "`"
-    if 'd' in resolution:
-        sql = 'Select trunc (%s+%s) from dual;' %(dDate, str(periods))
-    if 'm' in resolution:
-        sql =  'Select trunc (add_months(%s, %s)) from dual;' %(dDate, str(periods))
-    if 'y' in resolution:
-        sql =  'Select trunc (add_months(%s, %s)) from dual;' %(dDate, str(periods*12))
-    return sql
-
-######### SQL : SEQUENCE : column, type, start, leg
-def sql_seq (seqDic):
-    sql = ""
-    if 'column' in seqDic and 'type' in seqDic and 'start' in seqDic and 'inc' in seqDic:
-        if 'merge' in seqDic:
-            # "["+seqDic['column']+"]"+"\t"+
-            sql = "["+seqDic['type']+"],\n"
-        else:
-            sql = "["+seqDic['type']+"]"+"\t"+" IDENTITY("+str(seqDic['start'])+","+str(seqDic['inc'])+") NOT NULL,\n"
-    return sql
+        sql = "insert into %s (%s) select %s from %s" % (targetTableName,columns,columns, sourceTableName)
+        self.default = sql
+        self.connQuery[eConn.SQLSERVER] = sql

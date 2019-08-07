@@ -19,6 +19,7 @@
 import re
 import sqlparse
 from collections import OrderedDict
+from past.builtins import basestring
 from sqlparse.sql       import IdentifierList, Identifier, Parenthesis
 from sqlparse.tokens    import Keyword, DML
 
@@ -42,9 +43,15 @@ TABLE_COLUMN= 'column'
 def extract_tableAndColumns (sql):
     sql, pre = removeProps (sql=sql)
     tblTupe , columns, sqlPre, sqlPost = extract_tables(sql)
+
+
     pre = pre if pre and len(pre)>0 else sqlPre
 
     ret = {QUERY_PRE:pre, QUERY_POST:sqlPost}
+
+    if QUERY_COLUMNS_KEY in columns:
+        ret[QUERY_COLUMNS_KEY] = columns[QUERY_COLUMNS_KEY]
+        del columns[QUERY_COLUMNS_KEY]
 
     # merge table to columns
 
@@ -188,11 +195,15 @@ def extract_select_part (parsed):
                 else:
                     tarName = srcName
                 columnList.append( (srcName.replace("\n", " ").split(".") , tarName) )
+            elif item.value == '*':
+                columnList.append( ('*', '*') )
+
             elif not isPost:
                 preSql += uniocdeStr(item.value)
         elif isPost:
             postSql +=uniocdeStr(item.value)
 
+    columnDic[QUERY_COLUMNS_KEY] = columnList
     for tupCol in columnList:
         col     = tupCol[0]
         tarName = tupCol[1]

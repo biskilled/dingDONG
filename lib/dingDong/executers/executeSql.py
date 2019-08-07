@@ -24,6 +24,7 @@ import io
 import sys
 import multiprocessing
 from collections import OrderedDict
+from past.builtins import basestring
 
 from dingDong.config        import config
 from dingDong.misc.logger   import p, LOGGER_OBJECT

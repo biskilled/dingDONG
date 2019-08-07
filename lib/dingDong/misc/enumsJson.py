@@ -69,6 +69,7 @@ class eJson (object):
         IS_SQL      = 'sql'
         FOLDER      = 'folder'
         BATCH_SIZE  = 'batch'
+        UPDATE      = 'update'
 
         eDict = {
             NAME:       [NAME, 'name'],
@@ -80,7 +81,8 @@ class eJson (object):
             URLPARAM:   [URLPARAM, 'extra', 'extraparam'],
             FOLDER:     [FOLDER, 'files'],
             BATCH_SIZE: [BATCH_SIZE,'totalrows', 'rows'],
-            URL_FILE  : [URL_FILE, 'file']
+            URL_FILE  : [URL_FILE, 'file'],
+            UPDATE:     [UPDATE,'change']
 
         }
         DIC   = {   NAME:None,TYPE:None,CONN:None,OBJ:None,
@@ -114,6 +116,11 @@ class eJson (object):
         APPEND          = 'append'
         REPLACE_TO_NONE = 'replace'
         CSV             = 'csv'
+
+    class jUpdate(object):
+        DROP      = -1
+        UPDATE    = 1
+        NO_UPDATE = 2
 
 class eConn (object):
     SQLSERVER   = "sql"
@@ -155,13 +162,17 @@ class eSql (object):
     ISEXISTS    = 'isexists'
     DELETE      = 'delete'
 
+    TABLE_COPY_BY_COLUMN = 'copy'
+
 """ Methods To use for fun """
 def findProp (prop, obj=eConn, dictProp=None):
     dicClass = obj.__dict__
     def getPropValue (prop):
         if prop:
             for p in dicClass:
-                if isinstance(dicClass[p], str) and dicClass[p].lower() == prop.lower():
+                if isinstance(dicClass[p], str) and dicClass[p].lower() == str(prop).lower():
+                    return prop
+                elif isinstance(dicClass[p], int) and str(dicClass[p]) == str(prop):
                     return prop
 
                 if isinstance(dicClass[p], dict):

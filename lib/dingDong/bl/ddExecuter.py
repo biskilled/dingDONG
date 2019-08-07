@@ -19,6 +19,9 @@ try:
     import queue
 except ImportError:
     import Queue as queue
+
+import traceback
+import sys
 from threading import Thread
 
 from dingDong.bl.ddManager import ddManager
@@ -44,6 +47,7 @@ class dingDong:
         self.jsonParser = jsonParser(dicObj=dicObj, filePath=filePath,
                                      dirData=dirData, includeFiles=includeFiles, notIncludeFiles=notIncludeFiles,
                                      connDict=connDict, sqlFolder=self.sqlFolder)
+
 
         self.msg = executeAddMsg()
         self.propcesses = processes if processes else config.NUM_OF_PROCESSES
@@ -83,8 +87,9 @@ class dingDong:
         numOfProcesses = min (len(processList), self.propcesses)
 
         if numOfProcesses==1:
-            dingObject = ddManager(node=processList[0][0], connDict=self.connDict)
-            dingObject.dong()
+            for proc in processList:
+                dingObject = ddManager(node=proc[0], connDict=self.connDict)
+                dingObject.dong()
 
         elif numOfProcesses > 1:
             q = queue.Queue(maxsize=0)
@@ -109,12 +114,19 @@ class dingDong:
 
     def execDong (self, q):
         while True:
-            (jMap, procNum, procTotal) = q.get()
-            dingObject = ddManager(node=jMap)
-            if procTotal > 1:
-                p("DONG PROCESS NUMBER %s OUT OF %s" % (str(procNum), str(procTotal)))
-            dingObject.dong()
-            q.task_done()
+            try:
+                (jMap, procNum, procTotal) = q.get()
+                dingObject = ddManager(node=jMap)
+                if procTotal > 1:
+                    p("DONG PROCESS NUMBER %s OUT OF %s" % (str(procNum), str(procTotal)))
+                dingObject.dong()
+            except Exception as e:
+                err = traceback.extract_tb(e.__traceback__)
+                p("MULTI THREADING ERROR:\n%s " % e, "e")
+                for er in err:
+                    p(er , "e")
+            finally:
+                q.task_done()
 
     def setLoggingLevel (self, val):
         CRITICAL = 50

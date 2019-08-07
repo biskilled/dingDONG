@@ -138,6 +138,7 @@ class ddManager (object):
                     tarToSrc[tarColumns[col]] = {eJson.jSttValues.SOURCE: srcColumns[col]}
 
         tarToSrcColumns = {x.replace(tarPre, "").replace(tarPos, "").lower(): x for x in tarToSrc}
+
         for col in sttColumns:
             if col in tarToSrcColumns:
                 tarToSrc[tarToSrcColumns[col]].update(self.stt[sttColumns[col]])
@@ -245,6 +246,7 @@ class ddManager (object):
 
                         if eJson.jSttValues.ALIACE in self.stt[col]:
                             retStrucure[col][eJson.jSttValues.ALIACE] = self.stt[col][eJson.jSttValues.ALIACE]
+
         return retStrucure
 
     """ Check Source values in STT - remove invalid values """
