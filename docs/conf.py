@@ -14,14 +14,14 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.join('popEtl', 'lib'))
+sys.path.insert(0, os.path.join('dingDong', 'lib'))
 #sys.path.insert(0, os.path.abspath(os.path.join('..', '..', '..', 'lib')))
 #sys.path.insert(0, os.path.abspath('.'))
 
 
 # -- Project information -----------------------------------------------------
 
-PROJECT     = 'popEtl'
+PROJECT     = 'dingDong'
 COPYRIGHT   = '2019, BPMK ltd'
 AUTHOR      = 'Tal Shany'
 VERSION     = '1.0'
@@ -77,7 +77,7 @@ pygments_style = 'sphinx'
 #html_theme = 'alabaster'
 html_theme_path = ['_themes']
 html_theme = 'sphinx_rtd_theme'
-html_short_title = 'popEtl Documentation'
+html_short_title = 'dingDong Documentation'
 
 html_theme_options = {
     'canonical_url': '',
