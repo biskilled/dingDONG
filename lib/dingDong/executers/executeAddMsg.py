@@ -107,11 +107,12 @@ class executeAddMsg (object):
 
             htmlList.append (dicFirstTable)
             if withErr:
-                # 2nd table - errors tables
-                dicFirstTable = {eHtml.HEADER: ['ERROR FOUNDS IN CURRENT EXECUTION'],eHtml.ROWS: []}
-                for err in errList:
-                    dicFirstTable[eHtml.ROWS].append ( [err] )
-
+                if errList and len(errList)>0:
+                    dicFirstTable = {eHtml.HEADER: ['ERROR FOUNDS IN CURRENT EXECUTION'],eHtml.ROWS: []}
+                    for err in errList:
+                        dicFirstTable[eHtml.ROWS].append ( [err] )
+                else:
+                    dicFirstTable = {eHtml.HEADER: ['NO ERROR FOUNDS IN CURRENT EXECUTION'], eHtml.ROWS: []}
                 htmlList.append(dicFirstTable)
 
             if withWarning and warList and len (warList)>0:
