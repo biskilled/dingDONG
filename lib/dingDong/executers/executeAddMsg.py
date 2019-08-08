@@ -67,18 +67,7 @@ class executeAddMsg (object):
                                         msgProp.STEP_TIME  :tCntFromLaststep,
                                         msgProp.TOTAL_TIME :tCntFromStart })
 
-    def deleteOldLogFiles (self, days=5 ):
-        logsDir = self.loggClass.getLogsDir()
-        if logsDir:
-            now = time.time()
-            old = now - (days * 24 * 60 * 60)
-            for f in os.listdir(logsDir):
-                path = os.path.join(logsDir, f)
-                if os.path.isfile(path):
-                    stat = os.stat(path)
-                    if stat.st_mtime < old:
-                        self.logg.info("DELETE FILE %s" %(path))
-                        os.remove(path)
+
 
     def end(self, msg=None,pr=True):
         msg = msg if msg else msgProp.MSG_LAST_STEP
@@ -88,13 +77,15 @@ class executeAddMsg (object):
             for col in self.stateDic:
                 p (list(self.stateDic[col].values()))
 
-    def sendSMTPmsg (self, msgName, onlyOnErr=False, withErr=True, ):
+    def sendSMTPmsg (self, msgName, onlyOnErr=False, withErr=True,withWarning=True ):
 
         okMsg = msgProp.MSG_SUBJECT_SUCCESS %(msgName)
         errMsg= msgProp.MSG_SUBJECT_FAILURE %(msgName)
 
-        errList = self.loggClass.getLogData ()
+        errList = self.loggClass.getLogData (error=True)
         errCnt  = len(errList) if errList else 0
+
+        warList = self.loggClass.getLogData (error=False) if withWarning else None
 
         htmlList = []
         msgSubj  = okMsg if errCnt<1 else errMsg
@@ -117,10 +108,16 @@ class executeAddMsg (object):
             htmlList.append (dicFirstTable)
             if withErr:
                 # 2nd table - errors tables
-                dicFirstTable = {eHtml.HEADER: ['Error Desc'],
-                                 eHtml.ROWS: []}
+                dicFirstTable = {eHtml.HEADER: ['ERROR FOUNDS IN CURRENT EXECUTION'],eHtml.ROWS: []}
                 for err in errList:
                     dicFirstTable[eHtml.ROWS].append ( [err] )
+
+                htmlList.append(dicFirstTable)
+
+            if withWarning and warList and len (warList)>0:
+                dicFirstTable = {eHtml.HEADER: ['WARNING FOUNDS IN CURRENT EXECUTION'],eHtml.ROWS: []}
+                for war in warList:
+                    dicFirstTable[eHtml.ROWS].append([war])
 
                 htmlList.append(dicFirstTable)
 

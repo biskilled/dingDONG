@@ -22,22 +22,17 @@ import os
 
 from dingDong.config import config
 
+### INTERNAL LOGGING CLASSES
 
-class __listHandler(logging.Handler):  # Inherit from logging.Handler
-    def __init__(self):
-        # run the regular Handler __init__
-        logging.Handler.__init__(self)
-        # Our custom argument
-        self.log_list = []
-
-    def emit(self, record):
-        # record.message is the log message
-        self.log_list.append(self.format(record))
-
-    def getList (self):
-        return self.log_list
 
 class __myLogger (object):
+    class __logFilter(object):
+        def __init__(self, level):
+            self.__level = level
+
+        def filter(self, logRecord):
+            return logRecord.levelno <= self.__level
+
     def __init__ (self, loggLevel=logging.DEBUG, logFormat='%(asctime)s %(levelname)s %(message)s' ):
         dateFormat          = '%Y-%m-%d %H:%M:%S'
         self.logFormatter   = logging.Formatter(logFormat, dateFormat)
@@ -45,7 +40,8 @@ class __myLogger (object):
 
         logging.basicConfig(level=self.logLevel, format=logFormat, datefmt=dateFormat)
         self.isLogsFilesInit= False
-        self.logTmpFile     = None
+        self.logTmpFileErr  = None
+        self.logTmpFileWar  = None
         self.logg =  logging.getLogger(__name__)
 
         if config.LOGS_DIR and os.path.isdir(config.LOGS_DIR):
@@ -75,22 +71,37 @@ class __myLogger (object):
         logErrFile = "%s_%s.err" % (logErrFile, currentDate) if logErrFile and ".err" not in logErrFile.lower() else logErrFile
 
         logTmpFile = config.LOGS_TMP_NAME
-        logTmpFile = "%s.err" % (logTmpFile) if logTmpFile and ".err" not in logTmpFile.lower() else logTmpFile
+        logTmpFileErr = "%s.err" % (logTmpFile) if logTmpFile and ".err" not in logTmpFile.lower() else logTmpFile
+        logTmpFileWar = "%s.warning" % (logTmpFile) if logTmpFile and ".warning" not in logTmpFile.lower() else logTmpFile
 
         if not os.path.isdir(self.logDir):
             err = "%s if not a correct directory " % self.logDir
             raise ValueError(err)
 
         if logTmpFile:
-            self.logTmpFile = os.path.join(self.logDir, logTmpFile)
-            tmpFileErrors   = logging.FileHandler(self.logTmpFile, mode='a')
+            ### Error Temp log file
+            self.logTmpFileErr = os.path.join(self.logDir, logTmpFileErr)
+            tmpFileErrors   = logging.FileHandler(self.logTmpFileErr, mode='a')
             tmpFileErrors.setFormatter(self.logFormatter)
             tmpFileErrors.setLevel(logging.ERROR)
+            tmpFileErrors.addFilter(self.__logFilter(logging.ERROR))
             self.logg.addHandler(tmpFileErrors)
+
+            self.logTmpFileWar = os.path.join(self.logDir, logTmpFileWar)
+            tmpFileWarning = logging.FileHandler(self.logTmpFileWar, mode='a')
+            tmpFileWarning.setFormatter(self.logFormatter)
+            tmpFileWarning.setLevel(logging.WARNING)
+            tmpFileWarning.addFilter(self.__logFilter(logging.WARNING))
+            self.logg.addHandler(tmpFileWarning)
+
             try:
-                open(self.logTmpFile, 'w').close()
+                if os.path.isfile(self.logTmpFileErr):
+                    open(self.logTmpFileErr, 'w').close()
+
+                if os.path.isfile(self.logTmpFileWar):
+                    open(self.logTmpFileWar, 'w').close()
             except:
-                p("CANNOT OPEN TEMP FILE %s" %(self.logTmpFile), "e")
+                p("CANNOT DELETE TEMP FILES\n     %s\n     %s" %(self.logTmpFileErr, self.logTmpFileWar), "e")
 
         if not logErrFile:
             fileHandler = logging.FileHandler(os.path.join(self.logDir, logFile), mode='a')
@@ -109,6 +120,9 @@ class __myLogger (object):
             fileHandlerErr.setLevel(logging.ERROR)
             self.logg.addHandler(fileHandlerErr)
 
+        ## Delete OLD log file
+        self.deleteLogFiles()
+
     def getLogg (self):
         return self.logg
 
@@ -119,15 +133,52 @@ class __myLogger (object):
         self.logLevel = logLevel
         self.logg.setLevel(self.logLevel)
 
-    def getLogData (self, logPath=None):
-        lines = None
-        if not logPath and self.logDir and self.logTmpFile:
-            logPath = os.path.join (self.logDir,self.logTmpFile)
+    def getLogData (self, logPath=None, error=True):
+        def getLines (dir=None, f=None, fPath=None):
+            lines = None
+            logPath = os.path.join(dir, f) if dir and f else fPath
 
-        if logPath and os.path.isfile(logPath):
-            with open (logPath) as f:
-                lines = f.read().splitlines()
+            if logPath and os.path.isfile(logPath):
+                with open(logPath) as f:
+                    lines = f.read().splitlines()
+            return lines
+
+        if logPath:
+            lines = getLines (dir=None, f=None, fPath=logPath)
+        elif error:
+            lines = getLines(dir=self.logDir, f=self.logTmpFileErr, fPath=None)
+        else:
+            lines = getLines(dir=self.logDir, f=self.logTmpFileWar, fPath=None)
+
         return lines
+
+    def deleteLogFiles (self, days=None ):
+        days = days if days else config.LOGS_HISTORY_DAYS
+
+        if self.logDir:
+            now = time.time()
+            old = now - (days * 24 * 60 * 60)
+            for f in os.listdir(self.logDir):
+                path = os.path.join(self.logDir, f)
+                if os.path.isfile(path):
+                    stat = os.stat(path)
+                    if stat.st_mtime < old:
+                        self.logg.info("DELETE FILE %s" %(path))
+                        os.remove(path)
+
+class __listHandler(logging.Handler):  # Inherit from logging.Handler
+    def __init__(self):
+        logging.Handler.__init__(self)
+        # Our custom argument
+        self.log_list = []
+
+    def emit(self, record):
+        # record.message is the log message
+        self.log_list.append(self.format(record))
+
+    def getList (self):
+        return self.log_list
+
 
 LOGGER_OBJECT  = __myLogger(loggLevel=config.LOGS_DEBUG)
 __logg  = LOGGER_OBJECT.getLogg()

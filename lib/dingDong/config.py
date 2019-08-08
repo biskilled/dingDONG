@@ -43,6 +43,7 @@ class config:
     LOGS_INFO_NAME = 'log'
     LOGS_ERR_NAME  = 'log'
     LOGS_TMP_NAME  = 'lastLog'
+    LOGS_HISTORY_DAYS=5
 
     #SMTP and massaging Configuration
     SMTP_SERVER             = ""
