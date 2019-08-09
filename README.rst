@@ -77,12 +77,13 @@ download samples file
 
 in this sampel we will use `C:\samples` as root directory for all files and logs
 
-.. code::python
-    def xxxx(x):
-        print ("HALLL")
+.. code-block::python
+def xxxx(x):
+    print ("HALLL")
 
 
-
+hallow world
+dsdsdsdsd ``::``
 
 
 Road map
