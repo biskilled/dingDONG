@@ -69,7 +69,10 @@ download samples file
 
 3. `DATAELEMENTDESCRIPTION.csv <samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
 
-4.
+4. .. |location_link| raw:: html
+    <a href="http://www.ynet.co.il" target="_blank">check your location here</a>
+
+
 
 
 :download:`DEMOGRAPHICS.csv <https://github.com/biskilled/dingDong/blob/master/samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
