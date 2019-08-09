@@ -54,6 +54,15 @@ Installation
 ============
 `download from GitHub <https://github.com/biskilled/dingDong>`_ or install by using ``pip``
 
+```python
+pip install dingDong
+```
+
+Samples
+=======
+
+
+
 
 Road map
 ========
@@ -81,7 +90,7 @@ Cuurent supporting features
 Authors
 =======
 
-popEtl was created by `Tal Shany <http://www.biskilled.com>`_
+dingDong was created by `Tal Shany <http://www.biskilled.com>`_
 (tal@biSkilled.com)
 We are looking for contributions !!!
 
