@@ -70,7 +70,7 @@ download samples file
 3. `DATAELEMENTDESCRIPTION.csv <samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
 
 .. |location_link| raw:: html
-<a href="http://www.ynet.co.il" target="_blank">check your location here</a>
+   <a href="http://www.ynet.co.il" target="_blank">check your location here</a>
 
 
 
