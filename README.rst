@@ -71,16 +71,17 @@ download samples file
 
 4.
 
-    [YOYO](samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv)
 
-`DEMOGRAPHICS.csv <https://github.com/biskilled/dingDong/samples/sampleHealthCare/csvData/DEMOGRAPHICS.csv>`_
+:download:`DEMOGRAPHICS.csv <https://github.com/biskilled/dingDong/blob/master/samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
 `MEASURESOFBIRTHANDDEATH.csv <https://github.com/biskilled/dingDong/samples/sampleHealthCare/csvData/MEASURESOFBIRTHANDDEATH.csv>`_
 
 in this sampel we will use `C:\samples` as root directory for all files and logs
 
 .. code::python
-def xxxx(x):
-    print ("HALLL")
+    def xxxx(x):
+        print ("HALLL")
+
+
 
 
 
