@@ -80,6 +80,14 @@ check this `xxxx`_.
 .. _xxxx: sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv
 
 
+location_link
+|location_link
+
+.. |location_link| raw:: html
+
+   <a href="http://geoiptool.com" target="_blank">check your location here</a>
+
+
 :download:`DEMOGRAPHICS.csv <https://github.com/biskilled/dingDong/blob/master/samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
 `MEASURESOFBIRTHANDDEATH.csv <https://github.com/biskilled/dingDong/samples/sampleHealthCare/csvData/MEASURESOFBIRTHANDDEATH.csv>`_
 
