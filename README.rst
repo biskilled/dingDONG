@@ -89,7 +89,7 @@ yyyyy
 
 .. |location_link| raw:: html
 
-   <b><a href="https://github.com/biskilled/dingDong/blob/master/samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv" target=_blank>DATAELEMENTDESCRIPTION.csv</a></b>
+   <b><a download href="https://github.com/biskilled/dingDong/blob/master/samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv" target="_blank">DATAELEMENTDESCRIPTION.csv</a></b>
 
 
 :download:`DEMOGRAPHICS.csv <https://github.com/biskilled/dingDong/blob/master/samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
