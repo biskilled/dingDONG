@@ -63,7 +63,7 @@ Samples
 =======
 download samples files CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
 from `samples/sampleHealthCare/csvData <samples/sampleHealthCare/csvData/>`_ folder
-In this sample we use *C:\dingDong\*
+In this sample we use *C:\\dingDong*
 
 External hyperlinks, like `Python <http://www.python.org/>`__
 
