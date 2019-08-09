@@ -81,6 +81,11 @@ in this sampel we will use `C:\samples` as root directory for all files and logs
 def xxxx(x):
     print ("HALLL")
 
+::
+    Hallo world hoe
+    def xxxx ():
+        print ("GAlllo")
+
 
 hallow world
 dsdsdsdsd ``::``
