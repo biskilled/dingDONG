@@ -74,7 +74,7 @@ download samples file
 
 .. |location_link| raw:: <a href="http://www.ynet.co.il" target="_blank">check your location here</a>
 
-
+|location_link|
 
 
 
