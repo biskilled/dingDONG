@@ -89,7 +89,7 @@ yyyyy
 
 .. |location_link| raw:: html
 
-   <a href="javascript:window.open("http://www.ynet.co.il", "yyyy", 'height=300,width=300');"> Hallo world </a>
+   <a href="#" onclick="myFunction()">LinkText</a> <script type='text/javascript'>function myFunction(){window.open("http://www.ynet.co.il", "yyyy", 'height=300,width=300');}</script>"
 
 
 :download:`DEMOGRAPHICS.csv <https://github.com/biskilled/dingDong/blob/master/samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
