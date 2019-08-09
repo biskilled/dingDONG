@@ -54,13 +54,19 @@ Installation
 ============
 `download from GitHub <https://github.com/biskilled/dingDong>`_ or install by using ``pip``
 
-```python
+``
 pip install dingDong
-```
+``
+
 
 Samples
 =======
+download samples file
+`DATAELEMENTDESCRIPTION.csv <https://github.com/biskilled/dingDong/samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
+`DEMOGRAPHICS.csv <https://github.com/biskilled/dingDong/samples/sampleHealthCare/csvData/DEMOGRAPHICS.csv>`_
+`MEASURESOFBIRTHANDDEATH.csv <https://github.com/biskilled/dingDong/samples/sampleHealthCare/csvData/MEASURESOFBIRTHANDDEATH.csv>`_
 
+in this sampel we will use `C:\samples` as root directory for all files and logs
 
 
 
