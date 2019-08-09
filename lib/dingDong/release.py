@@ -21,4 +21,3 @@ __metaclass__ = type
 __version__ = '1.0.1'
 __author__  = 'BiSkilled'
 __codename__= 'Why not?'
-

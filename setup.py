@@ -28,6 +28,7 @@ from dingDong.release import  __version__, __author__
 def read_file(file_name):
     """Read file and return its contents."""
     with open(file_name, 'r') as f:
+        print (file_name)
         return f.read()
 
 def read_requirements(file_name):
@@ -119,4 +120,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
