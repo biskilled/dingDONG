@@ -63,7 +63,7 @@ Samples
 =======
 download samples file
 
-.. _DATAELEMENTDESCRIPTION.csv: samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv
+DATAELEMENTDESCRIPTION.csv:download:`csv <samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`
 
 `DATAELEMENTDESCRIPTION.csv <samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
 
