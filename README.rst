@@ -63,13 +63,13 @@ Samples
 =======
 download samples file
 
-:download:`DATAELEMENTDESCRIPTION.csv <samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`.
+1. :download:`DATAELEMENTDESCRIPTION.csv <samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`.
 
-.. csv:: samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv
+2. .. image:: samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv
 
-here is a pdf file :download:`pdf <samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`
+3. `DATAELEMENTDESCRIPTION.csv <samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
 
-`DATAELEMENTDESCRIPTION.csv <samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
+4.
 
     [YOYO](samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv)
 
@@ -77,6 +77,10 @@ here is a pdf file :download:`pdf <samples/sampleHealthCare/csvData/DATAELEMENTD
 `MEASURESOFBIRTHANDDEATH.csv <https://github.com/biskilled/dingDong/samples/sampleHealthCare/csvData/MEASURESOFBIRTHANDDEATH.csv>`_
 
 in this sampel we will use `C:\samples` as root directory for all files and logs
+
+.. code-block::python
+    def xxxx(x):
+        print ("HALLL")
 
 
 
