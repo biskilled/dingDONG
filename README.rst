@@ -65,6 +65,10 @@ download samples file
 
 :download:`DATAELEMENTDESCRIPTION.csv <samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`.
 
+.. image:: samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv
+
+here is a pdf file :download:`pdf <samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`
+
 `DATAELEMENTDESCRIPTION.csv <samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
 
     [YOYO](samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv)
