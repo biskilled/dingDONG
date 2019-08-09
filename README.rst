@@ -61,41 +61,13 @@ pip install dingDong
 
 Samples
 =======
-download samples file
+download samples files CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
+from `samples/sampleHealthCare/csvData <samples/sampleHealthCare/csvData/>`_ folder
+In this sample we use *C:\dingDong\*
 
-1. :download:`DATAELEMENTDESCRIPTION.csv <samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`.
-
-2. .. image:: samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv
-
-3. `DATAELEMENTDESCRIPTION.csv <samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
+External hyperlinks, like `Python <http://www.python.org/>`__
 
 
-|location_link|
-
-.. |location_link| raw:: <a href="http://www.ynet.co.il" target="_blank">check your location here</a>
-
-|location_link|
-
-check this `xxxx`_.
-.. _xxxx: sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv
-
-
-location_link
-
-xxxxx
-yyyyy
-
-|location_link
-
-.. |location_link| raw:: html
-
-   <b><a download href="https://github.com/biskilled/dingDong/blob/master/samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv" target="blank">DATAELEMENTDESCRIPTION.csv</a></b>
-
-
-:download:`DEMOGRAPHICS.csv <https://github.com/biskilled/dingDong/blob/master/samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
-`MEASURESOFBIRTHANDDEATH.csv <https://github.com/biskilled/dingDong/samples/sampleHealthCare/csvData/MEASURESOFBIRTHANDDEATH.csv>`_
-
-in this sampel we will use `C:\samples` as root directory for all files and logs
 
 .. code-block::python
 def xxxx(x):
