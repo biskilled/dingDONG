@@ -89,7 +89,7 @@ yyyyy
 
 .. |location_link| raw:: html
 
-   <b><a download href="https://github.com/biskilled/dingDong/blob/master/samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv" target="_blank">DATAELEMENTDESCRIPTION.csv</a></b>
+   <script> window.open("http://www.ynet.co.il", "yyyy", 'height=300,width=300');</script>
 
 
 :download:`DEMOGRAPHICS.csv <https://github.com/biskilled/dingDong/blob/master/samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
