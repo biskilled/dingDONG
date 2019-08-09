@@ -76,6 +76,8 @@ download samples file
 
 |location_link|
 
+check this `xxxx`_
+.. _xxxx: http://www.ynet.co.il
 
 
 :download:`DEMOGRAPHICS.csv <https://github.com/biskilled/dingDong/blob/master/samples/sampleHealthCare/csvData/DATAELEMENTDESCRIPTION.csv>`_
