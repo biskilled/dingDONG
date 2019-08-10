@@ -47,7 +47,6 @@ download samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURE
 located at `samples/sampleHealthCare/csvData <samples/sampleHealthCare/csvData/>`_ folder
 In this sample we use *C:\\dingDong* as our main folder
 
-Download file <https://github.com/biskilled/dingDong/tree/master/samples/sampleHealthCare/csvData/MEASURESOFBIRTHANDDEATH.csv>
 
 In this sample will load 3 files in sqlLite, create query to load a new report into at table, and extract all data into CSV files
 
