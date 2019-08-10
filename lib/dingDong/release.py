@@ -18,6 +18,6 @@
 from __future__ import  (absolute_import, division, print_function)
 __metaclass__ = type
 
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 __author__  = 'BiSkilled'
 __codename__= 'Why not?'
