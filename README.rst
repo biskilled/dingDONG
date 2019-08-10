@@ -169,21 +169,6 @@ We will extend our connectors and Meta-data manager accordingly.
 BATCH supported connectors
 ==========================
 
-Connectors :
-        Sql server  - tested, ready for production
-        Oracle      - tested, ready for production
-        SqlLite     - tested, ready for production
-        text files  - tested, ready for production
-        CSV         - tested
-        Vertica     - partially tested
-        MySql       - partially tested
-        MongoDB     - partially tested
-        Hadoop/Hive - not implemted
-
-        API Support
-        SalesForce  - partially, not tested
-
-
 +-------------------+------------------+------------------+-------------+------------------------------------------+
 | connectors Type   | python module    | checked version  | dev status  | notes                                    |
 +===================+==================+==================+=============+==========================================+
