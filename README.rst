@@ -179,6 +179,7 @@ We will extend our connectors and Meta-data manager accordingly.
 
 BATCH supported connectors
 ==========================
+Test 1
 
 +-------------------+---------------+------------------+---------------------------------------------+
 | connectors Type   | python module | checked version  | notes                                       |
@@ -186,11 +187,12 @@ BATCH supported connectors
 | sql               |  pyOdbc       | 2.0.1            | slow to extract, prefered to use ceODBc     |
 +------------------ +---------------+------------------+---------------------------------------------+
 
+test 2
 
-==================== ==================== ====================
-   connectors Type       python module       checked version
--------------------- -------------------- --------------------
-    sql                  pyodbc or ceODBC    2.0.1 / 2.1
+==================== ==================== ==================== ========================================
+   connectors Type       python module       checked version       Notes
+-------------------- -------------------- -------------------- ----------------------------------------
+    sql                  pyodbc              4.0.23              slow to extract massive data volume
 ==================== ==================== ====================
 
 
