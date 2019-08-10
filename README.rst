@@ -62,6 +62,8 @@ download samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURE
 located at `samples/sampleHealthCare/csvData <samples/sampleHealthCare/csvData/>`_ folder
 In this sample we use *C:\\dingDong* as our main folder
 
+Download file <https://github.com/biskilled/dingDong/tree/master/samples/sampleHealthCare/csvData>
+
 In this sample will load 3 files in sqlLite, create query to load a new report into at table, and extract all data into CSV files
 
 Full sample code ::
@@ -182,26 +184,30 @@ BATCH supported connectors
 
 Test 1
 
-+-------------------+---------------+------------------+---------------------------------------------+
-| connectors Type   | python module | checked version  | notes                                       |
-+===================+===============+==================+=============================================+
-| sql               |  pyOdbc       | 2.0.1            | slow to extract, prefered to use ceODBc     |
-+-------------------+---------------+------------------+---------------------------------------------+
++-------------------+------------------+------------------+---------------------------------------------+
+| connectors Type   | python module    | checked version  | notes                                       |
++===================+==================+==================+=============================================+
+| sql               |  pyOdbc          | 4.0.23           | slow to extract, massive data volumne       |
+|                   |                  |                  | preffered ceODBC                            |
++-------------------+------------------+------------------+---------------------------------------------+
+| sql               | ceODBC           | 2.0.1            | fast sql server for massive loading. need to|
+|                   |                  |                  | be installed manualy from 3rdPart folder    |
++-------------------+------------------+------------------+---------------------------------------------+
+| access            | pyOdbc           | 4.0.23           |                                             |
++-------------------+------------------+------------------+---------------------------------------------+
+| oracle            | cx-oracle        | 6.1              |                                             |
++-------------------+------------------+------------------+---------------------------------------------+
+| mysql             | pyMySql          | 0.6.3rc1         |                                             |
++-------------------+------------------+------------------+---------------------------------------------+
+| vertica           | vertica-python   | 0.9.1            |                                             |
++-------------------+------------------+------------------+---------------------------------------------+
+| sqllite            | sqllite3        | 6.1              |                                             |
++-------------------+------------------+------------------+---------------------------------------------+
+| mongoDb            | pyMongo         | 3.7.2            |                                             |
++-------------------+------------------+------------------+---------------------------------------------+
+| salesforce        | simple_salesforce| 3.7.2            |                                             |
++-------------------+------------------+------------------+---------------------------------------------+
 
-test 2
-==================== ==================== ==================== ========================================
-   connectors Type       python module       checked version       Notes
--------------------- -------------------- -------------------- ----------------------------------------
-    sql                  pyodbc              4.0.23              slow to extract massive data volume
-==================== ==================== ==================== ========================================
-
-
-*  APIs       : Salesforce
-*  RMDBs      : Sql-Server, Access, Oracle, Vertice, MySql
-*  middleware : column transformation and simple data cleansing
-*  DBs        : mongoDb
-*  Batch      : Using external scheduler currently .....
-*  onLine     : Needs to be implemented .....
 
 Authors
 =======
