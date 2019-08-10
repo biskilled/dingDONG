@@ -52,9 +52,8 @@ Read more about dingDong at http://www.biSkilled.com (marketing) or at `dingDong
 
 Installation
 ============
-`download from GitHub <https://github.com/biskilled/dingDong>`_ or install by using ``pip``
+`download from GitHub <https://github.com/biskilled/dingDong>`_ or install by using ``pip``::
 
-::
     pip install dingDong
 
 
@@ -71,8 +70,8 @@ In this sample we use *C:\\dingDong* as our main folder
         print ("HALLL")
 
 
-
-
+Hallo WORLD
+        print ("HAllo wrodl")
 
 
 Road map
