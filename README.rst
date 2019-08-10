@@ -18,21 +18,6 @@ we did impleented pure meta data manager, data tranformation and extracting meth
 Using the capabiltes of existing connectors with dingDong allow us to create robust data project using the
 adavatges of all the componenents
 
-Connectors :
-        Sql server  - tested, ready for production
-        Oracle      - tested, ready for production
-        SqlLite     - tested, ready for production
-        text files  - tested, ready for production
-        CSV         - tested
-        Vertica     - partially tested
-        MySql       - partially tested
-        MongoDB     - partially tested
-        Hadoop/Hive - not implemted
-
-        API Support
-        SalesForce  - partially, not tested
-
-
 dingDong is splitted to two main moduls:
  - DING - create and manage overall metadata strucutre for all object at the workflow
          - creating new object
@@ -48,7 +33,7 @@ dingDong is splitted to two main moduls:
     - merge        - merging source with target data can be done if source and merge located at the same connector
     - exec         - enable to execute PL/SQL or sstored procedure command as part of the whole data workflow
 
-Read more about dingDong at http://www.biSkilled.com (marketing) or at `dingDong documentation <https://readthedocs.org/projects/popeye-etl/>`_
+Read more about dingDong at http://www.biSkilled.com (marketing) or at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
 
 Installation
 ============
@@ -156,15 +141,17 @@ Full sample code ::
 Quick explain :
 
 1. import dingDong main modules
+
 2. set connection URL into Config.CONN_URL property
+
 3. nodesToLoad is a list of dictionary object to load.
    full availabe key list can be found at dingDong documantion
+
 4. Init dingDong class
-5. DING - mapping modulre
+
+5. DING - mapping module
+
 6  DONG - extract and load module
-
-
-
 
 Road map
 ========
@@ -182,31 +169,44 @@ We will extend our connectors and Meta-data manager accordingly.
 BATCH supported connectors
 ==========================
 
-Test 1
+Connectors :
+        Sql server  - tested, ready for production
+        Oracle      - tested, ready for production
+        SqlLite     - tested, ready for production
+        text files  - tested, ready for production
+        CSV         - tested
+        Vertica     - partially tested
+        MySql       - partially tested
+        MongoDB     - partially tested
+        Hadoop/Hive - not implemted
 
-+-------------------+------------------+------------------+---------------------------------------------+
-| connectors Type   | python module    | checked version  | notes                                       |
-+===================+==================+==================+=============================================+
-| sql               |  pyOdbc          | 4.0.23           | slow to extract, massive data volumne       |
-|                   |                  |                  | preffered ceODBC                            |
-+-------------------+------------------+------------------+---------------------------------------------+
-| sql               | ceODBC           | 2.0.1            | fast sql server for massive loading. need to|
-|                   |                  |                  | be installed manualy from 3rdPart folder    |
-+-------------------+------------------+------------------+---------------------------------------------+
-| access            | pyOdbc           | 4.0.23           |                                             |
-+-------------------+------------------+------------------+---------------------------------------------+
-| oracle            | cx-oracle        | 6.1              |                                             |
-+-------------------+------------------+------------------+---------------------------------------------+
-| mysql             | pyMySql          | 0.6.3rc1         |                                             |
-+-------------------+------------------+------------------+---------------------------------------------+
-| vertica           | vertica-python   | 0.9.1            |                                             |
-+-------------------+------------------+------------------+---------------------------------------------+
-| sqllite           | sqllite3         | 6.1              |                                             |
-+-------------------+------------------+------------------+---------------------------------------------+
-| mongoDb           | pyMongo          | 3.7.2            |                                             |
-+-------------------+------------------+------------------+---------------------------------------------+
-| salesforce        | simple_salesforce| 3.7.2            |                                             |
-+-------------------+------------------+------------------+---------------------------------------------+
+        API Support
+        SalesForce  - partially, not tested
+
+
++-------------------+------------------+------------------+-------------+------------------------------------------+
+| connectors Type   | python module    | checked version  | dev status  | notes                                    |
++===================+==================+==================+=============+==========================================+
+| sql               |  pyOdbc          | 4.0.23           | tested, prod| slow to extract, massive data volumne    |
+|                   |                  |                  |             | preffered using ceODBC                   |                                    |
++-------------------+------------------+------------------+--------------------------------------------------------+
+| sql               | ceODBC           | 2.0.1            | tested, prod| sql server conn for massive data loading |
+|                   |                  |                  |             | installed manualy from 3rdPart folder    |
++-------------------+------------------+------------------+-------------|------------------------------------------+
+| access            | pyOdbc           | 4.0.23           | tested, prod|                                          |
++-------------------+------------------+------------------+--------------------------------------------------------+
+| oracle            | cx-oracle        | 6.1              | tested, prod|                                          |                                                        |
++-------------------+------------------+------------------+--------------------------------------------------------+
+| mysql             | pyMySql          | 0.6.3rc1         | dev         |                                          |
++-------------------+------------------+------------------+--------------------------------------------------------+
+| vertica           | vertica-python   | 0.9.1            | dev         |                                          |
++-------------------+------------------+------------------+--------------------------------------------------------+
+| sqllite           | sqllite3         | 6.1              | tested, prod|                                          |
++-------------------+------------------+------------------+--------------------------------------------------------+
+| mongoDb           | pyMongo          | 3.7.2            | dev         |                                          |
++-------------------+------------------+------------------+--------------------------------------------------------+
+| salesforce        | simple_salesforce| 3.7.2            | dev         |                                          |
++-------------------+------------------+------------------+--------------------------------------------------------+
 
 
 Authors
