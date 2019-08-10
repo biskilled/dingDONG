@@ -54,33 +54,25 @@ Installation
 ============
 `download from GitHub <https://github.com/biskilled/dingDong>`_ or install by using ``pip``
 
-``
-pip install dingDong
-``
+::
+    pip install dingDong
 
 
 Samples
 =======
-download samples files CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
-from `samples/sampleHealthCare/csvData <samples/sampleHealthCare/csvData/>`_ folder
-In this sample we use *C:\\dingDong*
-
-External hyperlinks, like `Python <http://www.python.org/>`__
+download samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
+located at `samples/sampleHealthCare/csvData <samples/sampleHealthCare/csvData/>`_ folder
+In this sample we use *C:\\dingDong* as our main folder
 
 
 
 .. code-block::python
-def xxxx(x):
-    print ("HALLL")
-
-::
-    Hallo world hoe
-    def xxxx ():
-        print ("GAlllo")
+    def xxxx(x):
+        print ("HALLL")
 
 
-hallow world
-dsdsdsdsd ``::``
+
+
 
 
 Road map
