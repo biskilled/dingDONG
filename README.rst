@@ -182,7 +182,7 @@ BATCH supported connectors
 ====================    ====================    ====================
     connectors Type     python module   checked version
 --------------------    --------------------    --------------------
-    sql                 pyodbc or ceODBC        2.0.1
+    sql                 pyodbc or ceODBC        2.0.1 / 2.1
 ====================    ====================    ====================
 
 
