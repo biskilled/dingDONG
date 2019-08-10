@@ -151,11 +151,12 @@ Full sample code ::
     """
     m.dong()
 
-Quck explain :
+Quick explain :
+
 1. import dingDong main modules
 2. set connection URL into Config.CONN_URL property
-3. nodesToLoad is a list of dictionary object to load
-    full list of availabe key list can be found at documantion.
+3. nodesToLoad is a list of dictionary object to load.
+   full availabe key list can be found at dingDong documantion
 4. Init dingDong class
 5. DING - mapping modulre
 6  DONG - extract and load module
@@ -179,11 +180,18 @@ We will extend our connectors and Meta-data manager accordingly.
 BATCH supported connectors
 ==========================
 
-====================    ====================    ====================
-    connectors Type     python module   checked version
---------------------    --------------------    --------------------
-    sql                 pyodbc or ceODBC        2.0.1 / 2.1
-====================    ====================    ====================
++-------------------+---------------+------------------+---------------------------------------------+
+| connectors Type   | python module | checked version  | notes                                       |
++===================+===============+==================+=============================================+
+| sql               |  pyOdbc       | 2.0.1            | slow to extract, prefered to use ceODBc     |
++------------------ +---------------+------------------+---------------------------------------------+
+
+
+==================== ==================== ====================
+   connectors Type       python module       checked version
+-------------------- -------------------- --------------------
+    sql                  pyodbc or ceODBC    2.0.1 / 2.1
+==================== ==================== ====================
 
 
 *  APIs       : Salesforce
