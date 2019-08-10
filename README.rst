@@ -62,7 +62,7 @@ download samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURE
 located at `samples/sampleHealthCare/csvData <samples/sampleHealthCare/csvData/>`_ folder
 In this sample we use *C:\\dingDong* as our main folder
 
-Download file <https://github.com/biskilled/dingDong/tree/master/samples/sampleHealthCare/csvData>
+Download file <https://github.com/biskilled/dingDong/tree/master/samples/sampleHealthCare/csvData/MEASURESOFBIRTHANDDEATH.csv>
 
 In this sample will load 3 files in sqlLite, create query to load a new report into at table, and extract all data into CSV files
 
@@ -201,9 +201,9 @@ Test 1
 +-------------------+------------------+------------------+---------------------------------------------+
 | vertica           | vertica-python   | 0.9.1            |                                             |
 +-------------------+------------------+------------------+---------------------------------------------+
-| sqllite            | sqllite3        | 6.1              |                                             |
+| sqllite           | sqllite3         | 6.1              |                                             |
 +-------------------+------------------+------------------+---------------------------------------------+
-| mongoDb            | pyMongo         | 3.7.2            |                                             |
+| mongoDb           | pyMongo          | 3.7.2            |                                             |
 +-------------------+------------------+------------------+---------------------------------------------+
 | salesforce        | simple_salesforce| 3.7.2            |                                             |
 +-------------------+------------------+------------------+---------------------------------------------+
