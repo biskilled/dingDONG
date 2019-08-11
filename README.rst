@@ -19,12 +19,12 @@ adavatges of all the componenents
 
 dingDong is splitted into two main moduls:
 
- - DING - create and manage overall metadata strucutre for all object listed in the workflow
-         - creating new object
-         - modify existing object by using back propogation mechanism
-         - update data into new object
-         - store old structure
-         - (todo) --> truck all changes in main repo for CI/CD processess
+- DING - create and manage overall metadata strucutre for all object listed in the workflow
+     - creating new object
+     - modify existing object by using back propogation mechanism
+     - update data into new object
+     - store old structure
+     - (todo) --> truck all changes in main repo for CI/CD processess
 
 - DONG - extract and load data from diverse connectors
     - extract data - support multithreading for extracting massive data volume
@@ -52,16 +52,17 @@ on that tables and send the result into new CSV file.
 
 1. load module and basic configuration
 
-    Config.CONN_URL - set connection URl into all connectors
-            key : General connection name or connection type (sql, oracle, file .. )
-            value can be string or dictionary:
-                String      --> Connection string URL (key defined connection type: sql, oracle, mySql....)
-                Dictionary  --> must have 'conn' (connection type) and 'url' (connection string)
-                                available connection can be found at dingDong.misc.enumsJson.eConn
-    Config.LOGS_DEBUG   -> set logging level (logging.DEBUG, logging.WARNING...)
-    Config.LOGS_DIR     -> set logs directory for creating logs files
+   Config.CONN_URL - set connection URl into all connectors
+        key : General connection name or connection type (sql, oracle, file .. )
+        value can be string or dictionary:
+            String      --> Connection string URL (key defined connection type: sql, oracle, mySql....)
+            Dictionary  --> must have 'conn' (connection type) and 'url' (connection string)
+                            available connection can be found at dingDong.misc.enumsJson.eConn
+   Config.LOGS_DEBUG   -> set logging level (logging.DEBUG, logging.WARNING...)
+   Config.LOGS_DIR     -> set logs directory for creating logs files
 
-    confgiuration properties can be found at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_::
+   confgiuration properties can be found at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
+::
 
     from dingDong import DingDong
     from dingDong import Config
@@ -76,13 +77,13 @@ on that tables and send the result into new CSV file.
 
 2.  Creating workflow - workflow can be done as JSON format or python dictiaries
     In this sample we will use python dicionary the sample workflow contain:
-        1.  mapping and loading CSV file named DATAELEMENTDESCRIPTION into sqllite table named dateElements_Desc
-        2.  mapping and loading CSV file named DEMOGRAPHICS into sqllite table named demographics
-        3.  mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into sqllite table named birthDate
-        4.  create a new query based on demographics and birthDate  into new table named Finall
-        5.  Update sample field at Finall table by using direct PL/SQL query
-        6.  Extract Finall table data into a CSV file
-            We use VARCHAR(200) as default CSV column datatype. configuration can be found at DEFAULTS locatec at dingDong.conn.baseBatch
+    -  mapping and loading CSV file named DATAELEMENTDESCRIPTION into sqllite table named dateElements_Desc
+    -  mapping and loading CSV file named DEMOGRAPHICS into sqllite table named demographics
+    -  mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into sqllite table named birthDate
+    -  create a new query based on demographics and birthDate  into new table named Finall
+    -  Update sample field at Finall table by using direct PL/SQL query
+    -  Extract Finall table data into a CSV file
+        We use VARCHAR(200) as default CSV column datatype. configuration can be found at DEFAULTS locatec at dingDong.conn.baseBatch
 ::
 
     nodesToLoad = [
@@ -109,7 +110,7 @@ on that tables and send the result into new CSV file.
     dicObj      -> loading dicionary as a workflow
     dirData     -> loading JSON files in this folder
     includeFiles-> FILTER files to load in dirData folder
-    notIncldeFiles-> Ignoring files to load in dirData folder
+    notIncldeFiles-> Ignoring files to load in dirData folde
     connDict    -> equal to Config.CONN_URL, st connection Urls
     processes   -> number of parrallel processing, used only for loading data (DONG module)
 ::
