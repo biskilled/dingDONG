@@ -41,6 +41,14 @@ Quick sample:
 
 ..  toctree::
     :maxdepth: 2
+    :caption: EXECUTERS
+
+    ./rst/sqlScripts
+    ./rst/microsoftOLAP
+    ./rst/addMassageToSend
+
+..  toctree::
+    :maxdepth: 2
     :caption: Samples
 
     ./rst/samples
