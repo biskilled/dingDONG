@@ -34,15 +34,10 @@ Quick sample:
 
 ..  toctree::
     :maxdepth: 2
-    :caption: DING MODULE
+    :caption: MODULES
 
-    ./rst/mapping
-
-..  toctree::
-    :maxdepth: 2
-    :caption: DONG MODULE
-
-    ./rst/loading
+    ./rst/ding
+    ./rst/dong
 
 ..  toctree::
     :maxdepth: 2
