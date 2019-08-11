@@ -20,11 +20,11 @@ adavatges of all the componenents
 dingDong is splitted into two main moduls:
 
 - DING - create and manage overall metadata strucutre for all object listed in the workflow
-     - creating new object
-     - modify existing object by using back propogation mechanism
-     - update data into new object
-     - store old structure
-     - (todo) --> truck all changes in main repo for CI/CD processess
+    - creating new object
+    - modify existing object by using back propogation mechanism
+    - update data into new object
+    - store old structure
+    - (todo) --> truck all changes in main repo for CI/CD processess
 
 - DONG - extract and load data from diverse connectors
     - extract data - support multithreading for extracting massive data volume
@@ -52,16 +52,17 @@ on that tables and send the result into new CSV file.
 
 1. load module and basic configuration
 
-   Config.CONN_URL - set connection URl into all connectors
+    Config.CONN_URL - set connection URl into all connectors
         key : General connection name or connection type (sql, oracle, file .. )
         value can be string or dictionary:
             String      --> Connection string URL (key defined connection type: sql, oracle, mySql....)
             Dictionary  --> must have 'conn' (connection type) and 'url' (connection string)
                             available connection can be found at dingDong.misc.enumsJson.eConn
-   Config.LOGS_DEBUG   -> set logging level (logging.DEBUG, logging.WARNING...)
-   Config.LOGS_DIR     -> set logs directory for creating logs files
+    Config.LOGS_DEBUG   -> set logging level (logging.DEBUG, logging.WARNING...)
+    Config.LOGS_DIR     -> set logs directory for creating logs files
 
-   confgiuration properties can be found at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
+    confgiuration properties can be found at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
+
 ::
 
     from dingDong import DingDong
