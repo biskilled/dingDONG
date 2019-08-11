@@ -51,7 +51,6 @@ the sample demonstrate how to load 3 csv files into sqllite, create a simple qur
 on that tables and send the result into new CSV file.
 
 1. load module and basic configuration
-
     Config.CONN_URL - set connection URl into all connectors
         key : General connection name or connection type (sql, oracle, file .. )
         value can be string or dictionary:
@@ -108,12 +107,12 @@ on that tables and send the result into new CSV file.
           ]
 
 3.  Init class dingDong
-    dicObj      -> loading dicionary as a workflow
-    dirData     -> loading JSON files in this folder
-    includeFiles-> FILTER files to load in dirData folder
-    notIncldeFiles-> Ignoring files to load in dirData folde
-    connDict    -> equal to Config.CONN_URL, st connection Urls
-    processes   -> number of parrallel processing, used only for loading data (DONG module)
+    - dicObj      -> loading dicionary as a workflow
+    - dirData     -> loading JSON files in this folder
+    - includeFiles-> FILTER files to load in dirData folder
+    - notIncldeFiles-> Ignoring files to load in dirData folde
+    - connDict    -> equal to Config.CONN_URL, st connection Urls
+    - processes   -> number of parrallel processing, used only for loading data (DONG module)
 ::
 
     m = DingDong(dicObj=nodesToLoad,
@@ -125,20 +124,19 @@ on that tables and send the result into new CSV file.
                  processes=1)
 
 4.  DING
-    creating dateElements_Desc, demographics and birthDate tables based on CSV files
-    creating Finall table based on defined query
+    - creating dateElements_Desc, demographics and birthDate tables based on CSV files
+    - creating Finall table based on defined query
 
     if table exists and strucure changed - Ding module will track chnages by duplicate object with data and create new object schema
 ::
 
     m.ding()
 
-5.  DONG
-    Extracting data from CSV files into sqlLite table. defoult loading is truncate-> insert method
+5.  DONG - Extracting data from CSV files into sqlLite table. defoult loading is truncate-> insert method
     Extract data from query into Finall table (truncate-> insert )
-        if object strucuture changed and mode 2
-            - history table will be created
-            - new object will be create and will populated with data from history table (identical column name)
+    if object strucuture changed and mode 2
+        - history table will be created
+        - new object will be create and will populated with data from history table (identical column name)
 ::
 
         m.dong()
