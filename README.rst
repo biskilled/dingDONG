@@ -20,7 +20,7 @@ adavatges of all the componenents
 dingDong is splitted into two main moduls:
 
 - DING - create and manage overall metadata strucutre for all object listed in the workflow
-    - creating new object
+    - creating new objects
     - modify existing object by using back propogation mechanism
     - update data into new object
     - store old structure
