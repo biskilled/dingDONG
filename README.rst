@@ -4,34 +4,34 @@
 Ding Dong
 *********
 
-dingDong created for modeling devloping and mainting complex data integration projects - relational database
+dingDong created for modeling developing and maintaining complex data integration projects - relational database
 or cloud APIs integration, data cleansing or modeling algorithms.
 
-The project is currently supporting batch loading from diverse RMDBs. we do plan to extand it for a full support
-in REST and websockecet as well. The project if fully developer in python, we do use Node for our REST integration.
+The project is currently supporting batch loading from diverse RMDBs. we do plan to extend it for a full support
+in REST and Woonsocket as well. The project if fully developer in python, we do use Node for our REST integration.
 
-dingDong developeed to use as a glue between diverse data storage types using each componenet best of practice.
-for example there is no JOIN or UNION implementation becouse usually this functionaity is used in much efficient way at the connectors.
-we focus on managin the meta-data correctly, and helping creating fast and eaty to manage data workflows.
+dingDong developed to use as a glue between diverse data storage types using each component best of practice.
+for example there is no JOIN or UNION implementation because usually this functionality is used in much efficient way at the connectors.
+we focus on managing the meta-data correctly, and helping creating fast and easy to manage data work flows.
 
-Using the capabiltes of existing connectors with dingDong allow us to create robust data project using the
-adavatges of all the componenents
+Using the native capabilities of existing connectors with dingDong allow us to create robust data project using the
+advantages of all the components
 
-dingDong is splitted into two main moduls:
+dingDong have two main modules:
 
-- DING - create and manage overall metadata strucutre for all object listed in the workflow
+- DING - create and manage overall meta-data structure for all object listed in the work-flow
     - creating new objects
-    - modify existing object by using back propogation mechanism
+    - modify existing object by using back propagation mechanism
     - update data into new object
     - store old structure
-    - (todo) --> truck all changes in main repo for CI/CD processess
+    - (Todo) --> truck all work-flow changes as part of full CI/CD methodology
 
 - DONG - extract and load data from diverse connectors
-    - extract data - support multithreading for extracting massive data volume
-    - transfer     - enable to manipylate date by adding manipulation function on column
+    - extract data - support multi threading for extracting massive data volume
+    - transfer     - enable to add custom function on existing columns
                    - enable to add custom calculated fields
     - merge        - merging source with target data can be done if source and merge located at the same connector
-    - exec         - enable to execute PL/SQL or sstored procedure command as part of the whole data workflow
+    - exec         - enable to execute PL/SQL or stored procedure command as part of the whole data work-flow
 
 Read more about dingDong at http://www.biSkilled.com (marketing) or at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
 
@@ -47,10 +47,11 @@ download samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURE
 located at `samples/sampleHealthCare/csvData <samples/sampleHealthCare/csvData/>`_ folder.
 In this sample we use *C:\\dingDong* as our main folder
 
-the sample demonstrate how to load three csv files into sqllite, create a simple qury based
+the sample demonstrate how to load three csv files into SqlLite, create a simple query based
 on that tables and send the result into new CSV file.
 
 1. load module and basic configuration
+
    Config.CONN_URL - set connection URl into all connectors
    key : General connection name or connection type (sql, oracle, file .. )
    value can be string or dictionary:
@@ -61,7 +62,7 @@ on that tables and send the result into new CSV file.
     Config.LOGS_DEBUG   -> set logging level (logging.DEBUG, logging.WARNING...)
     Config.LOGS_DIR     -> set logs directory for creating logs files
 
-    confgiuration properties can be found at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
+    configuration properties can be found at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
 
 ::
 
@@ -76,15 +77,15 @@ on that tables and send the result into new CSV file.
     Config.LOGS_DEBUG = logging.DEBUG
     Config.LOGS_DIR = "C:\\dingDong"
 
-2.  Creating workflow - workflow can be done as JSON format or python dictiaries
-    In this sample we will use python dicionary the sample workflow contain:
-    -  mapping and loading CSV file named DATAELEMENTDESCRIPTION into sqllite table named dateElements_Desc
-    -  mapping and loading CSV file named DEMOGRAPHICS into sqllite table named demographics
-    -  mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into sqllite table named birthDate
-    -  create a new query based on demographics and birthDate  into new table named Finall
-    -  Update sample field at Finall table by using direct PL/SQL query
-    -  Extract Finall table data into a CSV file
-        We use VARCHAR(200) as default CSV column datatype. configuration can be found at DEFAULTS locatec at dingDong.conn.baseBatch
+2.  Creating work flow can be done as JSON format or python dictionaries
+    In this sample we will use python dictionary the sample work flow contain:
+    -  mapping and loading CSV file named DATAELEMENTDESCRIPTION into SqlLite table named dateElements_Desc
+    -  mapping and loading CSV file named DEMOGRAPHICS into SqlLite table named demographics
+    -  mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into SqlLite table named birthDate
+    -  create a new query based on demographics and birthDate  into new table named Final
+    -  Update sample field at Final table by using direct PL/SQL query
+    -  Extract Final table data into a CSV file
+        We use VARCHAR(200) as default CSV column data type. configuration can be found at DEFAULTS under dingDong.conn.baseBatch
 ::
 
     nodesToLoad = [
@@ -99,21 +100,21 @@ on that tables and send the result into new CSV file.
 
             {   "query":["sqlite","""   Select d.[State_FIPS_Code] AS A, d.[County_FIPS_Code] AS B, d.[County_FIPS_Code] AS G,d.[County_FIPS_Code], d.[CHSI_County_Name], d.[CHSI_State_Name],[Population_Size],[Total_Births],[Total_Deaths]
                                         From demographics d INNER JOIN birthDate b ON d.[County_FIPS_Code] = b.[County_FIPS_Code] AND d.[State_FIPS_Code] = b.[State_FIPS_Code]"""],
-                "target":["sqlite","Finall", 2]},
+                "target":["sqlite","Final", 2]},
 
             {   "myexec":["sqlite","Update dateElements_Desc Set [Data_Type] = 'dingDong';"]},
 
-            {   "source":["sqlite","Finall"],
-                "target":["file","finall.csv"]}
+            {   "source":["sqlite","Final"],
+                "target":["file","final.csv"]}
           ]
 
 3.  Init class dingDong
-    - dicObj      -> loading dicionary as a workflow
+    - dicObj      -> loading dictionary as a work flow
     - dirData     -> loading JSON files in this folder
     - includeFiles-> FILTER files to load in dirData folder
-    - notIncldeFiles-> Ignoring files to load in dirData folde
+    - notIncldeFiles-> Ignoring files to load in dirData folder
     - connDict    -> equal to Config.CONN_URL, st connection Urls
-    - processes   -> number of parrallel processing, used only for loading data (DONG module)
+    - processes   -> number of parallel processing, used only for loading data (DONG module)
 ::
 
     m = DingDong(dicObj=nodesToLoad,
@@ -126,16 +127,16 @@ on that tables and send the result into new CSV file.
 
 4.  DING
     - creating dateElements_Desc, demographics and birthDate tables based on CSV files
-    - creating Finall table based on defined query
+    - creating Final table based on defined query
 
-    if table exists and strucure changed - Ding module will track chnages by duplicate object with data and create new object schema
+    if table exists and structure changed - Ding module will track chnages by duplicate object with data and create new object schema
 ::
 
     m.ding()
 
-5.  DONG - Extracting data from CSV files into sqlLite table. defoult loading is truncate-> insert method
-    Extract data from query into Finall table (truncate-> insert )
-    if object strucuture changed and mode 2
+5.  DONG - Extracting data from CSV files into sqlLite table. default loading is truncate-> insert method
+    Extract data from query into Final table (truncate-> insert )
+    if object structure changed and mode 2
         - history table will be created
         - new object will be create and will populated with data from history table (identical column name)
 ::
@@ -167,12 +168,12 @@ Full sample code::
 
             {   "query":["sqlite","""   Select d.[State_FIPS_Code] AS A, d.[County_FIPS_Code] AS B, d.[County_FIPS_Code] AS G,d.[County_FIPS_Code], d.[CHSI_County_Name], d.[CHSI_State_Name],[Population_Size],[Total_Births],[Total_Deaths]
                                         From demographics d INNER JOIN birthDate b ON d.[County_FIPS_Code] = b.[County_FIPS_Code] AND d.[State_FIPS_Code] = b.[State_FIPS_Code]"""],
-                "target":["sqlite","Finall", 2]},
+                "target":["sqlite","Final", 2]},
 
             {   "myexec":["sqlite","Update dateElements_Desc Set [Data_Type] = 'dingDong';"]},
 
-            {   "source":["sqlite","Finall"],
-                "target":["file","finall.csv"]}
+            {   "source":["sqlite","Final"],
+                "target":["file","final.csv"]}
           ]
 
     m = DingDong(dicObj=nodesToLoad,
@@ -193,7 +194,7 @@ We would like to create a platform that will enable to design, implement and mai
 *  Any REST API connectivity from any API to any API using simple JSON mapping
 *  Any Relational data base connectivity using JSON mapping
 *  Any Non relational storage
-*  Main platform for any middleware business logic - from sample if-than-else up to statistics algorithms using ML and DL algorithms
+*  Main platform for any middle ware business logic - from sample if-than-else up to statistics algorithms using ML and DL algorithms
 *  Enable Real time and scheduled integration
 
 We will extend our connectors and Meta-data manager accordingly.
@@ -204,11 +205,11 @@ BATCH supported connectors
 +-------------------+------------------+------------------+-------------+------------------------------------------+
 | connectors Type   | python module    | checked version  | dev status  | notes                                    |
 +===================+==================+==================+=============+==========================================+
-| sql               |  pyOdbc          | 4.0.23           | tested, prod| slow to extract, massive data volumne    |
-|                   |                  |                  |             | preffered using ceODBC                   |
+| sql               |  pyOdbc          | 4.0.23           | tested, prod| slow to extract, massive data volume     |
+|                   |                  |                  |             | preferred using ceODBC                   |
 +-------------------+------------------+------------------+-------------+------------------------------------------+
 | sql               | ceODBC           | 2.0.1            | tested, prod| sql server conn for massive data loading |
-|                   |                  |                  |             | installed manualy from 3rdPart folder    |
+|                   |                  |                  |             | installed manually from 3rdPart folder   |
 +-------------------+------------------+------------------+-------------+------------------------------------------+
 | access            | pyOdbc           | 4.0.23           | tested, prod|                                          |
 +-------------------+------------------+------------------+-------------+------------------------------------------+
