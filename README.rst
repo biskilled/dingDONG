@@ -58,7 +58,7 @@ on that tables and send the result into new CSV file.
             - Dictionary --> must have 'conn' (connection type) and 'url' (connection string)
                              available connection can be found at dingDong.misc.enumsJson.eConn
    - Config.LOGS_DEBUG  -> set logging level (logging.DEBUG, logging.WARNING...)
-   - Config.LOGS_DIR    -> set logs directory for creating logs files
+   - Config.LOGS_DIR    -> set logs directory for creating logs files dsds
 
    configuration properties can be found at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
 ::
