@@ -54,15 +54,12 @@ on that tables and send the result into new CSV file.
    CONN_URL - set connection URl into all connectors
    
 
-1. 
-   Config.CONN_URL - set connection URl into all connectors
-   
-   key : General connection name or connection type (sql, oracle, file .. )
-   value can be string or dictionary:
-   
-       String      --> Connection string URL (key defined connection type: sql, oracle, mySql....)
-       Dictionary  --> must have 'conn' (connection type) and 'url' (connection string)
-       available connection can be found at dingDong.misc.enumsJson.eConn
+1. Config.CONN_URL - set connection URl into all connectors
+       key 	-> general connection name or connection type (sql, oracle, file .. )
+       value-> can be string or dictionary
+               String      --> Connection string URL (key defined connection type: sql, oracle, mySql....)
+               Dictionary  --> must have 'conn' (connection type) and 'url' (connection string)
+                               available connection can be found at dingDong.misc.enumsJson.eConn
 
     Config.LOGS_DEBUG   -> set logging level (logging.DEBUG, logging.WARNING...)
     Config.LOGS_DIR     -> set logs directory for creating logs files
