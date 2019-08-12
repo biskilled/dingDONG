@@ -74,15 +74,16 @@ on that tables and send the result into new CSV file.
     Config.LOGS_DEBUG = logging.DEBUG
     Config.LOGS_DIR = "C:\\dingDong"
 
-2. Creating work flow can be done as JSON format or python dictionaries.
+2. Creating work flow can be done as JSON format or python dictionaries \n
    In this followed sample we will use python dictionary the sample work flow contain
-   -  mapping and loading CSV file named DATAELEMENTDESCRIPTION into SqlLite table named dateElements_Desc
-   -  mapping and loading CSV file named DEMOGRAPHICS into SqlLite table named demographics
-   -  mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into SqlLite table named birthDate
-   -  create a new query based on demographics and birthDate  into new table named Final
-   -  Update sample field at Final table by using direct PL/SQL query
-   -  Extract Final table data into a CSV file
-   We use VARCHAR(200) as default CSV column data type. configuration can be found at DEFAULTS under dingDong.conn.baseBatch
+
+    -  mapping and loading CSV file named DATAELEMENTDESCRIPTION into SqlLite table named dateElements_Desc
+    -  mapping and loading CSV file named DEMOGRAPHICS into SqlLite table named demographics
+    -  mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into SqlLite table named birthDate
+    -  create a new query based on demographics and birthDate  into new table named Final
+    -  Update sample field at Final table by using direct PL/SQL query
+    -  Extract Final table data into a CSV file
+        We use VARCHAR(200) as default CSV column data type. configuration can be found at DEFAULTS under dingDong.conn.baseBatch
 ::
 
     nodesToLoad = [
