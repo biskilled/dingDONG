@@ -75,7 +75,8 @@ on that tables and send the result into new CSV file.
     Config.LOGS_DIR = "C:\\dingDong"
 
 2. Creating work flow can be done as JSON format or python dictionaries
-   In this followed sample we will use python dictionary the sample work flow contain
+ In this followed sample we will use python dictionary the sample work flow contain
+
    * mapping and loading CSV file named DATAELEMENTDESCRIPTION into SqlLite table named dateElements_Desc
    * mapping and loading CSV file named DEMOGRAPHICS into SqlLite table named demographics
    * mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into SqlLite table named birthDate
@@ -106,6 +107,7 @@ on that tables and send the result into new CSV file.
           ]
 
 3. Init class dingDong
+
 * dicObj      -> loading dictionary as a work flow
 * dirData     -> loading JSON files in this folder
 * includeFiles-> FILTER files to load in dirData folder
@@ -124,6 +126,7 @@ on that tables and send the result into new CSV file.
                  processes=1)
 
 4. DING
+
 * creating dateElements_Desc, demographics and birthDate tables based on CSV files
 * creating Final table based on defined query
 
