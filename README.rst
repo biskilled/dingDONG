@@ -50,17 +50,19 @@ In this sample we use *C:\\dingDong* as our main folder
 the sample demonstrate how to load three csv files into SqlLite, create a simple query based
 on that tables and send the result into new CSV file.
 
-1.  load module and basic configuration
-   - Config.CONN_URL   -> set connection URl into all connectors
-        - key   -> general connection name or connection type (sql, oracle, file .. )
-        - value -> can be string or dictionary
-            - String     --> Connection string URL (key defined connection type: sql, oracle, mySql....)
-            - Dictionary --> must have 'conn' (connection type) and 'url' (connection string)
-                             available connection can be found at dingDong.misc.enumsJson.eConn
-   - Config.LOGS_DEBUG  -> set logging level (logging.DEBUG, logging.WARNING...)
-   - Config.LOGS_DIR    -> set logs directory for creating logs files
+1. load module and basic configuration
 
-   configuration properties can be found at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
+* Config.CONN_URL   -> set connection URl into all connectors
+    * key   -> general connection name or connection type (sql, oracle, file .. )
+    * value -> can be string or dictionary
+      * String     --> Connection string URL (key defined connection type: sql, oracle, mySql....)
+      * Dictionary --> must have 'conn' (connection type) and 'url' (connection string).
+      available connection can be found at dingDong.misc.enumsJson.eConn
+* Config.LOGS_DEBUG  -> set logging level (logging.DEBUG, logging.WARNING...)
+* Config.LOGS_DIR    -> set logs directory for creating logs files
+
+configuration properties can be found at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
+
 ::
 
     from dingDong import DingDong
@@ -75,15 +77,15 @@ on that tables and send the result into new CSV file.
     Config.LOGS_DIR = "C:\\dingDong"
 
 2. Creating work flow can be done as JSON format or python dictionaries
- In this followed sample we will use python dictionary the sample work flow contain
+   In this followed sample we will use python dictionary the sample work flow contain
 
-   * mapping and loading CSV file named DATAELEMENTDESCRIPTION into SqlLite table named dateElements_Desc
-   * mapping and loading CSV file named DEMOGRAPHICS into SqlLite table named demographics
-   * mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into SqlLite table named birthDate
-   * create a new query based on demographics and birthDate  into new table named Final
-   * Update sample field at Final table by using direct PL/SQL query
-   * Extract Final table data into a CSV file.
-     We use VARCHAR(200) as default CSV column data type. configuration can be found at DEFAULTS under dingDong.conn.baseBatch
+* mapping and loading CSV file named DATAELEMENTDESCRIPTION into SqlLite table named dateElements_Desc
+* mapping and loading CSV file named DEMOGRAPHICS into SqlLite table named demographics
+* mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into SqlLite table named birthDate
+* create a new query based on demographics and birthDate  into new table named Final
+* Update sample field at Final table by using direct PL/SQL query
+* Extract Final table data into a CSV file.
+  We use VARCHAR(200) as default CSV column data type. configuration can be found at DEFAULTS under dingDong.conn.baseBatch
 ::
 
     nodesToLoad = [
@@ -137,9 +139,9 @@ on that tables and send the result into new CSV file.
 
 5.  DONG - Extracting data from CSV files into sqlLite table. default loading is truncate-> insert method
     Extract data from query into Final table (truncate-> insert )
-    if object structure changed and mode 2
-      * history table will be created
-      * new object will be create and will populated with data from history table (identical column name)
+* if object structure changed and mode 2 (like at the sample)
+  * history table will be created
+  * new object will be create and will populated with data from history table (identical column name)
 ::
 
         m.dong()
