@@ -51,10 +51,15 @@ the sample demonstrate how to load three csv files into SqlLite, create a simple
 on that tables and send the result into new CSV file.
 
 1. load module and basic configuration
+   CONN_URL - set connection URl into all connectors
+   
 
+1. 
    Config.CONN_URL - set connection URl into all connectors
+   
    key : General connection name or connection type (sql, oracle, file .. )
    value can be string or dictionary:
+   
        String      --> Connection string URL (key defined connection type: sql, oracle, mySql....)
        Dictionary  --> must have 'conn' (connection type) and 'url' (connection string)
        available connection can be found at dingDong.misc.enumsJson.eConn
@@ -63,6 +68,7 @@ on that tables and send the result into new CSV file.
     Config.LOGS_DIR     -> set logs directory for creating logs files
 
     configuration properties can be found at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
+   
 
 ::
 
@@ -77,7 +83,7 @@ on that tables and send the result into new CSV file.
     Config.LOGS_DEBUG = logging.DEBUG
     Config.LOGS_DIR = "C:\\dingDong"
 
-2.  Creating work flow can be done as JSON format or python dictionaries
+2.  Creating work flow can be done as JSON format or python dictionaries.
     In this sample we will use python dictionary the sample work flow contain:
     -  mapping and loading CSV file named DATAELEMENTDESCRIPTION into SqlLite table named dateElements_Desc
     -  mapping and loading CSV file named DEMOGRAPHICS into SqlLite table named demographics
