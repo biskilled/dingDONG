@@ -51,7 +51,7 @@ the sample demonstrate how to load three csv files into SqlLite, create a simple
 on that tables and send the result into new CSV file.
 
 1.  load module and basic configuration
-    - CONN_URL - set connection URl into all connectors
+    - Config.CONN_URL - set connection URl into all connectors
         - key -> general connection name or connection type (sql, oracle, file .. )
         - value-> can be string or dictionary
             - String     --> Connection string URL (key defined connection type: sql, oracle, mySql....)
