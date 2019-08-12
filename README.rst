@@ -74,16 +74,16 @@ on that tables and send the result into new CSV file.
     Config.LOGS_DEBUG = logging.DEBUG
     Config.LOGS_DIR = "C:\\dingDong"
 
-2. Creating work flow can be done as JSON format or python dictionaries \n
+2. Creating work flow can be done as JSON format or python dictionaries
    In this followed sample we will use python dictionary the sample work flow contain
 
-    -  mapping and loading CSV file named DATAELEMENTDESCRIPTION into SqlLite table named dateElements_Desc
-    -  mapping and loading CSV file named DEMOGRAPHICS into SqlLite table named demographics
-    -  mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into SqlLite table named birthDate
-    -  create a new query based on demographics and birthDate  into new table named Final
-    -  Update sample field at Final table by using direct PL/SQL query
-    -  Extract Final table data into a CSV file
-        We use VARCHAR(200) as default CSV column data type. configuration can be found at DEFAULTS under dingDong.conn.baseBatch
+   -  mapping and loading CSV file named DATAELEMENTDESCRIPTION into SqlLite table named dateElements_Desc
+   -  mapping and loading CSV file named DEMOGRAPHICS into SqlLite table named demographics
+   -  mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into SqlLite table named birthDate
+   -  create a new query based on demographics and birthDate  into new table named Final
+   -  Update sample field at Final table by using direct PL/SQL query
+   -  Extract Final table data into a CSV file
+      We use VARCHAR(200) as default CSV column data type. configuration can be found at DEFAULTS under dingDong.conn.baseBatch
 ::
 
     nodesToLoad = [
@@ -107,12 +107,13 @@ on that tables and send the result into new CSV file.
           ]
 
 3.  Init class dingDong
-    - dicObj      -> loading dictionary as a work flow
-    - dirData     -> loading JSON files in this folder
-    - includeFiles-> FILTER files to load in dirData folder
-    - notIncldeFiles-> Ignoring files to load in dirData folder
-    - connDict    -> equal to Config.CONN_URL, st connection Urls
-    - processes   -> number of parallel processing, used only for loading data (DONG module)
+
+   - dicObj      -> loading dictionary as a work flow
+   - dirData     -> loading JSON files in this folder
+   - includeFiles-> FILTER files to load in dirData folder
+   - notIncldeFiles-> Ignoring files to load in dirData folder
+   - connDict    -> equal to Config.CONN_URL, st connection Urls
+   - processes   -> number of parallel processing, used only for loading data (DONG module)
 ::
 
     m = DingDong(dicObj=nodesToLoad,
@@ -124,10 +125,10 @@ on that tables and send the result into new CSV file.
                  processes=1)
 
 4.  DING
-    - creating dateElements_Desc, demographics and birthDate tables based on CSV files
-    - creating Final table based on defined query
+   - creating dateElements_Desc, demographics and birthDate tables based on CSV files
+   - creating Final table based on defined query
 
-    if table exists and structure changed - Ding module will track chnages by duplicate object with data and create new object schema
+   if table exists and structure changed - Ding module will track chnages by duplicate object with data and create new object schema
 ::
 
     m.ding()
@@ -135,8 +136,8 @@ on that tables and send the result into new CSV file.
 5.  DONG - Extracting data from CSV files into sqlLite table. default loading is truncate-> insert method
     Extract data from query into Final table (truncate-> insert )
     if object structure changed and mode 2
-        - history table will be created
-        - new object will be create and will populated with data from history table (identical column name)
+      - history table will be created
+      - new object will be create and will populated with data from history table (identical column name)
 ::
 
         m.dong()
@@ -227,7 +228,6 @@ BATCH supported connectors
 +-------------------+------------------+------------------+-------------+------------------------------------------+
 | haddop/Hive       | .                | .                | dev         |                                          |
 +-------------------+------------------+------------------+-------------+------------------------------------------+
-
 
 Authors
 =======
