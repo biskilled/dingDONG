@@ -105,13 +105,14 @@ on that tables and send the result into new CSV file.
                 "target":["file","final.csv"]}
           ]
 
-3.  Init class dingDong
-   * dicObj      -> loading dictionary as a work flow
-   * dirData     -> loading JSON files in this folder
-   * includeFiles-> FILTER files to load in dirData folder
-   * notIncldeFiles-> Ignoring files to load in dirData folder
-   * connDict    -> equal to Config.CONN_URL, st connection Urls
-   * processes   -> number of parallel processing, used only for loading data (DONG module)
+3. Init class dingDong
+* dicObj      -> loading dictionary as a work flow
+* dirData     -> loading JSON files in this folder
+* includeFiles-> FILTER files to load in dirData folder
+* notIncldeFiles-> Ignoring files to load in dirData folder
+* connDict    -> equal to Config.CONN_URL, st connection Urls
+* processes   -> number of parallel processing, used only for loading data (DONG module)
+
 ::
 
     m = DingDong(dicObj=nodesToLoad,
@@ -122,11 +123,11 @@ on that tables and send the result into new CSV file.
                  connDict=None,
                  processes=1)
 
-4.  DING
-   * creating dateElements_Desc, demographics and birthDate tables based on CSV files
-   * creating Final table based on defined query
+4. DING
+* creating dateElements_Desc, demographics and birthDate tables based on CSV files
+* creating Final table based on defined query
 
-   if table exists and structure changed - Ding module will track chnages by duplicate object with data and create new object schema
+ if table exists and structure changed - Ding module will track chnages by duplicate object with data and create new object schema
 ::
 
     m.ding()
