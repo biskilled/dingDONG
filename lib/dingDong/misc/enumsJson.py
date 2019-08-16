@@ -37,8 +37,8 @@ class eJson (object):
         eDict = {
             TARGET: [TARGET, 'target'],  # Target
             SOURCE: [SOURCE, 'source'],  # Source
-            MERGE: [MERGE, 'merge'],
             QUERY: [QUERY, 'query'],
+            MERGE: [MERGE, 'merge'],
             SEQUENCE: [SEQUENCE, 'sequence'],
             STT: [STT, 'sourcetotarget'],
             STTONLY: [STTONLY, 'only'],

@@ -1,4 +1,4 @@
-.. _tag_mapping:
+.. _tag_olap:
 
 microsoft OLAP exeuter
 ======================

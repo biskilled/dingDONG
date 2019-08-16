@@ -43,7 +43,7 @@ we hope to extend our development and be one of the major open-source integratio
 
     ./rst/sqlScripts
     ./rst/microsoftOLAP
-    ./rst/addMassageToSend
+    ./rst/addMessageToSend
 
 ..  toctree::
     :maxdepth: 2
@@ -51,7 +51,9 @@ we hope to extend our development and be one of the major open-source integratio
 
     ./rst/samples
 
-	
+..  toctree::
+    :caption: About
+
+    ./rst/license
+
 * :ref:`license`
-
-

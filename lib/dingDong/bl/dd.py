@@ -1,4 +1,5 @@
-# (c) 2017-2019, Tal Shany <tal.shany@biSkilled.com>
+# Copyright (c) 2017-2019, BPMK LTD (BiSkilled) Tal Shany <tal.shany@biSkilled.com>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 #
 # This file is part of dingDong
 #
@@ -19,17 +20,17 @@ import re
 import copy
 from collections import OrderedDict
 
-from ddExecuter.config            import config
-from ddExecuter.misc.logger       import p, LOGGER_OBJECT
-from ddExecuter.misc.misc         import uniocdeStr
-from ddExecuter.bl.jsonParser     import jsonParser
-from ddExecuter.misc.enumsJson    import eJson
-from ddExecuter.conn.baseConnectorManager   import mngConnectors as conn
+from dingDong.config            import config
+from dingDong.misc.logger       import p, LOGGER_OBJECT
+from dingDong.misc.misc         import uniocdeStr
+from dingDong.bl.jsonParser     import jsonParser
+from dingDong.misc.enumsJson    import eJson
+from dingDong.conn.baseConnectorManager   import mngConnectors as conn
 
 ## Execters
-from ddExecuter.executers.executeSql import execQuery
-from ddExecuter.executers.executeAddMsg import executeAddMsg
-from ddExecuter.executers.executeMicrosoftOLAP import OLAP_Process
+from dingDong.executers.executeSql import execQuery
+from dingDong.executers.executeAddMsg import executeAddMsg
+from dingDong.executers.executeMicrosoftOLAP import OLAP_Process
 
 class dingDong:
     def __init__ (self,  dicObj=None, filePath=None,

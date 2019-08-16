@@ -1,4 +1,5 @@
-# (c) 2017-2019, Tal Shany <tal.shany@biSkilled.com>
+# Copyright (c) 2017-2019, BPMK LTD (BiSkilled) Tal Shany <tal.shany@biSkilled.com>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 #
 # This file is part of dingDong
 #
@@ -278,7 +279,7 @@ class jsonParser (object):
 
         if isinstance(propVal, str):
             ret[eJson.jValues.NAME]         = propFullName
-            ret[eJson.jMergeValues.TARGET]  = propVal[0]
+            ret[eJson.jMergeValues.TARGET]  = propVal
 
         elif isinstance(propVal, list):
             ret[eJson.jValues.NAME] = propFullName
@@ -286,8 +287,8 @@ class jsonParser (object):
                 ret[eJson.jMergeValues.TARGET]  = propVal[0]
             elif len(propVal) == 2:
                 ret[eJson.jMergeValues.TARGET] = propVal[0]
-                if str(propVal).isdigit():
-                    ret[eJson.jValues.UPDATE] = self.__setUpdate(propVal[2])
+                if str(propVal[1]).isdigit():
+                    ret[eJson.jValues.UPDATE] = self.__setUpdate(propVal[1])
                 else:
                     ret[eJson.jMergeValues.MERGE]  = propVal[1]
             elif len(propVal) == 3:

@@ -1,4 +1,4 @@
-.. _tag_loading:
+.. _tag_dong:
 
 Dong module
 ===========

@@ -26,7 +26,12 @@ configuration
     from dingDong import Config
 
 
-1. Connection URL dictionary for setting connectors connections ::
+
+.. _tag_CONN_URL:
+
+Connection url dictionay
+------------------------
+Connection URL dictionary for setting connectors connections ::
 
     CONN_URL    =  {    'sql'    :"DRIVER={SQL Server};SERVER=server,1433;DATABASE=database;UID=uid;PWD=pass;",
                             'oracle' :"DRIVER={SQL Server};SERVER=server,1433;DATABASE=database;UID=uid;PWD=pass;",
