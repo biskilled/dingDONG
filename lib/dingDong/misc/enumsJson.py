@@ -43,7 +43,7 @@ class eJson (object):
             STT: [STT, 'sourcetotarget'],
             STTONLY: [STTONLY, 'only'],
             MAP: [MAP, 'mapping'],
-            COLUMNS: [COLUMNS, 'columns'],
+            COLUMNS: [COLUMNS, 'columns', 'column'],
             PARTITION: [PARTITION, 'partition'],
             INC: [INC, 'incremental']
         }
@@ -96,6 +96,9 @@ class eJson (object):
         ALIACE  = 'a'
         FUNCTION= 'f'
         EXECFUNC= 'e'
+        INDEX   = 'i'
+        INDEX_CLUSTER = 'ic'
+        INDEX_UNIQUE  = 'iu'
         DIC     = {SOURCE: None, TYPE: None, ALIACE:None}
 
     class jMergeValues(object):
