@@ -201,6 +201,10 @@ class jsonParser (object):
                                 newDict[eJson.jKeys.STT] = stt
                             else:
                                 newDict[eJson.jKeys.STTONLY] = stt
+                        elif k == eJson.jKeys.INDEX:
+                            index = self.__index(propVal=node[prop])
+                            if index:
+                                newDict[eJson.jKeys.INDEX] = index
                         else:
                             p ("%s not implemented !" %(k), "e")
                     else:
@@ -364,6 +368,43 @@ class jsonParser (object):
                 if os.path.isfile( os.path.join(folderPath, fileName)):
                     ret[eJson.jValues.FILE] = os.path.join(folderPath, fileName)
 
+        return ret
+
+    def __index (self, propVal):
+        ## propVal = [{col:[],'iu':True, 'ic':True},{}]
+        if isinstance(propVal, (dict,OrderedDict)):
+            propVal = [propVal]
+
+        if not isinstance(propVal, list):
+            p("INDEX VALUES MUST BE A DICTIONARY OR LIST OF DICTIOANRY, FORMAT {'C'':list_column_index, 'ic':is cluster (True/False), 'iu': is unique (True/False)}")
+            return
+        ret = []
+        for indexDict in propVal:
+
+            if not isinstance(indexDict, (dict, OrderedDict)):
+                p("INDEX MUST BE DICTIOANY, FORMAT {'C'':list_column_index, 'ic':is cluster (True/False), 'iu': is unique (True/False)}")
+                continue
+
+            returnDict = {eJson.jValues.INDEX_COLUMS:[],eJson.jValues.INDEX_CLUSTER:True,eJson.jValues.INDEX_UNIQUE:False}
+            for node in indexDict:
+                k =  findProp (prop=node.lower(), obj=eJson.jValues, dictProp=indexDict[node])
+
+                if not k:
+                    p("INDEX VALUES IS NOT VALID: %s, IGNORE INDEX. VALID FORMAT: FORMAT {'C'':list_column_index, 'ic':is cluster (True/False), 'iu': is unique (True/False)}")
+                    break
+
+                if k == eJson.jValues.INDEX_COLUMS:
+                    if isinstance(indexDict[node], list ):
+                        returnDict[eJson.jValues.INDEX_COLUMS].extend(indexDict[node])
+                    else:
+                        returnDict[eJson.jValues.INDEX_COLUMS].append(indexDict[node])
+                elif k == eJson.jValues.INDEX_CLUSTER:
+                    if not indexDict[node]: returnDict[eJson.jValues.INDEX_CLUSTER] = False
+                elif k == eJson.jValues.INDEX_UNIQUE:
+                    if indexDict[node]: returnDict[eJson.jValues.INDEX_UNIQUE] = True
+                else:
+                    p("INDEX - UNRECOGNIZED KEY %s IN DICT:%s IGNORE. VALID FORMAT: FORMAT {'C'':list_column_index, 'ic':is cluster (True/False), 'iu': is unique (True/False)}" %(str(node),str(indexDict)), "e")
+            ret.append(indexDict)
         return ret
 
 

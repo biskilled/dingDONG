@@ -83,7 +83,7 @@ class baseBatch ():
         pass
 
     @abc.abstractmethod
-    def create(self, stt=None, objName=None):
+    def create(self, stt=None, objName=None, addIndex=None):
         pass
 
     @abc.abstractmethod

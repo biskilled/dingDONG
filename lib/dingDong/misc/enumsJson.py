@@ -30,6 +30,7 @@ class eJson (object):
         STTONLY     = 'stt'
         MAP         = 'map'
         COLUMNS     = 'col'
+        INDEX       = 'index'
         PARTITION   = 'par'           # not inplemented
         INC         = 'inc'           # not implemented
         NONO        = 'internal'
@@ -44,6 +45,7 @@ class eJson (object):
             STTONLY: [STTONLY, 'only'],
             MAP: [MAP, 'mapping'],
             COLUMNS: [COLUMNS, 'columns', 'column'],
+            INDEX: [INDEX, 'i'],
             PARTITION: [PARTITION, 'partition'],
             INC: [INC, 'incremental']
         }
@@ -70,6 +72,10 @@ class eJson (object):
         FOLDER      = 'folder'
         BATCH_SIZE  = 'batch'
         UPDATE      = 'update'
+        INDEX_COLUMS  = 'c'
+        INDEX_CLUSTER = 'ic'
+        INDEX_UNIQUE  = 'iu'
+
 
         eDict = {
             NAME:       [NAME, 'name'],
@@ -82,8 +88,10 @@ class eJson (object):
             FOLDER:     [FOLDER, 'files'],
             BATCH_SIZE: [BATCH_SIZE,'totalrows', 'rows'],
             URL_FILE  : [URL_FILE, 'file'],
-            UPDATE:     [UPDATE,'change']
-
+            UPDATE:     [UPDATE,'change'],
+            INDEX_CLUSTER: [INDEX_CLUSTER, 'cluster'],
+            INDEX_UNIQUE:[INDEX_UNIQUE, 'unique'],
+            INDEX_COLUMS:[INDEX_COLUMS,'column','columns']
         }
         DIC   = {   NAME:None,TYPE:None,CONN:None,OBJ:None,
                     FILTER:None,IS_CHANGE:None,URL:None,URLPARAM:None,
@@ -97,8 +105,6 @@ class eJson (object):
         FUNCTION= 'f'
         EXECFUNC= 'e'
         INDEX   = 'i'
-        INDEX_CLUSTER = 'ic'
-        INDEX_UNIQUE  = 'iu'
         DIC     = {SOURCE: None, TYPE: None, ALIACE:None}
 
     class jMergeValues(object):
@@ -164,6 +170,8 @@ class eSql (object):
     MERGE       = 'merge'
     ISEXISTS    = 'isexists'
     DELETE      = 'delete'
+    INDEX       = 'index'
+    INDEX_EXISTS= 'indexexists'
 
     TABLE_COPY_BY_COLUMN = 'copy'
 

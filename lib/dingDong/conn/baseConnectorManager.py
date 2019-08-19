@@ -66,10 +66,27 @@ def mngConnectors(connPropDic, connLoadProp=None):
     elif eJson.jValues.TYPE in connPropDic and connPropDic[eJson.jValues.TYPE] in connLoadProp :
         connPropDic = addPropToDict(existsDict=connPropDic, newProp=connLoadProp[connPropDic[eJson.jValues.TYPE]])
 
-
     if eJson.jValues.NAME not in connPropDic or connPropDic[eJson.jValues.NAME] is None:
         connPropDic[eJson.jValues.NAME] = connPropDic[eJson.jValues.CONN]
 
+    # Tal: if ther is no URL, check if conn is Set, search if there is only one conn and update details
+    if  eJson.jValues.URL not in connPropDic or (connPropDic[eJson.jValues.URL] is None and connPropDic[eJson.jValues.CONN] is not None):
+        connToLook  = connPropDic[eJson.jValues.CONN]
+        connParams  = None
+        connNum     = 0
+
+        for c in connLoadProp:
+            if c == connToLook or (eJson.jValues.CONN in connLoadProp[c] and c == connLoadProp[c][eJson.jValues.CONN] ):
+                connParams = connLoadProp[c]
+                connNum+=1
+        if connNum == 1:
+            for prop in connParams:
+                if prop not in connPropDic:
+                    connPropDic[prop] = connParams[prop]
+                elif connParams[prop] is None:
+                    connParams[prop] = connParams[prop]
+        else:
+            p("FOUND %s used %s times. cannot use it as URL defintion" %(str(connToLook),str(connNum)), "w")
     if connPropDic and isinstance(connPropDic, dict) and eJson.jValues.CONN in connPropDic:
         cType = connPropDic[eJson.jValues.CONN]
         if cType in CLASS_TO_LOAD:

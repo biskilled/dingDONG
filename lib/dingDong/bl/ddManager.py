@@ -31,6 +31,7 @@ class ddManager (object):
     def __init__(self, node, connDict=None):
         self.stt            = None
         self.addSourceColumn= True
+        self.addIndex       = None
         self.nodes          = None
         self.connDict       = connDict if connDict else config.CONN_URL
 
@@ -74,6 +75,10 @@ class ddManager (object):
                             else:
                                 self.stt[k].update ( node[eJson.jKeys.STTONLY][k] )
 
+                # ADD Index
+                if eJson.jKeys.INDEX in node:
+                    self.addIndex = node[eJson.jKeys.INDEX]
+
                 for i,k in enumerate (node):
                     if eJson.jKeys.SOURCE == k or eJson.jKeys.SOURCE in node[k]:
                         node[k][eJson.jValues.IS_SOURCE] = True
@@ -92,7 +97,7 @@ class ddManager (object):
                     elif eJson.jKeys.MERGE == k or eJson.jKeys.MERGE in node[k]:
                         modelDict[eJson.jKeys.MERGE] = node[k]
 
-                    elif eJson.jKeys.STT == k or eJson.jKeys.STTONLY==k:
+                    elif eJson.jKeys.STT == k or eJson.jKeys.STTONLY==k or eJson.jKeys.INDEX==k:
                         pass
                     else:
                         modelDict[i] = conn(connPropDic=node[k], connLoadProp=self.connDict)
@@ -273,7 +278,7 @@ class ddManager (object):
                 p("STT TAREGT %s HAVE INVALID SOURCE %s --> ignore COLUMN " % (col, self.stt[col][eJson.jSttValues.SOURCE]),"w")
                 del self.stt[col]
 
-    def dong(self):
+    def dong( self ):
         if self.nodes and len(self.nodes)>0:
             src         = None
             tar         = None
@@ -314,7 +319,7 @@ class ddManager (object):
                         mrgSource.merge(mergeTable=mergeTarget, mergeKeys=mergeKeys, sourceTable=None)
                         mrgSource.close()
 
-    def ding(self):
+    def ding( self ):
         if self.nodes and len(self.nodes) > 0:
             src         = None
             tar         = None
@@ -329,16 +334,15 @@ class ddManager (object):
                         tar = node[k]
                         mrgSource = tar
 
-
                         if  eJson.jKeys.SOURCE not in node:
-                            tar.create(stt=self.stt)
+                            tar.create(stt=self.stt, addIndex=self.addIndex)
                             tar.close()
                             tar = None
 
                     if tar and src:
                         # convert source data type to target data types
                         targetStt = self.updateTargetBySourceAndStt(src=src, tar=tar)
-                        tar.create(stt=targetStt)
+                        tar.create(stt=targetStt, addIndex=self.addIndex)
                         mrgSource = tar
                         src.close()
                         tar.close()
@@ -352,7 +356,7 @@ class ddManager (object):
                         mrgTarget.connIsTar = True
                         mrgTarget.connIsSrc = False
                         sttMerge = self.updateTargetBySourceAndStt(src=mrgSource, tar=mrgTarget)
-                        mrgTarget.create(stt=sttMerge)
+                        mrgTarget.create(stt=sttMerge,addIndex=self.addIndex)
                         mrgTarget.close()
                         mrgSource.close()
                         mrgSource = None

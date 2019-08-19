@@ -20,6 +20,7 @@ import os
 import io
 import sys
 import time
+import traceback
 from collections import OrderedDict
 
 from dingDong.conn.baseBatch            import baseBatch
@@ -177,7 +178,9 @@ class baseGlobalDb (baseBatch):
         except ImportError:
             p("%s is not installed" % (self.conn), "e")
         except Exception as e:
-            err = "Error connecting into DB: %s, ERROR: %s " % (self.conn, str(e))
+            err = "Error connecting into DB: %s, ERROR: %s\n " % (self.conn, str(e))
+            err += "USING URL: %s\n" %(self.connUrl)
+            #err+= traceback.format_exc()
             raise ValueError(err)
 
     def close(self):
@@ -193,13 +196,14 @@ class baseGlobalDb (baseBatch):
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             p("baseConnDb->Close: ERROR: file name:"+str(fname)+" line: "+str(exc_tb.tb_lineno)+" massage: "+str(exc_obj), "e")
 
-    def create(self, stt=None, objName=None):
+    def create(self, stt=None, objName=None, addIndex=None):
         tableSchema, tableName = self.setTableAndSchema(tableName=objName, tableSchema=None, wrapTable=False)
         tableFullName = '%s.%s'%(tableSchema, tableName) if tableSchema else tableName
 
         if not stt or len(stt) == 0:
             p("TABLE %s NOT MAPPED CORRECLTY " %(self.connObj), "e")
             return
+
         isNew,isExists, newHistoryTable = self.cloneObject(stt, tableSchema, tableName)
 
         if isNew or  (isExists and self.update<2):
@@ -211,11 +215,14 @@ class baseGlobalDb (baseBatch):
                     colName =  self.wrapColName (col=col, remove=True)
                 colType =  stt[col][eJson.jSttValues.TYPE]
                 sql += '\t%s\t%s,\n' %(colName, colType)
+
             sql = sql[:-2]+')'
-
-
             p("CREATE TABLE: \n" + sql)
             self.exeSQL(sql=sql, commit=True)
+
+        # Check for index
+        if addIndex and self.update<2:
+            self.addIndexToTable(tableName, addIndex)
 
         if self.update == 1:
             if newHistoryTable and len (newHistoryTable)>0:
@@ -262,6 +269,73 @@ class baseGlobalDb (baseBatch):
                 finallStructure[col][eJson.jSttValues.ALIACE] = finallStructure[col][eJson.jSttValues.ALIACE].replace(pre,"").replace(pos,"")
 
         return finallStructure
+
+    def addIndexToTable (self, tableName, addIndex, tableSchema=None):
+        if addIndex and len(addIndex)>0:
+            newIndexList    = []
+            existIndexDict  = {}
+            isClusterExists = False
+            toCreate        = True
+
+            ## update existing index
+            addIndex = [addIndex] if isinstance(addIndex, (dict,OrderedDict)) else addIndex
+            for ind in addIndex:
+                if eJson.jValues.INDEX_COLUMS in ind and ind[eJson.jValues.INDEX_COLUMS]:
+                    columns  = ind[eJson.jValues.INDEX_COLUMS] if isinstance(ind[eJson.jValues.INDEX_COLUMS], list) else [ind[eJson.jValues.INDEX_COLUMS]]
+                    columns  = [x.lower() for x in columns]
+                    isCluster= ind[eJson.jValues.INDEX_CLUSTER] if eJson.jValues.INDEX_CLUSTER in ind and ind[eJson.jValues.INDEX_CLUSTER] is not None else False
+                    isUnique = ind[eJson.jValues.INDEX_UNIQUE] if eJson.jValues.INDEX_UNIQUE in ind and ind[eJson.jValues.INDEX_UNIQUE] is not None else False
+                    newIndexList.append ({eJson.jValues.INDEX_COLUMS:columns, eJson.jValues.INDEX_CLUSTER:isCluster, eJson.jValues.INDEX_UNIQUE:isUnique})
+                else:
+                    p("NOT VALID INDEX %s , MUST HAVE COLUNs, IGNORING" %(str(ind)), "i")
+
+
+            ## update newIndexDict from db.
+            tableSchema, tableName = self.setTableAndSchema(tableName=tableName, tableSchema=tableSchema)
+            tableName = '%s.%s' %(tableSchema,tableName) if tableSchema else tableName
+            # check if there is cluster index
+            sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.INDEX_EXISTS, tableName=tableName)
+            self.cursor.execute(sql)
+            rows = self.cursor.fetchall()
+            if rows and len (rows)>0:
+                for row in rows:
+                    indexName = row[0]
+                    if indexName not in existIndexDict:
+                        existIndexDict[indexName] = {eJson.jValues.INDEX_COLUMS:[], eJson.jValues.INDEX_CLUSTER:False,eJson.jValues.INDEX_UNIQUE:False}
+
+                    existIndexDict[indexName][eJson.jValues.INDEX_CLUSTER] = True if row[2] or str(row[2]) == '1' else False
+                    if existIndexDict[indexName][eJson.jValues.INDEX_CLUSTER] == True:
+                        isClusterExists = True
+                    existIndexDict[indexName][eJson.jValues.INDEX_UNIQUE] = True if row[3] or str(row[3])  == '1' else False
+                    existIndexDict[indexName][eJson.jValues.INDEX_COLUMS].append (str(row[1]).lower())
+
+            ### Compare - Remove existing idential Indexes
+            for eInd in existIndexDict:
+                if existIndexDict[eInd] in newIndexList:
+                    newIndexList.remove(existIndexDict[eInd])
+
+            ### Compare index with existing indexes
+            for ind in newIndexList:
+                if ind[eJson.jValues.INDEX_CLUSTER] == True and isClusterExists:
+                    p("CLUSTERED INDEX ALREADY EXISTS, IGNORE NEW INDEX:%s" %(str(ind)), "w")
+                    toCreate = False
+                else:
+                    newColumn = ind[eJson.jValues.INDEX_COLUMS]
+
+                    for eInd in existIndexDict:
+                        eColumn = eInd[eJson.jValues.INDEX_COLUMS]
+
+                        if set(eColumn) == set(newColumn):
+                            p("INDEX ON COLUMN %s EXISTS, OLD IS_CLUSTER:%s, OLD IS_UNIQUE:%s, NEW IS_CLUSTER: %s, NEW IS_UNIQUE: %s, IGNORING..." %(eColumn, eInd[eJson.jValues.INDEX_CLUSTER], eInd[eJson.jValues.INDEX_UNIQUE], ind[eJson.jValues.INDEX_CLUSTER], ind[eJson.jValues.INDEX_UNIQUE] ) , "i")
+                            toCreate = False
+                    if toCreate:
+                        columnsCreate   = ind[eJson.jValues.INDEX_COLUMS]
+                        isUnique        = ind[eJson.jValues.INDEX_UNIQUE]
+                        isCluster       = ind[eJson.jValues.INDEX_CLUSTER]
+                        sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.INDEX, tableName=tableName, columns=columnsCreate, isCluster=isCluster, isUnique=isUnique)
+                        print ("TAL 8899", sql)
+                        self.exeSQL(sql=sql)
+                        p("TYPE:%s, ADD INDEX: COLUNS:%s, CLUSTER:%s, UNIQUE:%s" % (self.conn, str(columnsCreate),str(isCluster),str(isUnique)), "ii")
 
     def isExists(self, tableName, tableSchema):
         sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.ISEXISTS, tableName=tableName, tableSchema=tableSchema)

@@ -48,6 +48,8 @@ class baseSqlQuery (object):
         elif eSql.ISEXISTS  == sqlType: self.setSqlIsExists(**args)
         elif eSql.DELETE    == sqlType: self.setSqlDelete(**args)
         elif eSql.TABLE_COPY_BY_COLUMN    == sqlType: self.tblCopyByColumn(**args)
+        elif eSql.INDEX_EXISTS == sqlType: self.setSqlExistingIndexes(**args)
+        elif eSql.INDEX     == sqlType: self.setSqlIndex(**args)
 
         else:
             p("baseConnDbSqlQueries->getSql: %s IS NOT DEFINED  !" % (sqlType.upper()), "e")
@@ -86,6 +88,14 @@ class baseSqlQuery (object):
 
     def tblCopyByColumn(self, tableName, tableSchema, srcTableName, columns):
         pass
+
+    def setSqlExistingIndexes(self, tableName):
+        pass
+
+    def setSqlIndex(self,  tableName, columns, isCluster, isUnique):
+        pass
+
+
 
 
 class setSqlQuery (baseSqlQuery):
@@ -212,5 +222,26 @@ class setSqlQuery (baseSqlQuery):
         columns= ",".join(columns)
 
         sql = "insert into %s (%s) select %s from %s" % (targetTableName,columns,columns, sourceTableName)
+        self.default = sql
+        self.connQuery[eConn.SQLSERVER] = sql
+
+    def setSqlExistingIndexes(self, tableName):
+        sql = """
+        SELECT a.name AS indexName, COL_NAME(b.object_id,b.column_id) AS columnName,a.type AS isClustered,a.is_unique As isUnique
+        FROM sys.indexes AS a  INNER JOIN sys.index_columns AS b  ON a.object_id = b.object_id AND a.index_id = b.index_id  
+        WHERE a.is_hypothetical = 0 AND a.object_id = OBJECT_ID('%s');  """ % (tableName)
+
+        self.default = sql
+        self.connQuery[eConn.SQLSERVER] = sql
+
+    def setSqlIndex(self,  tableName, columns, isCluster, isUnique):
+        tableIndexName = tableName.split(".")
+        tableIndexName = tableIndexName[1] if len(tableIndexName)>1 else tableIndexName[0]
+        columnNames = "_".join(columns)
+        indexName = 'IX_%s_%s' %(tableIndexName, columnNames)
+        isClusterStr = "CLUSTERED" if isCluster else ""
+        isUniqueStr  = "UNIQUE" if isUnique else ""
+
+        sql = """CREATE %s %s INDEX %s ON %s (%s)""" %(isUniqueStr,isClusterStr,indexName, tableName, ",".join(columns) )
         self.default = sql
         self.connQuery[eConn.SQLSERVER] = sql
