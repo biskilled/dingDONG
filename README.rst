@@ -4,36 +4,36 @@
 Ding Dong
 *********
 
-dingDong created for modeling developing and maintaining complex data integration projects - relational database
+Ding-Dong created for modeling developing and maintaining complex data integration projects - relational database
 or cloud APIs integration, data cleansing or modeling algorithms.
 
-The project is currently supporting batch loading from diverse RMDBs. we do plan to extend it for a full support
-in REST and Woonsocket as well. The project if fully developer in python, we do use Node for our REST integration.
+The project is currently supporting batch loading from diverse RMDBs. we do plan to extend it for full support
+in REST and WebSocket as well. The project if fully developer in python, we do use Node for our REST integration.
 
-dingDong developed to use as a glue between diverse data storage types using each component best of practice.
-for example there is no JOIN or UNION implementation because usually this functionality is used in much efficient way at the connectors.
-we focus on managing the meta-data correctly, and helping creating fast and easy to manage data work flows.
+Ding-Dong developed to use as a glue between diverse data storage types using each component best of practice.
+for example, there is no JOIN or UNION implementation because usually this functionality is used in much efficient way at the connectors.
+we focus on managing the meta-data correctly and helping to create fast and easy to manage data workflows.
 
-Using the native capabilities of existing connectors with dingDong allow us to create robust data project using the
+Using the native capabilities of existing connectors with Ding-Dong allow us to create robust data project using the
 advantages of all the components
 
-dingDong have two main modules:
+Ding-Dong has two main modules:
 
 - DING - create and manage overall meta-data structure for all object listed in the work-flow
     - creating new objects
-    - modify existing object by using back propagation mechanism
+    - modify an existing object by using backpropagation mechanism
     - update data into new object
     - store old structure
     - (Todo) --> truck all work-flow changes as part of full CI/CD methodology
 
 - DONG - extract and load data from diverse connectors
-    - extract data - support multi threading for extracting massive data volume
-    - transfer     - enable to add custom function on existing columns
+    - extract data - support multithreading for extracting massive data volume
+    - transfer     - enable to add a custom function on existing columns
                    - enable to add custom calculated fields
-    - merge        - merging source with target data can be done if source and merge located at the same connector
-    - exec         - enable to execute PL/SQL or stored procedure command as part of the whole data work-flow
+    - merge        - merging source with target data can be done if the source and merge located at the same connector
+    - exec         - enable to execute PL/SQL or stored procedure command as part of the whole data workflow
 
-Read more about dingDong at http://www.biSkilled.com (marketing) or at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
+Read more about Ding-Dong at http://www.biSkilled.com (marketing) or at `Ding-Dong documentation <https://dingdong.readthedocs.io/en/latest>`_
 
 Installation
 ============
@@ -45,14 +45,14 @@ Samples
 =======
 download samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
 located at `samples/sampleHealthCare/csvData <samples/sampleHealthCare/csvData/>`_ folder.
-In this sample we use *C:\\dingDong* as our main folder
+In this sample, we use *C:\\dingDong* as our main folder
 
-the sample demonstrate how to load three csv files into SqlLite, create a simple query based
-on that tables and send the result into new CSV file.
+the sample demonstrates how to load three CSV files into SqlLite, create a simple query-based
+on those tables and send the result into a new CSV file.
 
 1. load module and basic configuration
 
-* Config.CONN_URL   -> set connection URl into all connectors
+* Config.CONN_URL   -> set connection URL into all connectors
     * key   -> general connection name or connection type (sql, oracle, file .. )
     * value -> can be string or dictionary
       * String     --> Connection string URL (key defined connection type: sql, oracle, mySql....)
@@ -86,6 +86,7 @@ configuration properties can be found at `dingDong documentation <https://dingdo
 * Update sample field at Final table by using direct PL/SQL query
 * Extract Final table data into a CSV file.
   We use VARCHAR(200) as default CSV column data type. configuration can be found at DEFAULTS under dingDong.conn.baseBatch
+
 ::
 
     nodesToLoad = [
@@ -130,18 +131,21 @@ configuration properties can be found at `dingDong documentation <https://dingdo
 4. DING
 
 * creating dateElements_Desc, demographics and birthDate tables based on CSV files
-* creating Final table based on defined query
+* creating Final table based on the defined query
 
- if table exists and structure changed - Ding module will track chnages by duplicate object with data and create new object schema
+ if the table exists and structure changed - Ding module will track changes by a duplicate object with data and create new object schema
+
 ::
 
     m.ding()
 
-5.  DONG - Extracting data from CSV files into sqlLite table. default loading is truncate-> insert method
-    Extract data from query into Final table (truncate-> insert )
+5.  DONG - Extracting data from CSV files into SQLite table. default loading is truncate-> insert method
+    Extract data from a query into the Final table (truncate-> insert )
+
 * if object structure changed and mode 2 (like at the sample)
   * history table will be created
-  * new object will be create and will populated with data from history table (identical column name)
+  * new object will be created and will be populated with data from history table (identical column name)
+
 ::
 
         m.dong()
@@ -195,10 +199,10 @@ Road map
 We would like to create a platform that will enable to design, implement and maintenance and data integration project such as:
 
 *  Any REST API connectivity from any API to any API using simple JSON mapping
-*  Any Relational data base connectivity using JSON mapping
-*  Any Non relational storage
-*  Main platform for any middle ware business logic - from sample if-than-else up to statistics algorithms using ML and DL algorithms
-*  Enable Real time and scheduled integration
+*  Any Relational database connectivity using JSON mapping
+*  Any Non-relational storage
+*  Main platform for any middleware business logic - from sample if-than-else up to statistics algorithms using ML and DL algorithms
+*  Enable Real-time and scheduled integration
 
 We will extend our connectors and Meta-data manager accordingly.
 
@@ -254,4 +258,3 @@ See `COPYING <COPYING>`_ to see the full text.
 .. |License| image:: https://img.shields.io/badge/license-GPL%20v3.0-brightgreen.svg
    :target: COPYING
    :alt: Repository License
-   
