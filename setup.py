@@ -1,4 +1,7 @@
 from __future__ import print_function
+__version__ = '1.0.11'
+__author__  = 'BiSkilled'
+__codename__= 'Why not?'
 
 import os.path
 import sys
@@ -15,8 +18,10 @@ except ImportError:
           " install setuptools).", file=sys.stderr)
     sys.exit(1)
 
+
 sys.path.insert(0, os.path.abspath('lib'))
-from release import  __version__, __author__
+#print(sys.path)
+#from release import  __version__, __author__
 
 def read_file(file_name):
     """Read file and return its contents."""
