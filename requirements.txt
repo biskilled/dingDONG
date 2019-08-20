@@ -7,13 +7,15 @@
 #ceodbc - download from gitHub : https://github.com/anthony-tuininga/ceODBC and exec setup.py build
 #pythonNet - needs to be installed from gitHub. follow : http://pythonnet.github.io/
 #Microsoft.AnalysisServices.DLL For using SSAS processing
+six
+future
+sqlparse
+csv23
+pythonnet
+
 pyodbc
 pymysql
 vertica_python
 cx_Oracle
 pymongo
 
-sqlparse
-pandas
-csv23
-pythonnet

@@ -1,15 +1,8 @@
 from __future__ import print_function
 
-import json
-import os
 import os.path
-import re
 import sys
 import warnings
-
-from collections import defaultdict
-from distutils.command.build_scripts import build_scripts as BuildScripts
-from distutils.command.sdist import sdist as SDist
 
 try:
     from setuptools import setup, find_packages
@@ -23,7 +16,7 @@ except ImportError:
     sys.exit(1)
 
 sys.path.insert(0, os.path.abspath('lib'))
-from dingDong.release import  __version__, __author__
+from release import  __version__, __author__
 
 def read_file(file_name):
     """Read file and return its contents."""
@@ -99,7 +92,8 @@ static_setup_params = dict(
     scripts=[],
     data_files=[],
     # Installing as zip files would break due to references to __file__
-    zip_safe=False
+    zip_safe=False,
+    install_requires=read_requirements('requirements.txt')
 )
 
 
