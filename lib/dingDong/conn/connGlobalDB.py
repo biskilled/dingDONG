@@ -134,7 +134,6 @@ class baseGlobalDb (baseBatch):
 
         self.connect()
 
-        print ("TAL 9999", self.connSql, self.conn, self.connObj, self.connName)
         p("CONNECTED, DB TYPE: %s, %s" % (self.conn, objName, ), "ii")
 
     """  MANADATORY METHOD INHERTIED FROM BASE BATCH INTERFACE"""
