@@ -45,7 +45,8 @@ Samples
 =======
 download samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
 located at `samples/sampleHealthCare/csvData <samples/sampleHealthCare/csvData/>`_ folder.
-In this sample, we use *C:\\dingDong* as our main folder
+In this sample, we use **C:\\dingDong** as our main folder for all source CSV files and dingDong logs.
+code sample **extractCsvToSqlLite.py** located at `samples/sampleHealthCare/csvData <samples/sampleHealthCare/csvData/>`_ folder
 
 the sample demonstrates how to load three CSV files into SqlLite, create a simple query-based
 on those tables and send the result into a new CSV file.
@@ -65,16 +66,17 @@ configuration properties can be found at `dingDong documentation <https://dingdo
 
 ::
 
+    import logging
     from dingDong import DingDong
     from dingDong import Config
 
-    Config.CONN_URL = {
-        'x1'    : {'conn':'sql',"url":"DRIVER={SQL Server};SERVER=CPX-VLQ5GA42TW2\SQLEXPRESS;DATABASE=ContosoRetailDW;UID=bpmk;PWD=bpmk;"},
-        'x2'    : {'conn':'sql',"url":"DRIVER={SQL Server};SERVER=CPX-VLQ5GA42TW2\SQLEXPRESS;DATABASE=ContosoRetailDW;UID=bpmk;PWD=bpmk;"},
-        'file'  : "C:\\dingDong\\",
-        'sqlite': "C:\\dingDong\\sqlLiteDB.db"}
+    """ set log level: logging.INFO, logging.DEBUG, logging.ERROR """
     Config.LOGS_DEBUG = logging.DEBUG
-    Config.LOGS_DIR = "C:\\dingDong"
+
+    Config.CONN_URL = {
+        'sampleSql': {'conn': 'sql',"url": "<Sql server connection string>;UID=USER;PWD=PWD;"},
+        'file': "C:\\dingDong\\",
+        'sqlite': "C:\\dingDong\\sqlLiteDB.db"}
 
 2. Creating work flow can be done as JSON format or python dictionaries
    In this followed sample we will use python dictionary the sample work flow contain
@@ -90,24 +92,24 @@ configuration properties can be found at `dingDong documentation <https://dingdo
 ::
 
     nodesToLoad = [
-            {   "source":["file","DATAELEMENTDESCRIPTION.csv"],
-                "target":["sqlite","dateElements_Desc"]},
+        {"source": ["file", "DATAELEMENTDESCRIPTION.csv"],
+         "target": ["sqlite", "dateElements_Desc"]},
 
-            {   "source":["file","DEMOGRAPHICS.csv"],
-                "target":["sqlite","demographics"]},
+        {"source": ["file", "DEMOGRAPHICS.csv"],
+         "target": ["sqlite", "demographics"]},
 
-            {   "source":["file","MEASURESOFBIRTHANDDEATH.csv"],
-                "target":["sqlite","birthDate"]},
+        {"source": ["file", "MEASURESOFBIRTHANDDEATH.csv"],
+         "target": ["sqlite", "birthDate"]},
 
-            {   "query":["sqlite","""   Select d.[State_FIPS_Code] AS A, d.[County_FIPS_Code] AS B, d.[County_FIPS_Code] AS G,d.[County_FIPS_Code], d.[CHSI_County_Name], d.[CHSI_State_Name],[Population_Size],[Total_Births],[Total_Deaths]
+        {"query": ["sqlite", """   Select d.[State_FIPS_Code] AS A, d.[County_FIPS_Code] AS B, d.[County_FIPS_Code] AS G,d.[County_FIPS_Code], d.[CHSI_County_Name], d.[CHSI_State_Name],[Population_Size],[Total_Births],[Total_Deaths]
                                         From demographics d INNER JOIN birthDate b ON d.[County_FIPS_Code] = b.[County_FIPS_Code] AND d.[State_FIPS_Code] = b.[State_FIPS_Code]"""],
-                "target":["sqlite","Final", 2]},
+         "target": ["sqlite", "Finall", 2]},
 
-            {   "myexec":["sqlite","Update dateElements_Desc Set [Data_Type] = 'dingDong';"]},
+        {"myexec": ["sqlite", "Update dateElements_Desc Set [Data_Type] = 'dingDong';"]},
 
-            {   "source":["sqlite","Final"],
-                "target":["file","final.csv"]}
-          ]
+        {"source": ["sqlite", "Finall"],
+         "target": ["file", "finall.csv"]}
+    ]
 
 3. Init class dingDong
 

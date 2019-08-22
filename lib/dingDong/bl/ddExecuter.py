@@ -59,6 +59,8 @@ class dingDong:
         ## Defualt properties
         self.connDict       = self.jsonParser.connDict
 
+        self.Config         = config
+
     def ding (self, destList=None, jsName=None, jsonNodes=None):
         p('STARTING TO MODEL DATA STRUCURE >>>>>' , "i")
         allNodes = self.__getNodes(destList=destList, jsName=jsName, jsonNodes=jsonNodes)

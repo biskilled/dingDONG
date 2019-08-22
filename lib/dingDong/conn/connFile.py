@@ -125,7 +125,7 @@ class connFile (baseBatch):
     def close(self):
         pass
 
-    def create(self, stt=None, fullPath=None):
+    def create(self, stt=None, fullPath=None, addIndex=None):
         fullPath = fullPath if fullPath else self.fileFullName
         self.cloneObject(stt=stt, fullPath=fullPath)
         p("NO POINT TO CREATE FILE %s " %(fullPath), "ii")

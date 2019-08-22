@@ -342,7 +342,12 @@ class ddManager (object):
                     if tar and src:
                         # convert source data type to target data types
                         targetStt = self.updateTargetBySourceAndStt(src=src, tar=tar)
-                        tar.create(stt=targetStt, addIndex=self.addIndex)
+
+                        if targetStt and len(targetStt)>0:
+                            tar.create(stt=targetStt, addIndex=self.addIndex)
+                        else:
+                            p("SOURCE: %s STRUCUTRE NOT DEFINED-> CANNOT CREATE TARGET" %(src.conn),"e")
+
                         mrgSource = tar
                         src.close()
                         tar.close()
