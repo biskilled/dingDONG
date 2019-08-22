@@ -117,7 +117,8 @@ class baseGlobalDb (baseBatch):
             self.connSql    = self.setQueryWithParams(self.connObj)
             self.connObj    = self.connSql
 
-        elif self.connObj and len(self.connObj)>0 and ('.sql' not in self.connObj and (self.sqlFullFile and self.sqlFullFile not in self.connObj)):
+        elif self.connObj and len(self.connObj)>0 \
+                and ('.sql' not in self.connObj and (not self.sqlFullFile or (self.sqlFullFile and self.sqlFullFile not in self.connObj))):
 
             self.connSql = "SELECT * FROM %s" %self.connObj
 
