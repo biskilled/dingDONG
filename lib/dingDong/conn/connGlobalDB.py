@@ -117,7 +117,8 @@ class baseGlobalDb (baseBatch):
             self.connSql    = self.setQueryWithParams(self.connObj)
             self.connObj    = self.connSql
 
-        elif self.connObj and len(self.connObj)>0 and '.sql' not in self.connObj and not self.sqlFullFile:
+        elif self.connObj and len(self.connObj)>0 and ('.sql' not in self.connObj and (self.sqlFullFile and self.sqlFullFile not in self.connObj)):
+
             self.connSql = "SELECT * FROM %s" %self.connObj
 
             self.connObj        = self.wrapColName(col=self.connObj, remove=True).split(".")
@@ -132,6 +133,8 @@ class baseGlobalDb (baseBatch):
         objName = "QUERY " if self.connIsSql else "TABLE: %s" %self.connObj
 
         self.connect()
+
+        print ("TAL 9999", self.connSql, self.conn, self.connObj, self.connName)
         p("CONNECTED, DB TYPE: %s, %s" % (self.conn, objName, ), "ii")
 
     """  MANADATORY METHOD INHERTIED FROM BASE BATCH INTERFACE"""
