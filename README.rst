@@ -46,7 +46,8 @@ Samples
 download samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
 located at `samples/sampleHealthCare/csvData <samples/sampleHealthCare/csvData/>`_ folder.
 In this sample, we use **C:\\dingDong** as our main folder for all source CSV files and dingDong logs.
-code sample **extractCsvToSqlLite.py** located at `samples/sampleHealthCare/csvData <samples/sampleHealthCare/csvData/>`_ folder
+
+Full code sample **extractCsvToSqlLite.py** located at `samples/sampleHealthCare/ <samples/sampleHealthCare/>`_ folder
 
 the sample demonstrates how to load three CSV files into SqlLite, create a simple query-based
 on those tables and send the result into a new CSV file.
