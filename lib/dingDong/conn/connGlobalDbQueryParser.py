@@ -85,11 +85,13 @@ def extract_tableAndColumns (sql):
     return ret
 
 def removeProps (sql):
-    sql = re.sub(r"/\*[^*]*\*+(?:[^*/][^*]*\*+)*/", "", sql)
-    sql = re.sub(r"\s+", " ", sql)
-    pre = ""
+    sql = re.sub(re.compile("/\*.*?\*/", re.MULTILINE | re.UNICODE | re.DOTALL), "",sql)
+    sql = re.sub(re.compile("--.*?\n"), "", sql, re.MULTILINE | re.UNICODE | re.DOTALL)  # remov
+    #sql = re.sub(r"/\*[^*]*\*+(?:[^*/][^*]*\*+)*/", "", sql)
+    #sql = re.sub(r"\s+", " ", sql)
 
-    regSql = r"(.*?select\s+(?:top\s+\d+\s+){0,1}(?:distinct\s+){0,1})(.*)"
+    pre     = ""
+    regSql  = r"(.*?select\s+(?:top\s+\d+\s+){0,1}(?:distinct\s+){0,1})(.*)"
 
     # sqlGrouping = re.search(regexSql, sqlStr, re.IGNORECASE | re.MULTILINE)
     sqlGrouping = re.search(regSql, sql, re.UNICODE | re.MULTILINE | re.S | re.I)

@@ -35,7 +35,7 @@ if 2 == sys.version_info[0]:
     sys.setdefaultencoding("utf8")
 
 # sqlWithParamList --> list of tuple (file name, paramas)
-def execQuery (sqlWithParamList, connObj ):
+def execQuery (sqlWithParamList, connObj, sqlFolder=None ):
     if sqlWithParamList is None or len(sqlWithParamList)==0:
         p("NOT RECIAVE ANY SQL STATEMENT")
         return
@@ -63,7 +63,6 @@ def execQuery (sqlWithParamList, connObj ):
             break
 
         # sql file is list of all files to execute
-
         if os.path.isdir(locName):
             sqlFiles = [os.path.join(locName, pos_sql)  for pos_sql in os.listdir(locName) if pos_sql.endswith('.sql')]
         elif os.path.isfile(locName):
@@ -122,6 +121,7 @@ def __execSql ( params ):
         sqlQuery = __split_sql_expressions(sqlTxt)
         isParam = True if len(locParams) > 0 else False
         for sql in sqlQuery:
+            sql = re.sub(r"\s+", " ", sql)
             if isParam:
                 sql =  connObj.setQueryWithParams (query=sql, queryParams=locParams)
             if 'PRINT' in sql:
@@ -143,41 +143,20 @@ def __execSql ( params ):
 
 def __split_sql_expressions(text):
     if (isinstance(text, basestring)):
+        text = re.sub(r"\/\*.*\*\/|--.*?\n", "", text, re.MULTILINE | re.UNICODE | re.DOTALL)
+        #text = re.sub(r"\s+", " ", text)
         return [text]
+
     results = []
-    tup = ''
-    remove = False
-    for line in text:
-        if u";" in line:
-            lines = line.split (";")
-            for l in lines:
-                tup+=" "+l
-                tup , remove = __split_sql_removeString (tup, remove)
-                if len (tup) > 0:
-                    results.append (tup)
-                tup = ''
-        else:
-            tup+=" "+line
-            tup, remove = __split_sql_removeString(tup, remove)
-    if len (tup) > 0:
-        results.append(tup)
+    text = uniocdeStr (sObj=text.read(), decode=False)
+    text = re.sub(re.compile("/\*.*?\*/", re.MULTILINE | re.UNICODE | re.DOTALL), "",text)
+    text = re.sub(re.compile("--.*?\n"), "", text, re.MULTILINE | re.UNICODE | re.DOTALL)  # remov
+
+    lines = text.split("GO\n")
+    for l in lines:
+        il =  l.split(";\n")
+        for ll in il:
+            results.append (ll)
+
+    results = results if len(results)>0 else None
     return results
-
-def __split_sql_removeString (line, remove=False):
-
-    #if remove:
-    #    if "*/" in line:
-    #        line = re.sub(r'.*\*\/', '', line)
-    #        remove = False
-    #    else:
-    #        return '', True
-    line = line.strip()
-    line = re.sub(r'\/\*.*\*\/', '', line)
-    line = re.sub(r'--.*', '', line)
-
-
-    #if "/*" in line:
-    #    remove = True
-    #    line = re.sub(r'\/\*.*', '', line)
-    line = line.replace("\n", " ").replace("\t", " ")
-    return line, remove

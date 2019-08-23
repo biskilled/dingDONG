@@ -326,19 +326,26 @@ class baseGlobalDb (baseBatch):
                     newColumn = ind[eJson.jValues.INDEX_COLUMS]
 
                     for eInd in existIndexDict:
-                        eColumn = eInd[eJson.jValues.INDEX_COLUMS]
+                        eColumn = existIndexDict[eInd][eJson.jValues.INDEX_COLUMS]
 
                         if set(eColumn) == set(newColumn):
-                            p("INDEX ON COLUMN %s EXISTS, OLD IS_CLUSTER:%s, OLD IS_UNIQUE:%s, NEW IS_CLUSTER: %s, NEW IS_UNIQUE: %s, IGNORING..." %(eColumn, eInd[eJson.jValues.INDEX_CLUSTER], eInd[eJson.jValues.INDEX_UNIQUE], ind[eJson.jValues.INDEX_CLUSTER], ind[eJson.jValues.INDEX_UNIQUE] ) , "i")
+                            msg = """
+                                    INDEX ON COLUMN %s EXISTS, OLD IS_CLUSTER:%s,
+                                    OLD IS_UNIQUE:%s, NEW IS_CLUSTER: %s,
+                                    NEW IS_UNIQUE: %s, IGNORING...""" %(str(eColumn),
+                                                                         str(existIndexDict[eInd][eJson.jValues.INDEX_CLUSTER]),
+                                                                         str(existIndexDict[eInd][eJson.jValues.INDEX_UNIQUE]),
+                                                                         str(ind[eJson.jValues.INDEX_CLUSTER]),
+                                                                         str(ind[eJson.jValues.INDEX_UNIQUE]))
+                            p(msg , "i")
                             toCreate = False
                     if toCreate:
                         columnsCreate   = ind[eJson.jValues.INDEX_COLUMS]
                         isUnique        = ind[eJson.jValues.INDEX_UNIQUE]
                         isCluster       = ind[eJson.jValues.INDEX_CLUSTER]
                         sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.INDEX, tableName=tableName, columns=columnsCreate, isCluster=isCluster, isUnique=isUnique)
-                        print ("TAL 8899", sql)
                         self.exeSQL(sql=sql)
-                        p("TYPE:%s, ADD INDEX: COLUNS:%s, CLUSTER:%s, UNIQUE:%s" % (self.conn, str(columnsCreate),str(isCluster),str(isUnique)), "ii")
+                        p("TYPE:%s, ADD INDEX: COLUNS:%s, CLUSTER:%s, UNIQUE:%s\n SQL: %s" % (self.conn, str(columnsCreate),str(isCluster),str(isUnique),str(sql)), "ii")
 
     def isExists(self, tableName, tableSchema):
         sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.ISEXISTS, tableName=tableName, tableSchema=tableSchema)
@@ -534,7 +541,7 @@ class baseGlobalDb (baseBatch):
         if method and len(method)>0:
             p("CONN:%s, EXEC METHOD:\n%s" %(self.conn, method), "i")
             methodTup = [(1,method,{})]
-            execQuery(sqlWithParamList=method, connObj=self)
+            execQuery(sqlWithParamList=method, connObj=self, sqlFolder=self.sqlFolder)
 
     """ PUBLIC METHOD FOR DB MANIPULATION  """
     def exeSQL(self, sql, commit=True):
@@ -857,7 +864,7 @@ class baseGlobalDb (baseBatch):
         elif self.sqlFolder and self.sqlFullFile and  os.path.isfile( os.path.join (self.sqlFolder,self.sqlFullFile)):
             fullFilePath = os.path.join (self.sqlFolder,self.sqlFullFile)
         elif self.sqlFolder and os.path.isfile(os.path.join(self.sqlFolder, self.connObj)):
-            fullFilePath = self.sqlFullFile(os.path.join(self.sqlFolder, self.connObj))
+            fullFilePath = os.path.join(self.sqlFolder, self.connObj)
 
         if fullFilePath:
             foundQuery= False

@@ -75,7 +75,7 @@ class eJson (object):
         INDEX_COLUMS  = 'c'
         INDEX_CLUSTER = 'ic'
         INDEX_UNIQUE  = 'iu'
-
+        FILE          = 'file'
 
         eDict = {
             NAME:       [NAME, 'name'],
