@@ -71,6 +71,7 @@ class dingDong:
             for jMap in jsonNodes:
                 dingObject = ddManager(node=jMap, connDict=self.connDict)
                 dingObject.ding()
+                self.msg.addStateCnt()
 
         p('FINSHED TO MODEL DATA STRUCURE >>>>>', "i")
         p('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', "ii")
@@ -85,6 +86,7 @@ class dingDong:
             procTotal = len(jsonNodes)
             for procNum, jMap in  enumerate (jsonNodes):
                 processList.append((jMap, procNum, procTotal))
+                self.msg.addStateCnt()
 
 
         numOfProcesses = min (len(processList), self.propcesses)

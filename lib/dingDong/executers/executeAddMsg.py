@@ -32,9 +32,10 @@ class msgProp (object):
     TS          = "TIME STAMP"
     STEP_TIME   = "TOTAL TIME CURRENT STEP"
     TOTAL_TIME  = "TOTAL TIME"
+    TASKS       = "TOTAL TASKS"
 
-    MSG_SUBJECT_SUCCESS = "LOADING JOB %s "
-    MSG_SUBJECT_FAILURE = "ERROR LOADING JOB %s "
+    MSG_SUBJECT_SUCCESS = "LOADING JOB %s TOTAL TASKS EXEC: %s"
+    MSG_SUBJECT_FAILURE = "ERROR LOADING JOB %s TOTAL TASKS EXEC: %s "
     MSG_LAST_STEP       = "TOTAL EXECUTION  "
 
     _TIME_FORMAT = "%m/%d/%Y %H:%M:%S"
@@ -51,8 +52,11 @@ class executeAddMsg (object):
         self.stateCnt   = 0
         self.sDesc      = sDesc
         self.inProcess  = False
+        self.currentSateDic = None
 
-    def addState (self, sDesc=None):
+        self.cntTasks   = 0
+
+    def addState (self, sDesc=None, totalTasks=None):
         self.stateCnt+=1
         if not sDesc:
             sDesc="%s%s" %(str(self.sDesc),str(self.stateCnt))
@@ -61,26 +65,43 @@ class executeAddMsg (object):
         tCntFromStart   = str(round ( ((ts - self.startTime) / 60) , 2))
         tCntFromLaststep= str(round ( ((ts - self.lastTime) / 60) , 2))
         self.lastTime   = ts
-        self.stateDic[self.stateCnt] = OrderedDict({msgProp.STEP_NUM   : self.stateCnt,
+        totalTasks = 0 if not totalTasks or totalTasks<1 else totalTasks
+
+        self.currentSateDic = OrderedDict({msgProp.STEP_NUM   : self.stateCnt,
                                         msgProp.DESC       :sDesc,
                                         msgProp.TS         :tsStr,
                                         msgProp.STEP_TIME  :tCntFromLaststep,
-                                        msgProp.TOTAL_TIME :tCntFromStart })
+                                        msgProp.TOTAL_TIME :tCntFromStart,
+                                        msgProp.TASKS      :totalTasks})
 
+        self.stateDic[self.stateCnt] = self.currentSateDic
 
+    def addStateCnt (self):
+        if self.currentSateDic and msgProp.TASKS in self.currentSateDic:
+            self.currentSateDic[msgProp.TASKS]+=1
+        self.cntTasks+=1
 
     def end(self, msg=None,pr=True):
         msg = msg if msg else msgProp.MSG_LAST_STEP
-        self.addState(sDesc=msg)
+        totalTasks = 0
+
+        for col in self.stateDic:
+            if self.stateDic[col][msgProp.TASKS] == 0:
+                self.stateDic[col][msgProp.TASKS] = 1
+
+            totalTasks += self.stateDic[col][msgProp.TASKS]
+
+        self.addState(sDesc=msg, totalTasks=totalTasks)
 
         if pr:
             for col in self.stateDic:
                 p (list(self.stateDic[col].values()))
 
+
     def sendSMTPmsg (self, msgName, onlyOnErr=False, withErr=True,withWarning=True ):
 
-        okMsg = msgProp.MSG_SUBJECT_SUCCESS %(msgName)
-        errMsg= msgProp.MSG_SUBJECT_FAILURE %(msgName)
+        okMsg = msgProp.MSG_SUBJECT_SUCCESS %(msgName, str(self.cntTasks))
+        errMsg= msgProp.MSG_SUBJECT_FAILURE %(msgName, str(self.cntTasks))
 
         errList = self.loggClass.getLogData (error=True)
         errCnt  = len(errList) if errList else 0

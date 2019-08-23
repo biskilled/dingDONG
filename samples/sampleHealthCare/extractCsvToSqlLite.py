@@ -63,6 +63,8 @@ nodesToLoad = [
 m = DingDong(dicObj=nodesToLoad, filePath=None, dirData=None,
              includeFiles=None,notIncludeFiles=None,connDict=None, processes=1)
 
+m.msg.addState("Start Ding")
+
 """ Mapping files strucutre into table strucure
     Target not exists   -> create new target table based on source table definitions 
     Target exists       -> if there is change, there are 3 option to update target table structure  
@@ -79,5 +81,8 @@ m.ding()
 
     more detild can be found at decumentation 
 """
+m.msg.addState("Start Dong")
 m.dong()
+
+m.msg.end(msg="FINISHED",pr=True)
 
