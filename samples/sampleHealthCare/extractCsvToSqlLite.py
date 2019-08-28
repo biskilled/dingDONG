@@ -60,10 +60,10 @@ nodesToLoad = [
         processes -> number of parrallel processing for loading data (DONG module) 
 """
 
-m = DingDong(dicObj=nodesToLoad, filePath=None, dirData=None,
+dd = DingDong(dicObj=nodesToLoad, filePath=None, dirData=None,
              includeFiles=None,notIncludeFiles=None,connDict=None, processes=1)
 
-m.msg.addState("Start Ding")
+dd.msg.addState("Start Ding")
 
 """ Mapping files strucutre into table strucure
     Target not exists   -> create new target table based on source table definitions 
@@ -72,7 +72,7 @@ m.msg.addState("Start Ding")
         2. create new table schema, store old schema in copied table with date prefix and merge data from old strucute into new strucure (CODE: 1, updteted at taret or merge key values)
         3. no change can be made into this table. CODE number 2. can be added only to target or merge objects    
 """
-m.ding()
+dd.ding()
 
 """ Extracting and loading data from source to target or to merge
     if stt node exists in JSOn mapping -> will update fields accrodinly 
@@ -81,8 +81,9 @@ m.ding()
 
     more detild can be found at decumentation 
 """
-m.msg.addState("Start Dong")
-m.dong()
+dd.msg.addState("Start Dong")
+dd.dong()
 
-m.msg.end(msg="FINISHED",pr=True)
+dd.msg.end(msg="FINISHED",pr=True)
+
 
