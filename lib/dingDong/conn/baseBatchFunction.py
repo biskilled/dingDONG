@@ -49,7 +49,8 @@ class fDCast(fncBase):
 
     def subHandler(self, col):
         if not col:
-            return self.cDate
+            #return self.cDate
+            return None
         if len(str(col))!=8 or not col.isdigit ():
             return None
 
