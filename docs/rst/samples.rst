@@ -1,5 +1,41 @@
 .. _tag_samples:
 
+Global Configuration
+####################
+
+Global configuration can be stored in config file or in each work-flow.
+Usually used for SMTP massaging, logging level and for folder locations
+
+Global varaible will be used at dingDong init
+
+::
+
+    from dingDong.config import config
+    from dingDong.bl.ddExecuter import dingDong
+
+    config.SMTP_RECEIVERS   = [<email1>, <email2>...]   # SEND EMAIL: TO
+    config.SMTP_SERVER      = "<SMTP server>"
+    config.SMTP_SERVER_USER = "email@address.com"
+    config.SMTP_SERVER_PASS = "<email password>"
+    config.SMTP_SENDER      = "<email from>"            # SEND EMAIL: FROM
+
+
+    PROJECT_FOLDER      = <folder path>\JSON    # main folder to store all JSON work-flow files
+    LOGS_FOLDER         = <folder path>\LOGS    # logs folder
+    SQL_FOLDER          = <folder path>\SQL     # SQL files to execute
+
+
+    FILES_NOT_INCLUDE   = ['<jsonFile.json>', '<jsonFile1>']    # JSON files to ignore while using JSON folder
+    FILES_INCLUDE       = ['<jsonFile5.json>','<jsonFile8>']    # Load only this JSON files
+
+    CONN_DICT = {
+                'dwh' : {"conn":"sql" , "url":<URL string>,"file":"sample.sql"},
+                'sap' : {"conn":"oracle", 'dsn':<dnn> , 'user':<user>,'pass':<pass>,'nls':<local nls language>},
+                'crm' : {"conn":"sql" , "url":<URL string>},
+                'file': {'delimiter':'~','header':True, 'folder':<folder path>,'replace':r'\"|\t'}
+                }
+
+
 Mapping and Loading
 ###################
 
@@ -97,15 +133,97 @@ results table, and extracting all results into CSV file.
     dd.msg.end(msg="FINISHED",pr=True)
 
 
-PL/SQL executer
-###############
 
-Sample of direvse sql file executing method
+Executer: PL\Sql
+################
+
+dingDong using execution methods to allow managing all business logic work flows
+the simple below using private function to set query paramters.
+execution is done in parrallel by define priorites. in our sample all priority number 1
+will execute in parallel, same for priority 2 and so on.
+Each execution can reciave paramters as a dcitioanry.
+each step is moitored by the logging mechanism **dd.msg.addState("step desc")** is used for adding massages
+and **dd.msg.sendSMTPmsg** send an HTML massage using SMTP confguration.
+
+::
+
+    # sample of private function to manage strat data and end date paramters for SQL queries
+    # current sample - reciave days and return startDate and endDate in %Y%m%d format
+
+    def setStartEndTime (e=1, s=400, f="%Y%m%d"):
+        dataRange, curDate = (e,s,f,) , datetime.datetime.today()
+        startDay = (curDate - datetime.timedelta(days=dataRange[1])).strftime(dataRange[2])
+        endDay   = (curDate - datetime.timedelta(days=dataRange[0])).strftime(dataRange[2])
+        return startDay, endDay
+
+    # update SQL queries paramters
+
+    startDay, endDay =  setStartEndTime (e=1, s=1000, f="%Y%m%d")
+    config.QUERY_PARAMS = {
+        "$start" : startDay,
+        "$end"   : endDay
+    }
+
+    ddSQLExecution = [
+        (1, SQL_FOLDER+"\\updateDWH.sql", {}),
+        (2, "exec Procedure_1_SQL", {}),
+        (3, "exec Procedure_2_SQL", {}),
+        (3, "exec Procedure_3_SQL" , {}),
+        (4, "exec Procedure_4_SQL", {}),
+        (5, "exec Procedure_5_SQL @last_etl_date='$start'" ,{'$start':config.QUERY_PARAMS['$start']}),
+        (5, "exec Procedure_6_SQL", {})
+    ]
+
+   dd = dingDong(  dicObj=None, filePath=None, dirData=PROJECT_FOLDER,
+                    includeFiles=FILES_INCLUDE, notIncludeFiles=FILES_NOT_INCLUDE,
+                    dirLogs=LOGS_FOLDER, connDict=CONN_DICT, processes=4)
+
+    dd.setLoggingLevel(val=logging.DEBUG)
+    dd.execDbSql(queries=qs, connName='sql')
+    dd.msg.addState("FINISH ALL SQL QUERIES !")
+
+    dd.msg.sendSMTPmsg (msgName="FINISHED EXECUTING WORK-FLOW", onlyOnErr=False, withErr=True, )
+
+
 
 STT - Source to target mapping
 ##############################
 
-Sample of using complex STT mapping
+Ding Work-flow:
 
+* EXTRACT: Load from oracle query into sql server table  **STG_Services** using truncate insert method
+* EXECUTE: Executing SQL file named ** update_Target_STG_Services.sql **
+* EXTRACT: Merge data from table ** STG_Services ** (target) to ** DWH_Services **
+* TRANFORM: function fDCast(). Columns ValidEndDate,ValidBgDate convert string values to smalldatetime
+  * more on function can be found at **Todo ..... **
+* TRANSFORM: execution function. Column LongDesc Concatinate 3 columns into long string: COL6+COL7+COL8
+* TRANSFORM: function fDCurr(). Update Column ETL_Date with system datetime value.
+* EXTRACT: Merge data from **STG_Services** into **DWH_Services**
+  * merge key columns: "COL1","COL2"
+  * merge using connection functionaly and can be done only if source and target are located at the same connection
 
+Dong Work-Flow:
+* DATA-TYPES: All oracle query columns COL1, COL2, ... will be in **STG_Services** and **DWH_Services** using
+SQL datatype align to oracle data-types
+* DATA-TYPES: ValidEndDate,ValidBgDate will have smalldatetime
+* DATA-TYPES: LongDesc will have nvarchar(500)
+* DATA-TYPES: ETL_Date will have smalldatetime
+* Tables **STG_Services** and **DWH_Services** will have non unique ("iu":false), clustered index ("ic":true) on COL1 and COl2
 
+::
+{
+    "target": ["sql", "STG_Services"],
+    "query": ["oracle", [
+                "SELECT COL1 as col1_Desc , COL2 as col2_Desc, COL3 as ValidEndDate, COL4 as ValidBgDate , COL5 as col5_Desc,",
+                "COL6 as col6_Desc, COL7 as col7_Desc, COL8 as col8_Desc, COL9 as col8_Desc ",
+                "FROM sar.services where COL7 ='B'"]
+                ],
+    "exec":["sql", "update_Target_STG_Services.sql"],
+    "merge":["DWH_Services",["COL1","COL2"]],
+    "sttappend":{
+        "ValidEndDate":{"s":"COL3", "t":"smalldatetime", "f":"fDCast()"},
+        "ValidBgDate": {"s":"COL4", "t":"smalldatetime", "f":"fDCast()"},
+        "LongDesc"   : {"t":"nvarchar(500)","e":"{COL6}{COL7}{COL8}"},
+        "ETL_Date":    {"t":"smalldatetime","f":"fDCurr()"}
+    },
+    "index":[{"c":["COL1", "COL2"],"ic":true,"iu":False}]
