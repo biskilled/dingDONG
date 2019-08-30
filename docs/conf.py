@@ -105,7 +105,7 @@ html_theme_options = {
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-html_title = 'popEtl Documentation'
+html_title = 'Ding-Dong Documentation'
 
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -176,7 +176,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'dingDOng', 'dingDOng Documentation',
-     AUTHOR, 'Tal@BiSkiled.com', 'Awsome integration project',
+     AUTHOR, 'Tal@BiSkiled.com', 'We love Data!',
      'Miscellaneous'),
 ]
 
