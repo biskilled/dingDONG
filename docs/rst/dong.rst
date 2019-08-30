@@ -75,9 +75,12 @@ listed below available JSON key and values
  - **execution function: e:** ``{'e':'{column1}{column2}{column3}'}``set execution method to use multiple source column as input function using input as source and output as target. more details and sample can be found at dong module
 
 
-Sample JSON loading
+.. _tag_functions:
 
-Loading samples
-###############
+Extract functions
+#################
 
-sample loading
+function class can be found in `github <https://github.com/biskilled/dingDong/blob/master/lib/dingDong/conn/baseBatchFunction.py>`_
+
+
+

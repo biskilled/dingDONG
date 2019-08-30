@@ -195,7 +195,7 @@ Ding Work-flow:
 :EXECUTE: Executing SQL file named ** update_Target_STG_Services.sql **
 :EXTRACT: Merge data from table ** STG_Services ** (target) to ** DWH_Services **
 :TRANFORM: function fDCast(). Columns ValidEndDate,ValidBgDate convert string values to smalldatetime
-  * more on function can be found at **Todo ..... **
+  * more on function can be found at **:ref:`tag_functions` **
 :TRANSFORM: execution function. Column LongDesc Concatinate 3 columns into long string: COL6+COL7+COL8
 :TRANSFORM: function fDCurr(). Update Column ETL_Date with system datetime value.
 :EXTRACT: Merge data from **STG_Services** into **DWH_Services**
