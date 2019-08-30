@@ -109,7 +109,7 @@ class __myLogger (object):
             self.logg.addHandler(fileHandler)
         else:
             # log file info
-            fileHandlerInfo = logging.FileHandler(os.path.join(self.logDir, logFile), mode='a')
+            fileHandlerInfo = logging.FileHandler(os.path.join(self.logDir, logFile))
             fileHandlerInfo.setFormatter(self.logFormatter)
             fileHandlerInfo.setLevel(self.logLevel)
             self.logg.addHandler(fileHandlerInfo)

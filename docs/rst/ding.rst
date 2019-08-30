@@ -18,7 +18,7 @@ Ding used for:
 .. _tag_schema_modify:
 
 Schema modification policy
---------------------------
+##########################
 There are three option to set if the object exists and modified:
 
 :-1 DEFAULT: The old structure is copied and stored with all data in it. naming format: ``object name_[YYYYMMDD]``. New schema structure is created with no data

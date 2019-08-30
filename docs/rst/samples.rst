@@ -36,8 +36,8 @@ Global varaible will be used at dingDong init
                 }
 
 
-Mapping and Loading
-###################
+Ding (mapping)- Dong (loading)
+##############################
 
 Sample of extracting 3 CSV files into temporal SqlLite tables. Creating a query to store aggragated data into
 results table, and extracting all results into CSV file.
@@ -134,7 +134,7 @@ results table, and extracting all results into CSV file.
 
 
 
-Executer: PL\Sql
+PL\Sql Executoer
 ################
 
 dingDong using execution methods to allow managing all business logic work flows
@@ -186,19 +186,19 @@ and **dd.msg.sendSMTPmsg** send an HTML massage using SMTP confguration.
 
 
 
-STT - Source to target mapping
+Source to target mapping (STT)
 ##############################
 
 Ding Work-flow:
 
-* EXTRACT: Load from oracle query into sql server table  **STG_Services** using truncate insert method
-* EXECUTE: Executing SQL file named ** update_Target_STG_Services.sql **
-* EXTRACT: Merge data from table ** STG_Services ** (target) to ** DWH_Services **
-* TRANFORM: function fDCast(). Columns ValidEndDate,ValidBgDate convert string values to smalldatetime
+:EXTRACT: Load from oracle query into sql server table  **STG_Services** using truncate insert method
+:EXECUTE: Executing SQL file named ** update_Target_STG_Services.sql **
+:EXTRACT: Merge data from table ** STG_Services ** (target) to ** DWH_Services **
+:TRANFORM: function fDCast(). Columns ValidEndDate,ValidBgDate convert string values to smalldatetime
   * more on function can be found at **Todo ..... **
-* TRANSFORM: execution function. Column LongDesc Concatinate 3 columns into long string: COL6+COL7+COL8
-* TRANSFORM: function fDCurr(). Update Column ETL_Date with system datetime value.
-* EXTRACT: Merge data from **STG_Services** into **DWH_Services**
+:TRANSFORM: execution function. Column LongDesc Concatinate 3 columns into long string: COL6+COL7+COL8
+:TRANSFORM: function fDCurr(). Update Column ETL_Date with system datetime value.
+:EXTRACT: Merge data from **STG_Services** into **DWH_Services**
   * merge key columns: "COL1","COL2"
   * merge using connection functionaly and can be done only if source and target are located at the same connection
 
@@ -211,7 +211,10 @@ SQL datatype align to oracle data-types
 * Tables **STG_Services** and **DWH_Services** will have non unique ("iu":false), clustered index ("ic":true) on COL1 and COl2
 
 ::
-{
+
+## JSON File:
+[
+   {
     "target": ["sql", "STG_Services"],
     "query": ["oracle", [
                 "SELECT COL1 as col1_Desc , COL2 as col2_Desc, COL3 as ValidEndDate, COL4 as ValidBgDate , COL5 as col5_Desc,",
@@ -227,3 +230,113 @@ SQL datatype align to oracle data-types
         "ETL_Date":    {"t":"smalldatetime","f":"fDCurr()"}
     },
     "index":[{"c":["COL1", "COL2"],"ic":true,"iu":False}]
+   }
+]
+
+## python:
+
+from dingDong.config import config
+from dingDong.bl.ddExecuter import dingDong
+
+config.SMTP_RECEIVERS   = [<email1>, <email2>...]   # SEND EMAIL: TO
+config.SMTP_SERVER      = "<SMTP server>"
+config.SMTP_SERVER_USER = "email@address.com"
+config.SMTP_SERVER_PASS = "<email password>"
+config.SMTP_SENDER      = "<email from>"            # SEND EMAIL: FROM
+
+PROJECT_FOLDER      = <folder path>\JSON    # main folder to store all JSON work-flow files
+LOGS_FOLDER         = <folder path>\LOGS    # logs folder
+SQL_FOLDER          = <folder path>\SQL     # SQL files to execute
+
+
+FILES_NOT_INCLUDE   = []    # JSON files to ignore while using JSON folder
+FILES_INCLUDE       = []    # Load only this JSON files
+
+CONN_DICT = {
+          'dwh' : {"conn":"sql" , "url":<URL string>,"file":"sample.sql"},
+          'sap' : {"conn":"oracle", 'dsn':<dnn> , 'user':<user>,'pass':<pass>,'nls':<local nls language>},
+          'crm' : {"conn":"sql" , "url":<URL string>},
+          'file': {'delimiter':'~','header':True, 'folder':<folder path>,'replace':r'\"|\t'}
+          }
+
+
+
+config.SMTP_RECEIVERS   = ['Oren.Muslavi@b-zion.org.il'] #
+config.SMTP_SERVER      = "172.31.2.10" #"smtp.gmail.com:587"
+config.SMTP_SERVER_USER = "AlertBi@b-zion.org.il" #"tal@bpmk.co.il"
+config.SMTP_SERVER_PASS = "bi2018"
+config.SMTP_SENDER      = "AlertBi@b-zion.org.il" #'tal@bpmk.co.il'
+
+
+PROJECT_FOLDER      = "C:\\gitHub\\dingDong\\schemas\\BNZ\\nam\\json"
+LOGS_FOLDER         = "C:\\gitHub\\dingDong\\schemas\\BNZ\\nam\\logs"
+SQL_FOLDER          = "C:\\gitHub\\dingDong\\schemas\\BNZ\\nam\\sql"
+
+
+FILES_NOT_INCLUDE    = ['smallTbls.json','critical.json','medumTbls.json','TN_Y_Tbls.json','dims.json','dwh.json','dims.json']
+#FILES_NOT_INCLUDE   = ['test.json']
+FILES_NOT_INCLUDE   = ['dwh.json','dims.json','test.json']
+FILES_INCLUDE          = []
+
+CONN_DICT = {
+            'sql'    : {"conn":"sql" , "url":"DRIVER={SQL Server};SERVER=SRV-BI,1433;DATABASE=BZ_NAM;UID=bpmk;PWD=bpmk;","file":"updateNBEW_NoMerge.sql"},
+            'sqlrepo': {"conn":"sql" , "url":"DRIVER={SQL Server};SERVER=SRV-BI,1433;DATABASE=BZ_NAM;UID=bpmk;PWD=bpmk;"},
+            'oracle' : {"conn":"oracle", 'dsn':'BZP' , 'user':'OUTLN','pass':'manager','nls':"hebrew_israel.we8dec"},      #"DSN=BZP;PWD=manager;charset=utf8"
+            'sqlAut' : {"conn":"sql" , "url":"DRIVER={SQL Server};SERVER=SRV-BI,1433;DATABASE=BZ_AUT;UID=bpmk;PWD=bpmk;"},
+            'max'    : {"conn":"sql" , "url":"DRIVER={SQL Server};SERVER=MAX2005\MAX2005;DATABASE=BZion-Prod;UID=bztest;PWD=bztest;"},
+            'sqlPacs': {"conn":"sql" , "url":"DRIVER={SQL Server};SERVER=SRV-BI,1433;DATABASE=BZ_PACS;UID=bpmk;PWD=bpmk;"},
+            'oraclePacs':{'conn':"oracle" , 'dsn':'mstore','user':'system','pass':'a1d2m7i4','nls':"HEBREW_ISRAEL.IW8MSWIN1255"},
+            'file'   : {'delimiter':'~','header':True, 'folder':"C:\\bi\\data\\automation",'replace':r'\"|\t'}
+            }
+
+def setStartEndTime (e=1, s=400, f="%Y%m%d"):
+    dataRange, curDate = (e,s,f,) , datetime.datetime.today()
+    startDay = (curDate - datetime.timedelta(days=dataRange[1])).strftime(dataRange[2])
+    endDay   = (curDate - datetime.timedelta(days=dataRange[0])).strftime(dataRange[2])
+    return startDay, endDay
+
+# Internal function in config file
+startDay, endDay =  setStartEndTime (e=1, s=1000, f="%Y%m%d")
+config.QUERY_PARAMS = {
+    "$start" : startDay,  # startDay,       #startDay, "20100101"
+    "$end"   : endDay
+}
+
+qs = [
+    (1, SQL_FOLDER+"\\updateNBEW.sql"           ,{}),
+    (2, "exec insert_Med_Nurs_OrgTree_from_NBEW", {}),
+    (3, "exec [dbo].[Create_Dim_Cases]"         ,{}),
+    (3, "exec [dbo].[Create_DIM_PATIENT_TYPE]"  ,{}),
+    (4, "exec create_Fact_Hachnasot"            ,{}),
+    (5, "exec [dbo].[Update_Nlei_values] @last_etl_date='$start'"   ,{'$start':config.QUERY_PARAMS['$start']}),
+    (5, "exec dbo.Create_fact_ishpuz_tables"    ,{}),
+    (6, "exec dbo.Create_Hosp_Daily_Status"     ,{}),
+    (7, "exec dbo.Set_Infected_Daily"           ,{}),
+    (8, "exec dbo.Create_fact_ishpuzim"         ,{}),
+    (8, "exec create_CLN_IshpuzimIndicators"    ,{}),
+    (9, "exec dbo.Create_Fact_Hayavim"          ,{}),
+    (10, "exec Create_Fact_Miun"                 ,{}),
+    (11, "exec SP_Sterna_Build_Nituach"          ,{})
+]
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Loading data from json files, cant get: source list files or destination list files or append mode () ')
+    dd = dingDong(  dicObj=None, filePath=None, dirData=PROJECT_FOLDER,
+                    includeFiles=FILES_INCLUDE, notIncludeFiles=FILES_NOT_INCLUDE,
+                    dirLogs=LOGS_FOLDER, connDict=CONN_DICT, processes=9)
+
+    dd.setLoggingLevel(val=logging.DEBUG)
+
+    dd.ding()
+    dd.msg.addState("DING NAMER !")
+
+    dd.dong()
+    dd.msg.addState("DONG NAMER !")
+
+    dd.execDbSql(queries=qs, connName='sql')
+    dd.msg.addState("FINISH NAMER SQL QUERIES !")
+
+    dd.execMicrosoftOLAP(serverName='SRV-BI', dbName='namer', cubes=[], dims=[], fullProcess=True)
+    dd.msg.addState("FINISH NAMER OLAP !")
+
+    dd.msg.sendSMTPmsg (msgName="FINISHED NAMER JOB", onlyOnErr=False, withErr=True, )
