@@ -35,7 +35,15 @@ def OLAP_Process(serverName,dbName, cubes=[], dims=[], fullProcess=True):
     amoServer.Connect(serverName)
 
     # Connect to database
-    amoDb = amoServer.Databases[dbName]
+    amoDb = None
+    for d in amoServer.Databases:
+        if str(d).lower() == dbName.lower():
+            amoDb = amoServer.Databases.GetByName(str(d))
+            break
+
+    if not amoDb:
+        p("OLAP: CANNOT FIND %s DB IN %s SERVER" %(dbName,serverName),"e")
+        return
 
     for dim in amoDb.Dimensions:
         if len(dims)==0 or dim in dims:

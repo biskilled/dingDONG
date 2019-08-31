@@ -715,7 +715,6 @@ class baseGlobalDb (baseBatch):
                 newStructureL[colAlias.replace(pre,"").replace(pos,"").lower()] = (colAlias,colType)
             else:
                 newStructureL[col.replace(pre,"").replace(pos,"").lower()] = (col, colType)
-
         existStructure = self.getStructure (tableName=tableName, tableSchema=tableSchema,sqlQuery=None)
 
         if not existStructure or len(existStructure) == 0:

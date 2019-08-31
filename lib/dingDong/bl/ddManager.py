@@ -198,11 +198,11 @@ class ddManager (object):
 
         ### Source connection type is different than target connection type
         elif self.addSourceColumn:
-
+            srcPre, srcPos = src.columnFrame[0], src.columnFrame[1]
             for col in sourceStt:
-                targetColName = col
+                targetColName = col.replace(srcPre,"").replace(srcPos,"")
                 if eJson.jSttValues.ALIACE in sourceStt[col] and sourceStt[col][eJson.jSttValues.ALIACE]:
-                    targetColName = sourceStt[col][eJson.jSttValues.ALIACE]
+                    targetColName = sourceStt[col][eJson.jSttValues.ALIACE].replace(srcPre,"").replace(srcPos,"")
 
                 colType = sourceStt[col][eJson.jSttValues.TYPE] if eJson.jSttValues.TYPE in sourceStt[col] and sourceStt[col][eJson.jSttValues.TYPE] else tar.defDataType
                 fmatch = re.search(r'(.*)(\(.+\))', colType, re.M | re.I)
