@@ -31,7 +31,17 @@ configuration
 
 Connection url dictionay
 ------------------------
-Connection URL dictionary for setting connectors connections ::
+:CONN_URL: Connection URL dictionary for setting connectors connections
+
+* Config.CONN_URL   -> set connection URL into all connectors
+  * key   -> general connection name or connection type (sql, oracle, file .. )
+  * value -> can be string or dictionary
+    * String     --> Connection string URL (key defined connection type: sql, oracle, mySql....)
+    * Dictionary --> must have 'conn' (connection type) and 'url' (connection string).
+
+Available connection can be found at dingDong.misc.enumsJson.eConn
+
+::
 
     CONN_URL    =  {    'sql'    :"DRIVER={SQL Server};SERVER=server,1433;DATABASE=database;UID=uid;PWD=pass;",
                             'oracle' :"DRIVER={SQL Server};SERVER=server,1433;DATABASE=database;UID=uid;PWD=pass;",
@@ -39,6 +49,7 @@ Connection URL dictionary for setting connectors connections ::
                             'vertica':"DRIVER=HPVertica;SERVER=server;DATABASE=database;PORT=5433;UID=user;PWD=pass",
                             'file'   :{'delimiter':',','header':True, 'folder':""}
                        }
+
 
 2. query parameters dictionary for loading parameters into complex queries ::
 
@@ -73,7 +84,7 @@ Connection URL dictionary for setting connectors connections ::
 
 9. Logs files properties::
 
-    LOGS_DEBUG = logging.DEBUG          --> Logging level
+    LOGS_DEBUG = logging.DEBUG          --> set logging level (logging.DEBUG, logging.WARNING...)
     LOGS_DIR   = None                   --> if Directory is set, logs files will be created
     LOGS_INFO_NAME = 'log'              --> default info log    : log.info
     LOGS_ERR_NAME  = 'log'              --> default error log   : log.err

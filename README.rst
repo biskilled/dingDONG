@@ -1,27 +1,36 @@
 |PyPI version| |Docs badge| |License|
 
-*********
-Ding Dong
-*********
+*************
+Ding Dong ETL
+*************
 
-Ding-Dong created for modeling developing and maintaining complex data integration projects - relational database
-or cloud APIs integration, data cleansing or modeling algorithms.
+Ding-Dong is a meta-data management infrastructure for ETL and REST full data integration projects.
+using Ding-Dong help to design, develop, maintain and scale complex batch and real-time data projects.
 
-The project is currently supporting batch loading from diverse RMDBs. we do plan to extend it for full support
-in REST and WebSocket as well. The project if fully developer in python, we do use Node for our REST integration.
+The use ding-dong propagation mechanism allowing developers to build complex data workflows in a fraction of time
 
-Ding-Dong developed to use as a glue between diverse data storage types using each component best of practice.
-for example, there is no JOIN or UNION implementation because usually this functionality is used in much efficient way at the connectors.
-we focus on managing the meta-data correctly and helping to create fast and easy to manage data workflows.
+See `Ding-Dong documentation <https://dingdong.readthedocs.io/en/latest>`_ for install and developer documentation.
+Ding-Dong at http://www.biSkilled.com (marketing) or at
 
-Using the native capabilities of existing connectors with Ding-Dong allow us to create robust data project using the
-advantages of all the components
+Why Ding-Dong?
+==============
+**Simple, because we are lazy!**
+
+Data project usually starts with a source to target modeling and implementing loading by using some ETL tool. during the project life-cycle, we have to change constantly source to target mapping and update our ETL infrastructure accordingly. Usually, this process is done in an iterative process and consume time and efforts. In addition, common ETL tools based on XML scheme which is hard to manage in full automated CI/CD processes.
+
+Ding-Dong is used to solve that by aligning design and mapping to load and data extraction. It is possible to manage all mapping schema in a convenient format such as excel or CSV and Ding-Dong will translate it into Ding-Dong JSON workflows format for the Loading and extraction methods. any update in source to target mapping will be propagated to all related object (mirroring, STG, and DWH object).
+
+Maintaining business logic in Ding-Dong is used directly by using SQL files that can be executed at the IDE as well. We added Ding-Dong **comments** syntax that use to extract queries from SQL files which help split maintain all business logic in manageable SQL files
+
+Ding-Dong developed to use as a glue between diverse data storage types using each component best of practice. We did not focus on implementing faster JOIN or UNION function but we did focus on managing the meta-data correctly.
+
+Using the native capabilities of existing connectors with Ding-Dong allow us to create robust data project using the advantages of all the components
 
 Ding-Dong has two main modules:
 
 - DING - create and manage overall meta-data structure for all object listed in the work-flow
     - creating new objects
-    - modify an existing object by using backpropagation mechanism
+    - modify an existing object by using a back-propagation mechanism
     - update data into new object
     - store old structure
     - (Todo) --> truck all work-flow changes as part of full CI/CD methodology
@@ -33,7 +42,7 @@ Ding-Dong has two main modules:
     - merge        - merging source with target data can be done if the source and merge located at the same connector
     - exec         - enable to execute PL/SQL or stored procedure command as part of the whole data workflow
 
-Read more about Ding-Dong at http://www.biSkilled.com (marketing) or at `Ding-Dong documentation <https://dingdong.readthedocs.io/en/latest>`_
+
 
 Installation
 ============
@@ -44,24 +53,13 @@ Installation
 Samples
 =======
 download samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
-located at `samples/sampleHealthCare/csvData <samples/sampleHealthCare/csvData/>`_ folder.
+located at `samples/sampleHealthCare/csvData <https://github.com/biskilled/dingDong/tree/master/samples/sampleHealthCare/csvData>`_ folder.
 In this sample, we use **C:\\dingDong** as our main folder for all source CSV files and dingDong logs.
 
-Full code sample **extractCsvToSqlLite.py** located at `samples/sampleHealthCare/ <samples/sampleHealthCare/>`_ folder
+Full code sample **extractCsvToSqlLite.py** located at `samples/sampleHealthCare/ <https://github.com/biskilled/dingDong/tree/master/samples/sampleHealthCare>`_ folder
 
 the sample demonstrates how to load three CSV files into SqlLite, create a simple query-based
 on those tables and send the result into a new CSV file.
-
-1. load module and basic configuration
-
-* Config.CONN_URL   -> set connection URL into all connectors
-    * key   -> general connection name or connection type (sql, oracle, file .. )
-    * value -> can be string or dictionary
-      * String     --> Connection string URL (key defined connection type: sql, oracle, mySql....)
-      * Dictionary --> must have 'conn' (connection type) and 'url' (connection string).
-      available connection can be found at dingDong.misc.enumsJson.eConn
-* Config.LOGS_DEBUG  -> set logging level (logging.DEBUG, logging.WARNING...)
-* Config.LOGS_DIR    -> set logs directory for creating logs files
 
 configuration properties can be found at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
 
@@ -71,9 +69,20 @@ configuration properties can be found at `dingDong documentation <https://dingdo
     from dingDong import DingDong
     from dingDong import Config
 
+    """ Main configuration """
+
     """ set log level: logging.INFO, logging.DEBUG, logging.ERROR """
     Config.LOGS_DEBUG = logging.DEBUG
 
+    """
+        set connection URL into all connectors
+        key   -> general connection name or connection type (sql, oracle, file .. )
+        value -> can be string or dictionary
+            String     --> Connection string URL (key defined connection type: sql, oracle, mySql....)
+            Dictionary --> must have 'conn' (connection type) and 'url' (connection string).
+        available connection can be found at dingDong.misc.enumsJson.eConn
+
+    """
     Config.CONN_URL = {
         'sampleSql': {'conn': 'sql',"url": "<Sql server connection string>;UID=USER;PWD=PWD;"},
         'file': "C:\\dingDong\\",
@@ -114,12 +123,12 @@ configuration properties can be found at `dingDong documentation <https://dingdo
 
 3. Init class dingDong
 
-* dicObj      -> loading dictionary as a work flow
-* dirData     -> loading JSON files in this folder
-* includeFiles-> FILTER files to load in dirData folder
-* notIncldeFiles-> Ignoring files to load in dirData folder
-* connDict    -> equal to Config.CONN_URL, st connection Urls
-* processes   -> number of parallel processing, used only for loading data (DONG module)
+:dicObj:        loading dictionary as a work flow
+:dirData:       loading JSON files in this folder
+:includeFiles:  FILTER files to load in dirData folder
+:notIncldeFiles: Ignoring files to load in dirData folder
+:connDict:      equal to Config.CONN_URL, st connection Urls
+:processes:     number of parallel processing, used only for loading data (DONG module)
 
 ::
 
@@ -252,7 +261,7 @@ License
 
 GNU General Public License v3.0
 
-See `COPYING <COPYING>`_ to see the full text.
+See `COPYING <https://github.com/biskilled/dingDong/blob/master/COPYING>`_ to see the full text.
 
 .. |PyPI version| image:: https://img.shields.io/pypi/v/dingDong.svg
    :target: https://github.com/biskilled/dingDong
