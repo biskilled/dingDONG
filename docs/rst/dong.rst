@@ -17,7 +17,7 @@ Dong support two main loading methods:
 The goals of this module:
 
 * extract and load data
-* data cleansing by using the calculated function on columns
+* data cleansing by using the calculated function on  columns
 * Ability to add calculated column
 * fast massive loading into diverse connection types
 
@@ -62,8 +62,8 @@ listed below available JSON key and values
  - **[merge object name, [-1,1,2]]:** set connection from connection properties, set target merge from merge object name, set merge :ref:`tag_schema_modify
  - **[merge object name, list merge keys]:** set connection from connection properties, set target to merge from the merge object name, set merge column from list merge keys. all remaining identical column will be updated
 
-- **Map source to target-stt**: a dictionary to map target to data tranformation functions and adding calculated columns. sample value: ``{'target column name':{'type':XXX, 'source':YYY, 'f':'fDate()', ..} ...}``. key: value for Dong listed below
-- **Map source to target-sttappend**: this is used to add column to all exisitng column in the source object. if the column exists than sttappend update properties accordingly.  key: value for Dong listed below
+- **Map source to target-set**: a dictionary to map target to data transformation functions and adding calculated columns. sample value: ``{'target column name':{'type':XXX, 'source':YYY, 'f':'fDate()', ..} ...}``. key: value for Dong listed below
+- **Map source to target-sttappend**: this is used to add column to all existing column in the source object. if the column exists than sttappend update properties accordingly.  key: value for Dong listed below
 
  - **source column name: s:** ``{'s':'Source column name'}`` source column name as inout for tranforming data
  - **function: f:** ``{'f':'function_name()'}`` set fuction method to transform data. new function can be added (samples below)
@@ -81,6 +81,22 @@ Extract functions
 #################
 
 function class can be found in `github <https://github.com/biskilled/dingDong/blob/master/lib/dingDong/conn/baseBatchFunction.py>`_
+and can be added by inherited fncBase class
+
+Built in functions:
+
+:fDCast:    Date string format convert. `YYYYMMDD` to `mm/dd/yyyy` format. None - if string not valid
+:fDTCast:   DateTime string format convert. `YYYYMMDDHHMMSS` to  `mm/dd/yyyy hh/mm/ss` format. None - if string not valid
+:fDFile:    Date string format convert. `dd/mm/yy` to  `mm/dd/yyyy` format. None - if string not valid
+:fDCurr:    Return current system dataTime
+:fTCast:    Time string format convert. `HHMMSS` to  `HH:MM:SS` format. None - if string not valid
+:fR:        Replace column string with another string. `fR(searchString, newString)`
+:fNull:     Return default value if column is None. `fNull(defaultValue)`
+:fClob:     return None if string is empty
+:fDecode:   Convert unicode string to STR
+:fPhone:    Not fully implemented: phone validation
+:fAddress:  Not fully implemented: address validation
+
 
 
 

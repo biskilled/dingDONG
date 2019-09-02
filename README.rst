@@ -52,13 +52,13 @@ Installation
 
 Samples
 =======
-download samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
+Download samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
 located at `samples/sampleHealthCare/csvData <https://github.com/biskilled/dingDong/tree/master/samples/sampleHealthCare/csvData>`_ folder.
 In this sample, we use **C:\\dingDong** as our main folder for all source CSV files and dingDong logs.
 
 Full code sample **extractCsvToSqlLite.py** located at `samples/sampleHealthCare/ <https://github.com/biskilled/dingDong/tree/master/samples/sampleHealthCare>`_ folder
 
-the sample demonstrates how to load three CSV files into SqlLite, create a simple query-based
+The sample demonstrates how to load three CSV files into SqlLite, create a simple query-based
 on those tables and send the result into a new CSV file.
 
 configuration properties can be found at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
@@ -208,7 +208,7 @@ Full sample code::
 Road map
 ========
 
-We would like to create a platform that will enable to design, implement and maintenance and data integration project such as:
+We would like to create a platform that will enable to design, implement and maintenance data integration project such as:
 
 *  Any REST API connectivity from any API to any API using simple JSON mapping
 *  Any Relational database connectivity using JSON mapping
