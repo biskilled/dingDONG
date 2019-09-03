@@ -1,9 +1,9 @@
 .. _tag_sql:
 
-Executer: execDbSql
+Executor: execDbSql
 ===================
 
-* Excuitng sql files and PL\Sql queries.
+* Executing SQL files and PL\SQL queries.
 * Support dynamic variable
 * Support extracting queries from '.sql' files
 * Support multithreading query processing
@@ -31,7 +31,3 @@ Executer: execDbSql
 
     # list or string for all queries to process
     Config.QUERY_PARAMS = {'@startDate':'20100801', '@endDate':'20100801'}
-
-
-
-

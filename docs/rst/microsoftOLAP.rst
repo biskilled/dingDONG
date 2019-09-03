@@ -1,7 +1,7 @@
 .. _tag_olap:
 
-microsoft OLAP exeuter
-======================
+Executor: microsoft OLAP
+========================
 
 Executing Microsoft OLAP cubes and dimensions, using Microsoft.AnalysisServices.DLL.
 

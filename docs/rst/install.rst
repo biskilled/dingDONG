@@ -1,6 +1,6 @@
 .. _tag_install:
 
-installation
+Installation
 ============
 
 .. |github_link| raw:: html
@@ -15,7 +15,7 @@ You can download dingDong from |github_link| or by using pip install
 
 .. _tag_config:
 
-configuration
+Configuration
 =============
 ::
 
@@ -24,8 +24,8 @@ configuration
 
 .. _tag_CONN_URL:
 
-Connection url dictionay
-------------------------
+Connection URL dictionary
+-------------------------
 
 :Config.CONN_URL:   Connection URL dictionary for setting all connectors connections
 
@@ -64,7 +64,7 @@ Available connection can be found at dingDong.misc.enumsJson.eConn::
 
     Config.DECODE          = "windows-1255"
 
-:Config.TRACK_HISTORY: Store old object strucure with data when schema changed is detected. format [object_name_YYYYMMDD]
+:Config.TRACK_HISTORY: Store old object structure with data when schema changed is detected. format [object_name_YYYYMMDD]
 ::
 
     Config.TRACK_HISTORY   = True

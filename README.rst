@@ -53,7 +53,7 @@ Installation
 Samples
 =======
 
-Samples can be found under `Ding-Dong sample documentation <https://dingdong.readthedocs.io/en/latest>`_
+Samples can be found under `Ding-Dong sample documentation <https://dingdong.readthedocs.io/en/latest/rst/samples.html>`_
 
 The sample below loading 3 CSV files into SQLite, we are using SQL to merge this CSV and extract data into a report table and CSV file.
 
@@ -61,7 +61,8 @@ Download zip file with 3 samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPH
 located at `samples/sampleHealthCare/csvData.zip <https://github.com/biskilled/dingDong/raw/master/samples/sampleHealthCare/csvData.zip>`_ folder.
 In this sample, we use **C:\\dingDong** as our main folder for all source CSV files and dingDong logs.
 
-Full code sample **extractCsvToSqlLite.py** located at `samples/sampleHealthCare/ <https://github.com/biskilled/dingDong/tree/master/samples/sampleHealthCare>`_ folder
+Full code sample **extractCsvToSqlLite.py** located at `samples/sampleHealthCare/ <https://github.com/biskilled/dingDong/tree/master/samples/sampleHealthCare/extractCsvToSqlLite.py>`_ folder
+
 
 The sample demonstrates how to load three CSV files into SqlLite, create a simple query-based
 on those tables and send the result into a new CSV file.

@@ -6,22 +6,22 @@ dingDong Documentation
 About dingDong
 ``````````````
 
-dingDong is an IT integration tool which was build to enable fast and easy design, implementation and maintained any data project.
+dingDong is an IT integration tool which was built to enable fast and easy design, implementation and maintained any data project.
 To do that we developed integration and modeling blocks that enable to model diverse SQL DBs
 and No SQL DB, extract data from one source to another and maintain business logic in an easy SQL/python format.
 
-dingDong's main goals are creating and maintaining CI/CD data work flows in a fast integration cycles and enabling to implement new requirement in a fast manner. It also provide a platform that enable to test and update business logic using the best of SQL in one hand and python on the other.
+dingDong's main goals are creating and maintaining CI/CD data workflows in a fast integration cycle and enabling to implement the new requirement in a fast manner. It also provides a platform that enable to test and update business logic using the best of SQL in one hand and python on the other.
 
-We believe that integration can be fast and much more simple buy using simple scripting language buy implementing two major concept :
+We believe that integration can be fast and much more simple buy using simple scripting language buy implementing two major concepts:
 
-* Fast design - the mapping module enable to create / maintenance data model from scratch or by using existing data model.
-  For example : to create full DWH implementation in Vertica based on mongo - all we have to do is create DWH model (entities, fields) using simple JSON format.
-  dingDong will manage all data type strucure and internal Vertica objects based on Mongo structure
-* Fast Extract and loading - Loader module enable to full load / merge / increment methods for loading data on a scheduled process based on JSN defined mapping structure
+* Fast design - the mapping module enables to create / maintenance data model from scratch or by using an existing data model.
+  For example: to create full DWH implementation in Vertica based on mongo - all we have to do is create a DWH model (entities, fields) using a simple JSON format.
+  dingDong will manage all data type structure and internal Vertica objects based on Mongo structure
+* Fast Extract and loading - Loader module enable to full load/merge/increment methods for loading data on a scheduled process based on JSN defined mapping structure
 
 This documentation is the first version of dingDong, we do look for your help and we will provide our "wish-list" .
 
-we hope to extend our development and be one of the major open-source integration platform. come and join us
+we hope to extend our development and be one of the major open-source integration platforms. come and join us
 
 
 ..  toctree::
@@ -39,17 +39,17 @@ we hope to extend our development and be one of the major open-source integratio
 
 ..  toctree::
     :maxdepth: 2
+    :caption: Samples
+
+    ./rst/samples
+
+..  toctree::
+    :maxdepth: 2
     :caption: EXECUTERS
 
     ./rst/sqlScripts
     ./rst/microsoftOLAP
     ./rst/addMessageToSend
-
-..  toctree::
-    :maxdepth: 2
-    :caption: Samples
-
-    ./rst/samples
 
 ..  toctree::
     :caption: About

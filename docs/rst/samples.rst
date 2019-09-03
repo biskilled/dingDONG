@@ -1,7 +1,7 @@
 .. _tag_samples:
 
-Global Configuration
-####################
+SAMPLE: Global Configuration
+============================
 
 Global configuration can be stored in config file or in each work-flow.
 Usually used for SMTP massaging, logging level and for folder locations
@@ -36,8 +36,8 @@ Global varaible will be used at dingDong init
                 }
 
 
-Ding (mapping)- Dong (loading)
-##############################
+SAMPLE: Ding (mapping)- Dong (loading)
+======================================
 
 Sample of extracting 3 CSV files into temporal SqlLite tables. Creating a query to store aggragated data into
 results table, and extracting all results into CSV file.
@@ -66,13 +66,13 @@ results table, and extracting all results into CSV file.
         'file': "C:\\dingDong\\",
         'sqlite': "C:\\dingDong\\sqlLiteDB.db"}
 
-    """ This is sample JSON configurtion formt for:
-        1. mapping and loading CSV file named DATAELEMENTDESCRIPTION into sqllite table named dateElements_Desc
-        2. mapping and loading CSV file named DEMOGRAPHICS into sqllite table named demographics
-        3. mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into sqllite table named birthDate
-        4. create a new query based on demographics and birthDate  into new table named Finall
-        5. Update sample field at Finall table by using direct PL/SQL query
-        6. Extract Finall table data into a CSV file
+    """ This is sample JSON configuration format for:
+        1. mapping and loading CSV file named DATAELEMENTDESCRIPTION into SQLLite table named dateElements_Desc
+        2. mapping and loading CSV file named DEMOGRAPHICS into SQLLite table named demographics
+        3. mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into SQLLite table named birthDate
+        4. create a new query based on demographics and birthDate  into new table named `Final`
+        5. Update sample field at `Final` table by using direct PL/SQL query
+        6. Extract Final table data into a CSV file
 
         file default datatype can be found at dingDong.conn.baseBatch under DEFAULTS values (currently set to VARCHAR(200) for all relation Dbs
     """
@@ -88,11 +88,11 @@ results table, and extracting all results into CSV file.
 
         {"query": ["sqlite", """   Select d.[State_FIPS_Code] AS A, d.[County_FIPS_Code] AS B, d.[County_FIPS_Code] AS G,d.[County_FIPS_Code], d.[CHSI_County_Name], d.[CHSI_State_Name],[Population_Size],[Total_Births],[Total_Deaths]
                                         From demographics d INNER JOIN birthDate b ON d.[County_FIPS_Code] = b.[County_FIPS_Code] AND d.[State_FIPS_Code] = b.[State_FIPS_Code]"""],
-         "target": ["sqlite", "Finall", 2]},
+         "target": ["sqlite", "Final", 2]},
 
         {"myexec": ["sqlite", "Update dateElements_Desc Set [Data_Type] = 'dingDong';"]},
 
-        {"source": ["sqlite", "Finall"],
+        {"source": ["sqlite", "Final"],
          "target": ["file", "finall.csv"]}
     ]
 
@@ -111,19 +111,19 @@ results table, and extracting all results into CSV file.
 
     dd.msg.addState("Start Ding")
 
-    """ Mapping files strucutre into table strucure
+    """ Mapping files structure into a table structure
         Target not exists   -> create new target table based on source table definitions
-        Target exists       -> if there is change, there are 3 option to update target table structure
-            1. copy old data into table with date prefix and create new table with updated meta data (default, CODE:-1)
-            2. create new table schema, store old schema in copied table with date prefix and merge data from old strucute into new strucure (CODE: 1, updteted at taret or merge key values)
+        Target exists       -> if there is change, there are 3 option to update the target table structure
+            1. copy old data into the table with date prefix and create a new table with updated metadata (default, CODE:-1)
+            2. create new table schema, store old schema in a copied table with date prefix and merge data from the old structure into a new structure (CODE: 1, updated at target or merge key values)
             3. no change can be made into this table. CODE number 2. can be added only to target or merge objects
     """
     dd.ding()
 
     """ Extracting and loading data from source to target or to merge
-        if stt node exists in JSOn mapping -> will update fields accrodinly
-        if column node exists -> will map column types by column node definitin
-        if mapping node exists-> will map source to target accordinglr
+        if STT node exists in JSON mapping -> will update fields accordingly
+        if the column node exists -> will map column types by column node definition
+        if mapping node exists-> will map source to target accordingly
 
         more detild can be found at decumentation
     """
@@ -134,12 +134,12 @@ results table, and extracting all results into CSV file.
 
 
 
-PL\Sql Executoer
-################
+SAMPLE: PL\Sql Executoer
+========================
 
-dingDong using execution methods to allow managing all business logic work flows
-the simple below using private function to set query paramters.
-execution is done in parrallel by define priorites. in our sample all priority number 1
+dingDong using execution methods to allow managing all business logic workflows
+the simple below using a private function to set query parameters.
+execution is done in parallel by define priorities. in our sample all priority number 1
 will execute in parallel, same for priority 2 and so on.
 Each execution can reciave paramters as a dcitioanry.
 each step is moitored by the logging mechanism **dd.msg.addState("step desc")** is used for adding massages
@@ -147,8 +147,8 @@ and **dd.msg.sendSMTPmsg** send an HTML massage using SMTP confguration.
 
 ::
 
-    # sample of private function to manage strat data and end date paramters for SQL queries
-    # current sample - reciave days and return startDate and endDate in %Y%m%d format
+    # sample of private function to manage start date and end date parameters for SQL queries
+    # current sample - receive days and return startDate and endDate in %Y%m%d format
 
     def setStartEndTime (e=1, s=400, f="%Y%m%d"):
         dataRange, curDate = (e,s,f,) , datetime.datetime.today()
@@ -156,7 +156,7 @@ and **dd.msg.sendSMTPmsg** send an HTML massage using SMTP confguration.
         endDay   = (curDate - datetime.timedelta(days=dataRange[0])).strftime(dataRange[2])
         return startDay, endDay
 
-    # update SQL queries paramters
+    # update SQL queries parameters
 
     startDay, endDay =  setStartEndTime (e=1, s=1000, f="%Y%m%d")
     config.QUERY_PARAMS = {
@@ -186,8 +186,8 @@ and **dd.msg.sendSMTPmsg** send an HTML massage using SMTP confguration.
 
 
 
-Source to target mapping (STT)
-##############################
+SAMPLE: Source to target mapping (STT)
+======================================
 
 ::
 
@@ -306,7 +306,7 @@ Ding Work-flow
 :EXTRACT: Merge data from **STG_Services** into **DWH_Services**
 
   * merge key columns: "COL1","COL2"
-  * merge using connection functionaly and can be done only if source and target are located at the same connection
+  * merge using connection functionality and can be done only if source and target are located at the same connection
 
 Dong Work-Flow
 --------------
