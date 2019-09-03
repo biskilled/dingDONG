@@ -576,11 +576,15 @@ class baseGlobalDb (baseBatch):
     """ Return TABLE STRUCTURE : {ColumnName:{Type:ColumnType, ALIACE: ColumnName} .... } """
     def getDBStructure(self, tableSchema, tableName):
         ret = OrderedDict()
+        tableSchema = self.wrapColName(col=tableSchema, remove=True)
+        tableName   = self.wrapColName(col=tableName, remove=True)
 
         sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.STRUCTURE, tableName=tableName, tableSchema=tableSchema)
-
         self.exeSQL(sql, commit=False)
+
         rows = self.cursor.fetchall()
+        if not rows or (rows and len(rows)<1):
+            p ("ERROR CONN: %s RECEIVE DB STRACTURE: TABLE: %s, SCHEMA: %s" %(self.conn, tableName, tableSchema), "e")
 
         for col in rows:
             colName = uniocdeStr(col[0])
