@@ -52,8 +52,13 @@ Installation
 
 Samples
 =======
+
+Samples can be found under `Ding-Dong sample documentation <https://dingdong.readthedocs.io/en/latest>`_
+
+The sample below loading 3 CSV files into SQLite, we are using SQL to merge this CSV and extract data into a report table and CSV file.
+
 Download zip file with 3 samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
-located at `samples/sampleHealthCare/csvData.zip <https://github.com/biskilled/dingDong/waw/master/samples/sampleHealthCare/csvData.zip>`_ folder.
+located at `samples/sampleHealthCare/csvData.zip <https://github.com/biskilled/dingDong/raw/master/samples/sampleHealthCare/csvData.zip>`_ folder.
 In this sample, we use **C:\\dingDong** as our main folder for all source CSV files and dingDong logs.
 
 Full code sample **extractCsvToSqlLite.py** located at `samples/sampleHealthCare/ <https://github.com/biskilled/dingDong/tree/master/samples/sampleHealthCare>`_ folder
@@ -91,9 +96,9 @@ configuration properties can be found at `dingDong documentation <https://dingdo
 2. Creating work flow can be done as JSON format or python dictionaries
    In this followed sample we will use python dictionary the sample work flow contain
 
-* mapping and loading CSV file named DATAELEMENTDESCRIPTION into SqlLite table named dateElements_Desc
+* mapping and loading CSV file named DATAELEMENTDESCRIPTION into SQLLite table named dateElements_Desc
 * mapping and loading CSV file named DEMOGRAPHICS into SqlLite table named demographics
-* mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into SqlLite table named birthDate
+* mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into SQLLite table named birthDate
 * create a new query based on demographics and birthDate  into new table named Final
 * Update sample field at Final table by using direct PL/SQL query
 * Extract Final table data into a CSV file.
