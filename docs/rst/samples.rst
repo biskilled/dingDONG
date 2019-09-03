@@ -1,7 +1,7 @@
 .. _tag_samples:
 
-SAMPLE: Global Configuration
-============================
+Global configuration
+====================
 
 Global configuration can be stored in config file or in each work-flow.
 Usually used for SMTP massaging, logging level and for folder locations
@@ -36,8 +36,8 @@ Global varaible will be used at dingDong init
                 }
 
 
-SAMPLE: Ding (mapping)- Dong (loading)
-======================================
+Ding-Dong (mapp-load)
+=====================
 
 Sample of extracting 3 CSV files into temporal SqlLite tables. Creating a query to store aggragated data into
 results table, and extracting all results into CSV file.
@@ -133,9 +133,8 @@ results table, and extracting all results into CSV file.
     dd.msg.end(msg="FINISHED",pr=True)
 
 
-
-SAMPLE: PL\Sql Executoer
-========================
+PL\Sql Executor
+===============
 
 dingDong using execution methods to allow managing all business logic workflows
 the simple below using a private function to set query parameters.
@@ -186,8 +185,8 @@ and **dd.msg.sendSMTPmsg** send an HTML massage using SMTP confguration.
 
 
 
-SAMPLE: Source to target mapping (STT)
-======================================
+Source to target mapping (STT)
+==============================
 
 ::
 

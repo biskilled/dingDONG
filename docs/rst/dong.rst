@@ -30,7 +30,7 @@ Main Configuration properties:
 * Config.LOGS_DIR		-> log files folder
 
 JSON work-flow
-==============
+##############
 
 All work-flows takes using :ref:`tag_CONN_URL`  (``Config.CONN_URL`` in the config file) as a source for all connection properties.
 with merging connection properties and JSON vales there are all available properties for each work-flow node (connection URL object, pre-execution, post-execution, etc)
@@ -78,7 +78,7 @@ listed below available JSON key and values
 .. _tag_functions:
 
 Extract functions
-=================
+#################
 
 function class can be found in `github <https://github.com/biskilled/dingDong/blob/master/lib/dingDong/conn/baseBatchFunction.py>`_
 and can be added by inherited fncBase class

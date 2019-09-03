@@ -18,7 +18,7 @@ Ding used for:
 .. _tag_schema_modify:
 
 Schema modification policy
-==========================
+##########################
 There are three option to set if the object exists and modified:
 
 :-1 DEFAULT: The old structure is copied and stored with all data in it. naming format: ``object name_[YYYYMMDD]``. New schema structure is created with no data
@@ -26,7 +26,7 @@ There are three option to set if the object exists and modified:
 :2 NO CHANGE: object structure cannot be modified
 
 JSON work-flow
-==============
+##############
 
 All work-flows takes using :ref:`tag_CONN_URL`  (``Config.CONN_URL`` in the config file) as a source for all connection properties.
 with merging connection properties and JSON vales there are all available properties for each work-flow node (connection URL object, pre-execution, post-execution, etc)
@@ -76,7 +76,7 @@ listed below available JSON key and values
 
 
 Mapping samples
-===============
+###############
 
  .. code-block:: python
 

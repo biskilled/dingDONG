@@ -1,7 +1,7 @@
 .. _tag_sql:
 
-Executor: execDbSql
-===================
+execDbSql
+=========
 
 * Executing SQL files and PL\SQL queries.
 * Support dynamic variable
