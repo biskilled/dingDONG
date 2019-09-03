@@ -45,7 +45,7 @@ we hope to extend our development and be one of the major open-source integratio
 
 ..  toctree::
     :maxdepth: 2
-    :caption: EXECUTERS
+    :caption: EXECUTORS
 
     ./rst/sqlScripts
     ./rst/microsoftOLAP
