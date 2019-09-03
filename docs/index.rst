@@ -21,7 +21,7 @@ We believe that integration can be fast and much more simple buy using simple sc
 
 This documentation is the first version of dingDong, we do look for your help and we will provide our "wish-list" .
 
-we hope to extend our development and be one of the major open-source integration platforms. come and join us
+We hope to extend our development and be one of the major open-source integration platforms. come and join us
 
 
 ..  toctree::
@@ -30,6 +30,7 @@ we hope to extend our development and be one of the major open-source integratio
 
     ./rst/install
 
+
 ..  toctree::
     :maxdepth: 2
     :caption: MODULES
@@ -37,11 +38,13 @@ we hope to extend our development and be one of the major open-source integratio
     ./rst/ding
     ./rst/dong
 
+
 ..  toctree::
     :maxdepth: 2
     :caption: Samples
 
     ./rst/samples
+
 
 ..  toctree::
     :maxdepth: 2
@@ -51,9 +54,11 @@ we hope to extend our development and be one of the major open-source integratio
     ./rst/microsoftOLAP
     ./rst/addMessageToSend
 
+
 ..  toctree::
     :caption: About
 
     ./rst/license
+
 
 * :ref:`license`

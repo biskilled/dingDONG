@@ -10,7 +10,7 @@ using Ding-Dong help to design, develop, maintain and scale complex batch and re
 The use ding-dong propagation mechanism allowing developers to build complex data workflows in a fraction of time
 
 See `Ding-Dong documentation <https://dingdong.readthedocs.io/en/latest>`_ for install and developer documentation.
-Ding-Dong at http://www.biSkilled.com (marketing) or at
+more information can be found at http://www.biSkilled.com
 
 Why Ding-Dong?
 ==============
