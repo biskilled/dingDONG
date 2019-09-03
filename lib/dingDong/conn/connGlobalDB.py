@@ -379,9 +379,9 @@ class baseGlobalDb (baseBatch):
             existingColumns = qp.extract_tableAndColumns(sql=sourceSql)
             preSql = existingColumns[qp.QUERY_PRE]
             postsql = existingColumns[qp.QUERY_POST]
+            pre, pos = self.columnFrame[0], self.columnFrame[1]
             if self.connIsSql:
                 allColumns  = existingColumns[qp.QUERY_COLUMNS_KEY]
-                pre, pos = self.columnFrame[0], self.columnFrame[1]
 
                 for col in allColumns:
                     existingColumnsDic[col[1].replace(pre,"").replace(pos,"").lower()] = ".".join(col[0])
