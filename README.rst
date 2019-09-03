@@ -52,8 +52,8 @@ Installation
 
 Samples
 =======
-Download samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
-located at `samples/sampleHealthCare/csvData <https://github.com/biskilled/dingDong/tree/master/samples/sampleHealthCare/csvData>`_ folder.
+Download zip file with 3 samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
+located at `samples/sampleHealthCare/csvData.zip <https://github.com/biskilled/dingDong/waw/master/samples/sampleHealthCare/csvData.zip>`_ folder.
 In this sample, we use **C:\\dingDong** as our main folder for all source CSV files and dingDong logs.
 
 Full code sample **extractCsvToSqlLite.py** located at `samples/sampleHealthCare/ <https://github.com/biskilled/dingDong/tree/master/samples/sampleHealthCare>`_ folder
