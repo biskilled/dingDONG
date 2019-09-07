@@ -10,14 +10,14 @@ Global varaible will be used at dingDong init
 
 ::
 
-    from dingDong.config import config
-    from dingDong.bl.ddExecuter import dingDong
+    from dingDong import DingDong
+    from dingDong import Config
 
-    config.SMTP_RECEIVERS   = [<email1>, <email2>...]   # SEND EMAIL: TO
-    config.SMTP_SERVER      = "<SMTP server>"
-    config.SMTP_SERVER_USER = "email@address.com"
-    config.SMTP_SERVER_PASS = "<email password>"
-    config.SMTP_SENDER      = "<email from>"            # SEND EMAIL: FROM
+    Config.SMTP_RECEIVERS   = [<email1>, <email2>...]   # SEND EMAIL: TO
+    Config.SMTP_SERVER      = "<SMTP server>"
+    Config.SMTP_SERVER_USER = "email@address.com"
+    Config.SMTP_SERVER_PASS = "<email password>"
+    Config.SMTP_SENDER      = "<email from>"            # SEND EMAIL: FROM
 
 
     PROJECT_FOLDER      = <folder path>\JSON    # main folder to store all JSON work-flow files

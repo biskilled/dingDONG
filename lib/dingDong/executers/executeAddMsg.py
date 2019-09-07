@@ -97,7 +97,6 @@ class executeAddMsg (object):
             for col in self.stateDic:
                 p (list(self.stateDic[col].values()))
 
-
     def sendSMTPmsg (self, msgName, onlyOnErr=False, withErr=True,withWarning=True ):
 
         okMsg = msgProp.MSG_SUBJECT_SUCCESS %(msgName, str(self.cntTasks))
