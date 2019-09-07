@@ -12,6 +12,7 @@ future
 sqlparse
 csv23
 pythonnet
+gitpython
 
 pyodbc
 pymysql

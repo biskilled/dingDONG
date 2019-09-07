@@ -3,4 +3,5 @@
 Mailing logging massaging
 =========================
 
-todo
+adding masages for monitoring overall work-flow process
+
