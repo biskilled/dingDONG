@@ -1,73 +1,89 @@
 |PyPI version| |Docs badge| |License|
 
-*************
-Ding Dong ETL
-*************
+******************************
+Ding Dong data preparation ETL
+******************************
 
-Ding-Dong is a meta-data management infrastructure for ETL and REST full data integration projects.
-using Ding-Dong help to design, develop, maintain and scale complex batch and real-time data projects.
+dingDong is a metadata management infrastructure for ETL, REST APIs, and machine learning models
+with a complete version control support for all data preparation, loading, and ML experiments.
 
-The use ding-dong propagation mechanism allowing developers to build complex data workflows in a fraction of time
+using dingDONG propagation mechanism help to design, develop, maintain and scale complex batch and real-time data projects in a fraction of time
 
 See `Ding-Dong documentation <https://dingdong.readthedocs.io/en/latest>`_ for install and developer documentation.
-more information can be found at http://www.biSkilled.com
+More information can be found at http://www.biSkilled.com
 
-Why Ding-Dong?
+Why Ding Dong?
 ==============
-**Simple, because we are lazy!**
+**Simple, because it is fast and easy to implement !**
 
-Data project usually starts with a source to target modeling and implementing loading by using some ETL tool. during the project life-cycle, we have to change constantly source to target mapping and update our ETL infrastructure accordingly. Usually, this process is done in an iterative process and consume time and efforts. In addition, common ETL tools based on XML scheme which is hard to manage in full automated CI/CD processes.
+Main steps at data project include:
 
-Ding-Dong is used to solve that by aligning design and mapping to load and data extraction. It is possible to manage all mapping schema in a convenient format such as excel or CSV and Ding-Dong will translate it into Ding-Dong JSON workflows format for the Loading and extraction methods. any update in source to target mapping will be propagated to all related object (mirroring, STG, and DWH object).
+- Source to target modeling - mostly done by excel or external ERD mapping tools
+- Implementing - mostly done by external ETL tools
+- Improve, extend, maintenance and deploy between environments - usually an iterative process which consumes time and effort. meta-data is constantly changing. if business logic involves ML/DL models - versioning must be set for trucking overall results accuracy
 
-Maintaining business logic in Ding-Dong is used directly by using SQL files that can be executed at the IDE as well. We added Ding-Dong **comments** syntax that use to extract queries from SQL files which help split maintain all business logic in manageable SQL files
+**dingDONG developed to maintain and speed the overall data project implementation**
 
-Ding-Dong developed to use as a glue between diverse data storage types using each component best of practice. We did not focus on implementing faster JOIN or UNION function but we did focus on managing the meta-data correctly.
+- Source to target modeling - dingDONG truck meta-data changes such as adding, removing, updating DB columns. converting data-type from diverse connections or adding key sequence is done automatically. Modeling can be managed in a simple excel file, dindDONG will truck excel updates and will update all object by using a propagation mechanism.
+-  Implementing E(T)L (extract, transform, load) - dingDONG multi-threading and data fetching optimization give a powerful tool for massive bulk data loading
+- Transform - It is possible to add calculated columns or manipulate existing column by adding python functions. a function such as scaling or normalization can be added as easy as adding the current date or concatenate functions
+- Business logic - Maintaining business logic in Ding-Dong is used directly by using SQL files that can be executed directly at the development IDE. Using dingDONG **comments** syntax is used to extract and execute complex queries from SQL files which allows managing all business logic in separate files.
+- Version control - dingDONG versioning and manage all metadata changes and stored it in a proprietary dingDONG DB (MongoDB). dingDONG supports unique **GIT** version-control mechanism for managing ML/DL project versioning and tracking experiments history results. There is full support in **GITHUB** for distributed versioning.
 
-Using the native capabilities of existing connectors with Ding-Dong allow us to create robust data project using the advantages of all the components
-
-Ding-Dong has two main modules:
+dingDONG modules:
 
 - DING - create and manage overall meta-data structure for all object listed in the work-flow
     - creating new objects
     - modify an existing object by using a back-propagation mechanism
     - update data into new object
     - store old structure
-    - (Todo) --> truck all work-flow changes as part of full CI/CD methodology
+    - CI source control
 
 - DONG - extract and load data from diverse connectors
-    - extract data - support multithreading for extracting massive data volume
-    - transfer     - enable to add a custom function on existing columns
-                   - enable to add custom calculated fields
-    - merge        - merging source with target data can be done if the source and merge located at the same connector
-    - exec         - enable to execute PL/SQL or stored procedure command as part of the whole data workflow
+    - extract data - support multi-threading for extracting massive data volume
+    - transfer     - add a custom function on existing columns or new custom calculated fields
+    - merge        - merging source with target object (supported only for objects at the same connector)
+    - exec         - execute PL/SQL/Stored procedure commands
+
+- VERSION CONTROL - track meta-data and code updates
+    - Versions numbers are managed automatically (sample: <major-release>.<minor-release>.<fixId>)
+    - Any change at object metadata is automatically stored dingDONG repository
+    - Support managed GIT versioning of ML / DL experiments.
+       - Code update - a new version is created
+       - Experiment results stored in dingDong repository for future analytics
+       - Roll revisions history by version number
+       - Define measures such as counting total input or total output rows
+       - Store executions result for compare experiments performance
 
 
 
 Installation
 ============
+
 `download from GitHub <https://github.com/biskilled/dingDong>`_ or install by using ``pip``::
 
     pip install dingDong
+
+Adding MongoDB for pip installation is now cooked. Installation instruction will come soon
+Docker support - as well, still at the oven .. will come soon
 
 Samples
 =======
 
 Samples can be found under `Ding-Dong sample documentation <https://dingdong.readthedocs.io/en/latest/rst/samples.html>`_
 
-The sample below loading 3 CSV files into SQLite, we are using SQL to merge this CSV and extract data into a report table and CSV file.
+The sample below loads 3 CSV files into SQLite. (we are using SQL to merge this CSV and extract data into a report table and CSV file).
 
-Download zip file with 3 samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
+Download ZIP file with 3 samples CSV files DATAELEMENTDESCRIPTION.csv, DEMOGRAPHICS.csv, MEASURESOFBIRTHANDDEATH.csv
 located at `samples/sampleHealthCare/csvData.zip <https://github.com/biskilled/dingDong/raw/master/samples/sampleHealthCare/csvData.zip>`_ folder.
-In this sample, we use **C:\\dingDong** as our main folder for all source CSV files and dingDong logs.
+In this sample, we use **C:\\dingDONG** as our main folder for all source CSV files and dingDong logs.
 
 Full code sample **extractCsvToSqlLite.py** located at `samples/sampleHealthCare/ <https://github.com/biskilled/dingDong/tree/master/samples/sampleHealthCare/extractCsvToSqlLite.py>`_ folder
 
+The sample demonstrates how to load 3 CSV files into SqlLite, create a simple query-based
+on those tables and send the result to a new CSV file.
 
-The sample demonstrates how to load three CSV files into SqlLite, create a simple query-based
-on those tables and send the result into a new CSV file.
-
-configuration properties can be found at `dingDong documentation <https://dingdong.readthedocs.io/en/latest>`_
+configuration properties can be found at `dingDONG documentation <https://dingdong.readthedocs.io/en/latest>`_
 
 ::
 
@@ -94,15 +110,15 @@ configuration properties can be found at `dingDong documentation <https://dingdo
         'file': "C:\\dingDong\\",
         'sqlite': "C:\\dingDong\\sqlLiteDB.db"}
 
-2. Creating work flow can be done as JSON format or python dictionaries
-   In this followed sample we will use python dictionary the sample work flow contain
+2. Creating workflow can be done as JSON format or python dictionaries
+   For the sake of this example, we will use a python dictionary. The sample work-flow will contain:
 
 * mapping and loading CSV file named DATAELEMENTDESCRIPTION into SQLLite table named dateElements_Desc
 * mapping and loading CSV file named DEMOGRAPHICS into SqlLite table named demographics
 * mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into SQLLite table named birthDate
 * create a new query based on demographics and birthDate  into new table named Final
-* Update sample field at Final table by using direct PL/SQL query
-* Extract Final table data into a CSV file.
+* Update sample fields at Final table by using direct PL/SQL query
+* Extract Final data into a CSV file.
   We use VARCHAR(200) as default CSV column data type. configuration can be found at DEFAULTS under dingDong.conn.baseBatch
 
 ::
@@ -119,7 +135,7 @@ configuration properties can be found at `dingDong documentation <https://dingdo
 
         {"query": ["sqlite", """   Select d.[State_FIPS_Code] AS A, d.[County_FIPS_Code] AS B, d.[County_FIPS_Code] AS G,d.[County_FIPS_Code], d.[CHSI_County_Name], d.[CHSI_State_Name],[Population_Size],[Total_Births],[Total_Deaths]
                                         From demographics d INNER JOIN birthDate b ON d.[County_FIPS_Code] = b.[County_FIPS_Code] AND d.[State_FIPS_Code] = b.[State_FIPS_Code]"""],
-         "target": ["sqlite", "Finall", 2]},
+         "target": ["sqlite", "Finall", -1]},
 
         {"myexec": ["sqlite", "Update dateElements_Desc Set [Data_Type] = 'dingDong';"]},
 
@@ -129,12 +145,12 @@ configuration properties can be found at `dingDong documentation <https://dingdo
 
 3. Init class dingDong
 
-:dicObj:        loading dictionary as a work flow
-:dirData:       loading JSON files in this folder
-:includeFiles:  FILTER files to load in dirData folder
-:notIncldeFiles: Ignoring files to load in dirData folder
-:connDict:      equal to Config.CONN_URL, st connection Urls
-:processes:     number of parallel processing, used only for loading data (DONG module)
+:dicObj:        Loading dictionary as a work flow
+:dirData:       Loading JSON files in this folder
+:includeFiles:  Include files to load from directory folder (dirData)
+:notIncldeFiles: Exclude files to load from directory folder (dirData)
+:connDict:      Equal to Config.CONN_URL, set connection URLs string
+:processes:     Max number of parallel threading to load data (DONG module)
 
 ::
 
@@ -149,20 +165,20 @@ configuration properties can be found at `dingDong documentation <https://dingdo
 4. DING
 
 * creating dateElements_Desc, demographics and birthDate tables based on CSV files
-* creating Final table based on the defined query
+* extracting query structure and creating Final table
 
- if the table exists and structure changed - Ding module will track changes by a duplicate object with data and create new object schema
+ Flag -1 - default flag,  indicate that on changed structure- old structure is stored with all data. object is udated to new strucutre
 
 ::
 
     m.ding()
 
-5.  DONG - Extracting data from CSV files into SQLite table. default loading is truncate-> insert method
-    Extract data from a query into the Final table (truncate-> insert )
+5.  DONG - Extracting and loading data from CSV files into SQLite table, using default truncate-> insert method
+    Extract data from a query into Final table
 
-* if object structure changed and mode 2 (like at the sample)
-  * history table will be created
-  * new object will be created and will be populated with data from history table (identical column name)
+* if object structure changed and mode 1 (default mode)
+  * history table will is created
+  * new object structure is created. new object is populated with data from history table (only identical column name)
 
 ::
 
@@ -214,13 +230,14 @@ Full sample code::
 Road map
 ========
 
-We would like to create a platform that will enable to design, implement and maintenance data integration project such as:
+We would like to create a platform that will enable to design, implement and maintain data integration project such as:
 
 *  Any REST API connectivity from any API to any API using simple JSON mapping
 *  Any Relational database connectivity using JSON mapping
 *  Any Non-relational storage
-*  Main platform for any middleware business logic - from sample if-than-else up to statistics algorithms using ML and DL algorithms
+*  Main platform for any middle-ware business logic - from sample if-than-else up to statistics algorithms using ML and DL algorithms
 *  Enable Real-time and scheduled integration
+*  Single point of truth - maintain all changes by using git source control and enable to compare version and rollback as needed
 
 We will extend our connectors and Meta-data manager accordingly.
 
@@ -258,7 +275,7 @@ BATCH supported connectors
 Authors
 =======
 
-dingDong was created by `Tal Shany <http://www.biskilled.com>`_
+dingDONG was created by `Tal Shany <http://www.biskilled.com>`_
 (tal@biSkilled.com)
 We are looking for contributions !!!
 

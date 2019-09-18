@@ -74,4 +74,3 @@ Mailing logging massaging
         dd.msg.addState("FINISH EXECUTING OLAP !")
 
         dd.msg.sendSMTPmsg (msgName="FINISHED WORK_FLOW", onlyOnErr=False, withErr=True, )
-

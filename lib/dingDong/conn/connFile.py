@@ -79,6 +79,7 @@ class connFile (baseBatch):
         self.append     = self.setProperties(propKey=eJson.jFile.APPEND, propVal=append, propDef=DEFAULTS)
         self.replaceToNone= self.setProperties(propKey=eJson.jFile.REPLACE_TO_NONE, propVal=replaceToNone, propDef=DEFAULTS)
         self.isCsv      = self.setProperties(propKey=eJson.jFile.CSV, propVal=isCsv, propDef=DEFAULTS)
+        self.columnFrame = ('','')
 
         """ FILE PROPERTIES """
         self.fileFullName = None
