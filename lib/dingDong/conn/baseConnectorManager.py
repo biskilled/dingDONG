@@ -21,9 +21,10 @@ from dingDong.misc.logger     import p
 from dingDong.misc.enumsJson import eConn, eJson
 from dingDong.config import config
 
-from dingDong.conn.connGlobalDB   import baseGlobalDb
-from dingDong.conn.connAccess     import access
-from dingDong.conn.connFile       import connFile
+from dingDong.conn.connGlobalDB import baseGlobalDb
+from dingDong.conn.connAccess   import access
+from dingDong.conn.connMongo    import mongo
+from dingDong.conn.connFile     import connFile
 
 CLASS_TO_LOAD = {eConn.SQLSERVER :baseGlobalDb,
                  eConn.ORACLE:baseGlobalDb,
@@ -31,7 +32,8 @@ CLASS_TO_LOAD = {eConn.SQLSERVER :baseGlobalDb,
                  eConn.ACCESS:access,
                  eConn.MYSQL:baseGlobalDb,
                  eConn.LITE:baseGlobalDb,
-                 eConn.FILE:connFile}
+                 eConn.FILE:connFile,
+                 eConn.MONGO:mongo}
 
 def addPropToDict (existsDict, newProp):
     if newProp and isinstance(newProp, (dict, OrderedDict)):

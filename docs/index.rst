@@ -1,27 +1,39 @@
 .. _dingDong:
 
-dingDong Documentation
-======================
+Ding Dong data preparation ETL
+==============================
 
-About dingDong
-``````````````
+Why ding DONG
+`````````````
 
-dingDong is an IT integration tool which was built to enable fast and easy design, implementation and maintained any data project.
-To do that we developed integration and modeling blocks that enable to model diverse SQL DBs
-and No SQL DB, extract data from one source to another and maintain business logic in an easy SQL/python format.
+dingDONG is an IT integration tool which was built to enable fast and easy design, implementation and maintain complex data and machine learning projects.
+dingDONG support end to end development cycle includes code versioning, maintenance automation and propagation mechanism that
+enable developers to maintain, extend and scale complex data projects.
 
-dingDong's main goals are creating and maintaining CI/CD data workflows in a fast integration cycle and enabling to implement the new requirement in a fast manner. It also provides a platform that enable to test and update business logic using the best of SQL in one hand and python on the other.
+dingDONG give an advantage for machine-learning and deep-learning project by providing simple data preparation layer and experiment version-control layers which
+give input/output flexibility and full development life- cycle monitoring.
 
-We believe that integration can be fast and much more simple buy using simple scripting language buy implementing two major concepts:
 
-* Fast design - the mapping module enables to create / maintenance data model from scratch or by using an existing data model.
-  For example: to create full DWH implementation in Vertica based on mongo - all we have to do is create a DWH model (entities, fields) using a simple JSON format.
-  dingDong will manage all data type structure and internal Vertica objects based on Mongo structure
-* Fast Extract and loading - Loader module enable to full load/merge/increment methods for loading data on a scheduled process based on JSN defined mapping structure
+dingDong main goals are
+ - to model (on the fly) diverse SQL and NO-SQL DBS
+ - extract and load data optimizing our machine CPU / IO (multithreading, fast connectors )
+ - enabling to prepare data easily by adding a new column or manipulating data flow (scaling, normalization..)
+ - CI / CD - maintain meta-data versioning, for roll-back and revision compare
+ - CI / CD for machine-learning or Deep learning by using embedded GIT functionality
+ - enable work-flows flexibility by providing detailed logs and alerts (mail) mechanism
+ - extending and improving unique work-flows executers
+    - PL/SQL or complex SQL files multiprocess executers
+    - OLAP executers
+    - REST Apis executers
+ - batch or real-time scheduling mechanism
 
-This documentation is the first version of dingDong, we do look for your help and we will provide our "wish-list" .
+This documentation is the first version of dingDONG, we are open to help from other developers, and we like to receive your comments and feedback.
 
-We hope to extend our development and be one of the major open-source integration platforms. come and join us
+Please, fill free to contact me at tal@biSkilled.com
+
+We hope to extend dingDONG to be one of the major open-source integration platforms.
+
+**Come and join us!**
 
 
 ..  toctree::
@@ -37,6 +49,7 @@ We hope to extend our development and be one of the major open-source integratio
 
     ./rst/ding
     ./rst/dong
+    ./rst/vc
 
 
 ..  toctree::

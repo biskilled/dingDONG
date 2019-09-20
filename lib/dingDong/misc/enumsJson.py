@@ -138,6 +138,7 @@ class eConn (object):
     ACCESS      = "access"
     MYSQL       = "mysql"
     LITE        = "sqlite"
+    MONGO       = 'mongo'
     FILE        = "file"
     NONO        = 'nono'
 
@@ -202,7 +203,6 @@ def findProp (prop, obj=eConn, dictProp=None):
             if ret is not None:
                 return ret
     return None
-
 
 def getAllProp (obj=eJson):
     dicClass = obj.__dict__

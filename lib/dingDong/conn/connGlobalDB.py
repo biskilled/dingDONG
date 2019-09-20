@@ -150,6 +150,7 @@ class baseGlobalDb (baseBatch):
                 import vertica_python
                 self.connDB = vertica_python.connect(self.connUrl)
                 self.cursor = self.connDB.cursor()
+
             elif eConn.ORACLE == self.conn:
                 self.isExtractSqlIsOnlySTR = True
                 self.connDB = cx_Oracle.connect(self.connUrl['user'], self.connUrl['pass'], self.connUrl['dsn'])

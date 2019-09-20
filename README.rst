@@ -16,38 +16,38 @@ Why Ding Dong?
 ==============
 **Simple, because it is fast and easy to implement !**
 
-Main steps at data project include:
+Steps for creating at data project:
 
 - Source to target modeling - mostly done by excel or external ERD mapping tools
-- Implementing - mostly done by external ETL tools
-- Improve, extend, maintenance and deploy between environments - usually an iterative process which consumes time and effort. meta-data is constantly changing. if business logic involves ML/DL models - versioning must be set for trucking overall results accuracy
+- Implementing - done mainly by external ETL tools
+- Improvements, extensions, maintenance and deploy between environments - usually an iterative process which consumes time and effort. meta-data is constantly changing. if business logic involves ML/DL models - versioning must be set for trucking overall results accuracy
 
 **dingDONG developed to maintain and speed the overall data project implementation**
 
 - Source to target modeling - dingDONG truck meta-data changes such as adding, removing, updating DB columns. converting data-type from diverse connections or adding key sequence is done automatically. Modeling can be managed in a simple excel file, dindDONG will truck excel updates and will update all object by using a propagation mechanism.
--  Implementing E(T)L (extract, transform, load) - dingDONG multi-threading and data fetching optimization give a powerful tool for massive bulk data loading
-- Transform - It is possible to add calculated columns or manipulate existing column by adding python functions. a function such as scaling or normalization can be added as easy as adding the current date or concatenate functions
-- Business logic - Maintaining business logic in Ding-Dong is used directly by using SQL files that can be executed directly at the development IDE. Using dingDONG **comments** syntax is used to extract and execute complex queries from SQL files which allows managing all business logic in separate files.
-- Version control - dingDONG versioning and manage all metadata changes and stored it in a proprietary dingDONG DB (MongoDB). dingDONG supports unique **GIT** version-control mechanism for managing ML/DL project versioning and tracking experiments history results. There is full support in **GITHUB** for distributed versioning.
+- Implementing E(T)L (extract, transform, load) - dingDONG multi-threading and data fetching optimization give a powerful tool for massive bulk data loading
+- Transform - It is possible to add calculated columns or manipulate existing column by adding python functions. A function such as scaling or normalization can be added as easy as adding the current date or concatenate functions
+- Business logic - Maintaining business logic in dingDONG is used directly by using SQL files that can be executed directly at the development IDE. Using dingDONG **comments** syntax is used to extract and execute complex queries from SQL files which allows managing all business logic in separate files.
+- Version control - dingDONG version control and management keeps track of all metadata changes and stored it in a proprietary dingDONG DB (MongoDB). dingDONG supports **GIT** version-control mechanism for managing ML/DL projects, versioning and tracking experiments history results. There is full support in **GITHUB** for distributed versioning.
 
 dingDONG modules:
 
-- DING - create and manage overall meta-data structure for all object listed in the work-flow
+- DING - create and manage overall meta-data structure for all listed object in the work-flow
     - creating new objects
     - modify an existing object by using a back-propagation mechanism
     - update data into new object
-    - store old structure
+    - save old structures
     - CI source control
 
 - DONG - extract and load data from diverse connectors
     - extract data - support multi-threading for extracting massive data volume
     - transfer     - add a custom function on existing columns or new custom calculated fields
-    - merge        - merging source with target object (supported only for objects at the same connector)
+    - merge        - merging source with the target object (supported only for objects at the same connector)
     - exec         - execute PL/SQL/Stored procedure commands
 
 - VERSION CONTROL - track meta-data and code updates
     - Versions numbers are managed automatically (sample: <major-release>.<minor-release>.<fixId>)
-    - Any change at object metadata is automatically stored dingDONG repository
+    - Any change at object metadata is automatically stored at dingDONG repository
     - Support managed GIT versioning of ML / DL experiments.
        - Code update - a new version is created
        - Experiment results stored in dingDong repository for future analytics
@@ -277,6 +277,7 @@ Authors
 
 dingDONG was created by `Tal Shany <http://www.biskilled.com>`_
 (tal@biSkilled.com)
+
 We are looking for contributions !!!
 
 License
