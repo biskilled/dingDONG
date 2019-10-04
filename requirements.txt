@@ -14,6 +14,7 @@ csv23
 pythonnet
 gitpython
 wget
+pandas
 
 pyodbc
 pymysql

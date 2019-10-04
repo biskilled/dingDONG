@@ -204,6 +204,7 @@ class ddManager (object):
                 if eJson.jSttValues.ALIACE in sourceStt[col] and sourceStt[col][eJson.jSttValues.ALIACE]:
                     targetColName = sourceStt[col][eJson.jSttValues.ALIACE].replace(srcPre,"").replace(srcPos,"")
 
+
                 colType = sourceStt[col][eJson.jSttValues.TYPE] if eJson.jSttValues.TYPE in sourceStt[col] and sourceStt[col][eJson.jSttValues.TYPE] else tar.defDataType
                 fmatch = re.search(r'(.*)(\(.+\))', colType, re.M | re.I)
                 if fmatch:
@@ -215,12 +216,13 @@ class ddManager (object):
 
                 ## Receive list of all dataType in DataTypes Tree
                 newDataTypeTree     = src.getDataTypeTree (dataType=replaceString.lower(), ret=([]))
+
                 if newDataTypeTree is None:
                     p("SOURCE CONNECTION: %s, COLUMN: %s, DATA TYPE: %s ; IS NOT EXISTS, WILL USE DEFAULT VALUE" %(src.conn,col, replaceString),"w")
                     tarType = tar.defDataType
                 else:
                     targetList = tar.setDataTypeTree (dataTypeTree=newDataTypeTree, allDataTypes=tar.DATA_TYPES, ret=[])
-                    tarType = '%s%s' %(targetList[-1],postType) if targetList and len(targetList)>0 else tar.defDatatType
+                    tarType = '%s%s' %(targetList[-1],postType) if targetList and len(targetList)>0 and targetList[-1] is not None else tar.defDataType
                 retStrucure[targetColName] = {eJson.jSttValues.TYPE:tarType}
 
         retStrucureL = {x.lower():x for x in retStrucure}
@@ -342,6 +344,7 @@ class ddManager (object):
                     if tar and src:
                         # convert source data type to target data types
                         targetStt = self.updateTargetBySourceAndStt(src=src, tar=tar)
+
 
                         if targetStt and len(targetStt)>0:
                             tar.create(stt=targetStt, addIndex=self.addIndex)

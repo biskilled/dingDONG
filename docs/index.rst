@@ -1,6 +1,6 @@
 .. _dingDong:
 
-Ding Dong data preparation ETL
+Ding DONG data preparation ETL
 ==============================
 
 Why ding DONG

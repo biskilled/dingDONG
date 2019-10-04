@@ -159,6 +159,13 @@ class dingDong:
         connObj = conn(connPropDic=connPropDic , connLoadProp=self.connDict)
         execQuery(sqlWithParamList=queries, connObj=connObj)
 
+    def test (self):
+        for connProp in self.connDict:
+            c = conn(connPropDic=self.connDict[connProp], connLoadProp=None)
+            c.test ()
+
+
+
     def execMicrosoftOLAP (self, serverName, dbName, cubes=[], dims=[], fullProcess=True):
         OLAP_Process(serverName=serverName, dbName=dbName, cubes=cubes, dims=dims, fullProcess=fullProcess)
 

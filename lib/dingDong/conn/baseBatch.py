@@ -32,8 +32,9 @@ DEFAULTS    =   {
                     eJson.jValues.BATCH_SIZE:200000
                 }
 
+# eConn.dataType.B_DEFAULT:'nvarchar(200)',
 DATA_TYPES = {
-    eConn.dataType.B_STR: { eConn.dataType.B_DEFAULT:'nvarchar(200)',
+    eConn.dataType.B_STR: {
                             eConn.dataType.DB_VARCHAR:None,
                             eConn.dataType.DB_NVARCHAR:None,
                             eConn.dataType.DB_CHAR:None,
@@ -82,16 +83,22 @@ class baseBatch ():
     def close(self):
         pass
 
+    def test(self):
+        if self.connect():
+            p("TEST-> SUCCESS: %s, type: %s " % (self.connName, self.conn))
+        else:
+            p("TEST-> FAILED: %s, type: %s " % (self.connName, self.conn))
+
+    @abc.abstractmethod
+    def isExists(self, **args):
+        pass
+
     @abc.abstractmethod
     def create(self, stt=None, objName=None, addIndex=None):
         pass
 
     @abc.abstractmethod
     def getStructure(self, **args):
-        pass
-
-    @abc.abstractmethod
-    def isExists(self, **args):
         pass
 
     @abc.abstractmethod
@@ -112,6 +119,10 @@ class baseBatch ():
 
     @abc.abstractmethod
     def merge(self, mergeTable, mergeKeys=None, sourceTable=None):
+        pass
+
+    @abc.abstractmethod
+    def cntRows(self, objName=None):
         pass
 
     """ -----------------   GLOBAL METHODS -------------------------------------"""
@@ -144,12 +155,6 @@ class baseBatch ():
             for num, row in enumerate(data):
                 data[num] = [i if i!='' else None for i in row]
         return data
-
-    def test(self):
-        if self.connect():
-            p("TEST-> SUCCESS: %s, type: %s " % (self.connName, self.conn))
-        else:
-            p("TEST-> FAILED: %s, type: %s " % (self.connName, self.conn))
 
     """ GET DATA TYPE TREE - Return source data types"""
     def getDataTypeTree (self, dataType, dataTypeTree=None, ret=list([])):
@@ -199,13 +204,14 @@ class baseBatch ():
                     ret.append(k)
                     if allDataTypes[k] and eConn.dataType.B_DEFAULT in allDataTypes[k]:
                         ret.append(allDataTypes[k][eConn.dataType.B_DEFAULT])
+                    else:
+                        ret.append(None)
 
                     dataTypeTree.remove(k)
                     return self.setDataTypeTree(dataTypeTree=dataTypeTree, allDataTypes=allDataTypes[k], ret=ret)
         return ret
 
     """ return default data types dictionary   """
-
     def setDefaults(self, defaultsDic):
         defValues = {}
         if defaultsDic and eConn.NONO in defaultsDic and defaultsDic[eConn.NONO]:
@@ -263,4 +269,3 @@ class baseBatch ():
                 return unicode(sObj)
             elif decode:
                 return str(sObj).decode(decode)
-

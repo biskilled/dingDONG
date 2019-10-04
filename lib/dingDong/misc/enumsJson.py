@@ -61,6 +61,7 @@ class eJson (object):
         URL         = 'url'
         URLPARAM    = 'eurl'
         URL_FILE    = 'urlfile'
+        DB_NAME     = 'db'
         DEFAULT_TYPE= 'defaultdatatype'
         SCHEMA      = 'schema'
         EMPTY       = 'empty'
@@ -91,7 +92,8 @@ class eJson (object):
             UPDATE:     [UPDATE,'change'],
             INDEX_CLUSTER: [INDEX_CLUSTER, 'cluster'],
             INDEX_UNIQUE:[INDEX_UNIQUE, 'unique'],
-            INDEX_COLUMS:[INDEX_COLUMS,'column','columns']
+            INDEX_COLUMS:[INDEX_COLUMS,'column','columns'],
+            DB_NAME     :[DB_NAME, 'dbname']
         }
         DIC   = {   NAME:None,TYPE:None,CONN:None,OBJ:None,
                     FILTER:None,IS_CHANGE:None,URL:None,URLPARAM:None,

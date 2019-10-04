@@ -4,7 +4,7 @@
 Ding Dong data preparation ETL
 ******************************
 
-dingDong is a metadata management infrastructure for ETL, REST APIs, and machine learning models
+dingDong is a metadata management infrastructure for data preparation, ETL, and machine learning models
 with a complete version control support for all data preparation, loading, and ML experiments.
 
 using dingDONG propagation mechanism help to design, develop, maintain and scale complex batch and real-time data projects in a fraction of time
