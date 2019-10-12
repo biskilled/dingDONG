@@ -6,7 +6,7 @@
 # dingDong is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# (at your option) any late r version.
 #
 # dingDong is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -51,6 +51,10 @@ DEFAULTS = {
                               eJson.jValues.EMPTY: 'Null', eJson.jValues.COLFRAME: ("[", "]"),
                               eJson.jValues.SP: {'match': r'([@].*[=])(.*?(;|$))', 'replace': r"[=;@\s']"}  },
 
+            eConn.POSTGESQL: {eJson.jValues.DEFAULT_TYPE: 'varchar(100)', eJson.jValues.SCHEMA: 'public',
+                              eJson.jValues.EMPTY: 'Null', eJson.jValues.COLFRAME: ('"', '"'),
+                              eJson.jValues.SP: {'match': r'([@].*[=])(.*?(;|$))', 'replace': r"[=;@\s']"}  },
+
             eConn.LITE: {   eJson.jValues.DEFAULT_TYPE:'varchar(100)',eJson.jValues.SCHEMA:None,
                             eJson.jValues.EMPTY:'Null'}
            }
@@ -61,6 +65,11 @@ DATA_TYPES = {
                       eConn.dataType.DB_DECIMAL:['number','numeric','dec','decimal']
                     },
     eConn.SQLSERVER:{
+                        eConn.dataType.DB_DATE:['smalldatetime','datetime'],
+                        eConn.dataType.DB_DECIMAL:['decimal']
+                    },
+
+    eConn.POSTGESQL:{
                         eConn.dataType.DB_DATE:['smalldatetime','datetime'],
                         eConn.dataType.DB_DECIMAL:['decimal']
                     },
@@ -85,10 +94,11 @@ class baseGlobalDb (baseBatch):
         self.usingSchema= True
 
         """ BASIC PROPERTIES FROM BASECONN """
-        self.conn           = self.conn
-        self.connName       = self.connName
-        self.defDataType    = self.defDataType
-        self.update         = self.update
+        self.conn               = self.conn
+        self.connName           = self.connName
+        self.defDataType        = self.defDataType
+        self.update             = self.update
+        self.creeateFromObjName = self.creeateFromObjName
 
         """ DB PROPERTIES """
         self.connUrl = self.setProperties(propKey=eJson.jValues.URL, propVal=connUrl)
@@ -141,8 +151,6 @@ class baseGlobalDb (baseBatch):
 
         p("CONNECTED, DB TYPE: %s, %s" % (self.conn, objName, ), "ii")
 
-    """  MANADATORY METHOD INHERTIED FROM BASE BATCH INTERFACE"""
-
     def connect(self):
         try:
             if eConn.MYSQL == self.conn:
@@ -150,6 +158,12 @@ class baseGlobalDb (baseBatch):
                 self.connDB = pymysql.connect(self.connUrl["host"], self.connUrl["user"], self.connUrl["passwd"],
                                               self.connUrl["db"])
                 self.cursor = self.connDB.cursor()
+
+            elif eConn.POSTGESQL == self.conn:
+                import psycopg2
+                self.connDB = psycopg2.connect(self.connUrl)
+                self.cursor = self.connDB.cursor()
+
             elif eConn.VERTICA == self.conn:
                 import vertica_python
                 self.connDB = vertica_python.connect(self.connUrl)
@@ -225,7 +239,7 @@ class baseGlobalDb (baseBatch):
             p("TABLE %s NOT MAPPED CORRECLTY " %(self.connObj), "e")
             return
 
-        isNew,isChanged, newHistoryTable = self.cloneObject(stt, tableSchema, tableName)
+        isNew,isChanged, newHistoryTable = self.cloneObject(newStructure=stt, tableName=tableName, tableSchema=tableSchema)
 
         if isNew or  (isChanged and self.update<2):
             sql = "CREATE TABLE %s \n (" %(tableFullName)
@@ -267,9 +281,9 @@ class baseGlobalDb (baseBatch):
     """ INTERNAL USED: for create method: Compare existing stucture to new one, if 
             object exists call compareExistToNew - compare 2 object and update   """
     def cloneObject(self, newStructure, tableName, tableSchema=None):
-        newStructureL = OrderedDict()
-        isNew = True
-        isChanged = False
+        newStructureL   = OrderedDict()
+        isNew           = True
+        isChanged       = False
 
         tableSchema, tableName = self.setTableAndSchema(tableName=tableName, tableSchema=tableSchema, wrapTable=False)
         pre, pos = self.columnFrame[0], self.columnFrame[1]
@@ -324,9 +338,13 @@ class baseGlobalDb (baseBatch):
     """ INTERNAL USED: TABLE STRUCTURE : {ColumnName:{Type:ColumnType, ALIACE: ColumnName} .... } """
     def getDBStructure(self, tableName, tableSchema):
         ret = OrderedDict()
+
+        if not self.isExists(tableName=tableName, tableSchema=tableSchema):
+            p ("%s: TABLE %s, SCHEMA %s NOT EXISTS.. " %(self.conn, tableName, tableSchema), "ii")
+            return ret
+
         tableSchema = self.wrapColName(col=tableSchema, remove=True)
         tableName = self.wrapColName(col=tableName, remove=True)
-
         sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.STRUCTURE, tableName=tableName, tableSchema=tableSchema)
         self.exeSQL(sql, commit=False)
 
@@ -450,6 +468,85 @@ class baseGlobalDb (baseBatch):
                 p("!!!!ERROR: COLUMN %s NOT FOUND " % col, "w")
 
         return ret
+
+    """ INTERNAL USED: for clone method - update object is exists
+            -1: create history table base on config.TRACK_HISTORY. new name: tablename_currentDate
+            1 : update strucure (change data type, add column or remove column)
+            2 : Cannot change object """
+    def compareExistToNew(self, existStructure, newStructureL, tableName, tableSchema):
+        isChanged       = False
+        newHistoryTable = None
+        updateDesc = 'UPDATE' if self.update == eJson.jUpdate.UPDATE else 'DROP CREATE' if self.update == eJson.jUpdate.DROP else 'WARNIN, NO UPDATE'
+        pre, pos = self.columnFrame[0], self.columnFrame[1]
+        existStructureL = {x.replace(pre, "").replace(pos, "").lower(): x for x in existStructure}
+
+        for col in existStructureL:
+            if col in newStructureL:
+                ## update column type
+                if existStructure[existStructureL[col]][eJson.jSttValues.TYPE].lower() != newStructureL[col][1].lower():
+                    isChanged = True
+                    if self.update == eJson.jUpdate.UPDATE:
+                        sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.COLUMN_UPDATE,
+                                                   tableName=tableName, tableSchema=tableSchema, columnName=col,
+                                                   columnType=newStructureL[col][1])
+                        self.exeSQL(sql=sql)
+                    p("%s: CONN:%s, TABLE: %s, COLUMN %s, TYPE CHANGED, OLD: %s, NEW: %s" % (
+                    updateDesc, self.conn, tableName, col, existStructure[existStructureL[col]][eJson.jSttValues.TYPE],
+                    newStructureL[col][1]), "w")
+
+            ## REMOVE COLUMN
+            else:
+                isChanged = True
+                sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.COLUMN_DELETE, tableName=tableName,
+                                           tableSchema=tableSchema, columnName=col)
+                self.exeSQL(sql=sql)
+
+                p("CONN:%s, TABLE: %s, REMOVING COLUMN: %s " % (self.conn, tableName, col), "w")
+
+        for col in newStructureL:
+            # ADD COLUMN
+            if col not in existStructureL:
+                isChanged = True
+                sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.COLUMN_ADD,
+                                           tableName=tableName, tableSchema=tableSchema, columnName=col,
+                                           columnType=newStructureL[col][1])
+                self.exeSQL(sql=sql)
+
+                p("CONN:%s, TABLE: %s, ADD COLUMN: %s " % (self.conn, tableName, newStructureL[col][0]), "w")
+
+        if not isChanged:
+            p("TABLE %s DID NOT CHANGED  >>>>>" % (tableName), "ii")
+            return isChanged, newHistoryTable
+        else:
+            if self.update > 1:
+                p("TABLE STRUCTURE CHANGED, UPDATE IS NOT ALLOWED, NO CHANGE", "w")
+                return isChanged, newHistoryTable
+            else:
+                if config.TRACK_HISTORY:
+                    p("TABLE HISTORY IS ON ...", "ii")
+                    newHistoryTable = "%s_%s" % (tableName, str(time.strftime('%y%m%d')))
+                    if (self.isExists(tableSchema=tableSchema, tableName=tableName)):
+                        num = 0
+                        while (self.isExists(tableSchema=tableSchema, tableName=newHistoryTable)):
+                            num += 1
+                            newHistoryTable = "%s_%s_%s" % (tableName, str(time.strftime('%y%m%d')), str(num))
+                    if newHistoryTable:
+                        p("TABLE HISTORY IS ON AND CHANGED, TABLE %s EXISTS ... RENAMED TO %s" % (
+                        str(tableName), str(newHistoryTable)), "w")
+                        sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.RENAME, tableSchema=tableSchema,
+                                                   tableName=tableName, tableNewName=newHistoryTable)
+
+                        # sql = eval (self.objType+"_renameTable ("+self.objName+","+oldName+")")
+                        p("RENAME TABLE SQL:%s" % (str(sql)), "w")
+                        self.exeSQL(sql=sql, commit=True)
+                else:
+                    if existStructure and len(existStructure) > 0:
+                        p("TABLE HISTORY IS OFF AND TABLE EXISTS, DROP -> CREATE TABLE %s IN NEW STRUCTURE... " % (
+                            str(tableName)), "w")
+                        sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.DROP, tableName=tableName,
+                                                   tableSchema=tableSchema)
+                        self.exeSQL(sql=sql, commit=True)
+        return isChanged, newHistoryTable
 
     """ INTERNAL USED: Add index """
     def addIndexToTable (self, tableName, addIndex, tableSchema=None):
@@ -785,6 +882,67 @@ class baseGlobalDb (baseBatch):
     def cntRows (self, objName=None):
         raise NotImplementedError("count rows need to be implemented")
 
+    def createFrom (self, stt=None, objName=None, addIndex=None):
+        if not self.creeateFromObjName:
+            p ("CONN %s DO NOT HAVE TABLE TO CREATE FROM, IGNORE" %(self.conn), "e")
+            return
+
+        tableSchema, tableName = self.setTableAndSchema (tableName=self.creeateFromObjName )
+        if self.isExists(tableName=tableName, tableSchema=tableSchema):
+            sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.CREATE_FROM, tableName=self.creeateFromObjName)
+            self.exeSQL(sql=sql)
+
+            rows = self.cursor.fetchall()
+            if not rows or (rows and len(rows) < 1):
+                p("ERROR CREATE FROM TABLE %s, CONN: %s -> NO ROWS" %(self.creeateFromObjName, self.conn),"ii")
+                return
+
+            tableToCreate = {}
+            for col in rows:
+                if len(col)==1:
+                    if col[0] not in tableToCreate:
+                        tableToCreate[col[0].lower()]= [col[0],OrderedDict()]
+                elif len(col)==2:
+                    if col[0] not in tableToCreate:
+                        tableToCreate[col[0].lower()] = [col[0], OrderedDict()]
+                        tableToCreate[col[0].lower()][1][col[1]] = {}
+                        tableToCreate[col[0].lower()][1][col[1]][eJson.jSttValues.TYPE] = self.defDataType
+                    else:
+                        tableToCreate[col[0].lower()][1][col[1]] = {}
+                        tableToCreate[col[0].lower()][1][col[1]][eJson.jSttValues.TYPE] = self.defDataType
+                elif len(col)>=3:
+                    if col[0] not in tableToCreate:
+                        tableToCreate[col[0].lower()]= [col[0],OrderedDict()]
+                        tableToCreate[col[0].lower()][1][col[1]] = {}
+                        tableToCreate[col[0].lower()][1][col[1]][eJson.jSttValues.TYPE] = col[2]
+                    else:
+                        tableToCreate[col[0].lower()][1][col[1]] = {}
+                        tableToCreate[col[0].lower()][1][col[1]][eJson.jSttValues.TYPE] = col[2]
+
+
+            tableFilter = objName if objName else self.connObj
+
+            filteredTables = {}
+            if tableFilter and len(tableFilter)>0 and tableFilter.lower() in tableToCreate:
+                filteredTables[tableToCreate[tableFilter.lower()][0]] = tableToCreate[tableFilter.lower()][1]
+            else:
+                for t in tableToCreate:
+                    filteredTables[ tableToCreate[t][0] ] = tableToCreate[t][1]
+
+            stt = stt if stt else None
+            for t in filteredTables:
+                ## ADD STT TO NEW CREATE TABLES
+                if stt:
+                    createStt = {x.lower():x for x in filteredTables[t]}
+                    for col in stt:
+                        if col.lower() in createStt:
+                            filteredTables[t][ createStt[col.lower()] ].extend( stt[col] )
+                        else:
+                            filteredTables[t][ col ] = stt[col]
+
+                self.create(stt=filteredTables[t], objName=t, addIndex=addIndex)
+
+
     ########################################################################################################
 
     """ INTERNAL USED  """
@@ -802,71 +960,6 @@ class baseGlobalDb (baseBatch):
             p(e, "e")
             p(u"ERROR SQL:\n%s " % (uniocdeStr(s)), "e")
             return False
-
-    """ INTERNAL USED for clone method - update object is exists
-        -1: create history table base on config.TRACK_HISTORY. new name: tablename_currentDate
-        1 : update strucure (change data type, add column or remove column)
-        2 : Cannot change object """
-    def compareExistToNew (self, existStructure, newStructureL, tableName, tableSchema):
-        isChanged       = False
-        newHistoryTable = None
-        updateDesc      = 'UPDATE' if self.update == 1 else 'DROP CREATE' if self.update < 1 else 'WARNIN, NO UPDATE'
-        pre, pos        = self.columnFrame[0], self.columnFrame[1]
-        existStructureL = {x.replace(pre, "").replace(pos, "").lower(): x for x in existStructure}
-
-        for col in existStructureL:
-            if col in newStructureL:
-                ## update column type
-                if existStructure[existStructureL[col]][eJson.jSttValues.TYPE].lower() != newStructureL[col][1].lower():
-                    isChanged = True
-                    if self.update == 1:
-                        sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.TABLE_CHANGE_COLUMN,
-                                                   tableName=tableName, tableSchema=tableSchema, columnName=col,
-                                                   columnType=newStructureL[col][1])
-                        self.exeSQL(sql=sql)
-
-                    p("%s: CONN:%s, TABLE: %s, COLUMN %s, TYPE CHANGED, OLD: %s, NEW: %s" % (updateDesc, self.conn, tableName, col, existStructure[existStructureL[col]][eJson.jSttValues.TYPE],newStructureL[col][1]), "w")
-
-            ## REMOVE COLUMN
-            else:
-                isChanged = True
-                p("CONN:%s, TABLE: %s, REMOVING COLUMN: %s " % (self.conn, tableName, col), "w")
-
-        for col in newStructureL:
-            # ADD COLUMN
-            if col not in existStructureL:
-                isChanged = True
-                p("CONN:%s, TABLE: %s, ADD COLUMN: %s " % (self.conn, tableName, newStructureL[col][0]), "w")
-
-        if not isChanged:
-            p("TABLE %s DID NOT CHANGED  >>>>>" % (tableName), "ii")
-            return isChanged, newHistoryTable
-        else:
-            if self.update>1:
-                p("TABLE STRUCTURE CHANGED, UPDATE IS NOT ALLOWED, NO CHANGE","w")
-                return isChanged, newHistoryTable
-            else:
-                if config.TRACK_HISTORY:
-                    p("TABLE HISTORY IS ON ...", "ii")
-                    newHistoryTable = "%s_%s" % (tableName, str(time.strftime('%y%m%d')))
-                    if (self.isExists(tableSchema=tableSchema, tableName=tableName)):
-                        num = 0
-                        while (self.isExists(tableSchema=tableSchema, tableName=newHistoryTable)):
-                            num += 1
-                            newHistoryTable = "%s_%s_%s" % (tableName, str(time.strftime('%y%m%d')), str(num))
-                    if newHistoryTable:
-                        p("TABLE HISTORY IS ON AND CHANGED, TABLE %s EXISTS ... RENAMED TO %s" % (str(tableName), str(newHistoryTable)), "w")
-                        sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.RENAME, tableSchema=tableSchema,tableName=tableName, tableNewName=newHistoryTable)
-
-                        # sql = eval (self.objType+"_renameTable ("+self.objName+","+oldName+")")
-                        p("RENAME TABLE SQL:%s" % (str(sql)), "w")
-                        self.exeSQL(sql=sql, commit=True)
-                else:
-                    if existStructure and len(existStructure)>0:
-                        p("TABLE HISTORY IS OFF AND TABLE EXISTS, DROP -> CREATE TABLE %s IN NEW STRUCTURE... "%(str(tableName)), "w")
-                        sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.DROP,  tableName=tableName, tableSchema=tableSchema)
-                        self.exeSQL(sql=sql, commit=True)
-        return isChanged, newHistoryTable
 
     """ INTERNAL USED:
         Return tableSchema, tableName From table name and schema 

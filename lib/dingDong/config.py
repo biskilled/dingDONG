@@ -51,3 +51,5 @@ class config:
     SMTP_SERVER_PASS        = ""
     SMTP_SENDER             = ""
     SMTP_RECEIVERS          = ['info@biSkilled.com']
+
+    VERSION = 1

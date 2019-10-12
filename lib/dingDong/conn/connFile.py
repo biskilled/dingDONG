@@ -109,7 +109,6 @@ class connFile (baseBatch):
                 self.folder = head
                 self.fileFullName = self.folder
 
-    """  MANADATORY METHOD INHERTIED FROM BASE BATCH INTERFACE"""
     def connect(self, fileName=None):
         if fileName:
             self.fileFullName = fileName
@@ -126,13 +125,69 @@ class connFile (baseBatch):
     def close(self):
         pass
 
+    def test(self):
+        baseBatch.test(self)
+
+    def isExists(self, fullPath=None):
+        fullPath = fullPath if fullPath else self.fileFullName
+        return os.path.isfile(fullPath)
+
     def create(self, stt=None, fullPath=None, addIndex=None):
         fullPath = fullPath if fullPath else self.fileFullName
         self.cloneObject(stt=stt, fullPath=fullPath)
         p("NO POINT TO CREATE FILE %s " %(fullPath), "ii")
 
-    """  Strucutre Dictinary for file: {Column Name: {ColumnType:XXXXX} .... }
-            Types : STR , FLOAD , INT, DATETIME (only if defined)  """
+    """ INTERNAL USED: 
+        for create method create new File is file is exist
+        If config.TRACK_HISTORY will save old table as tablename_currentDate   """
+    def cloneObject(self, stt=None, fullPath=None):
+        fullPath = fullPath if fullPath else self.fileFullName
+        fileName = os.path.basename(fullPath)
+        fileDir = os.path.dirname(fullPath)
+
+        fileNameNoExtenseion = os.path.splitext(fileName)[0]
+        fimeNameExtension = os.path.splitext(fileName)[1]
+        ### check if table exists - if exists, create new table
+        isFileExists = os.path.isfile(fullPath)
+        toUpdateFile = False
+
+        if isFileExists:
+            actulSize = os.stat(fullPath).st_size
+            if actulSize < self.fileMinSize:
+                p("FILE %s EXISTS WITH SIZE SMALLER THAN %s --> WONT UPDATE  ..." % (fullPath, str(actulSize)), "ii")
+                toUpdateFile = False
+
+            fileStructure = self.getStructure(fullPath=fullPath)
+            fileStructureL = [x.lower() for x in fileStructure]
+            sttL = [x.lower() for x in stt]
+
+            if set(fileStructureL) != set(sttL):
+                toUpdateFile = True
+                p("FILE %s EXISTS, SIZE %s STRUCTURE CHANGED !!" % (fullPath, str(actulSize)), "ii")
+            else:
+                p("FILE %s EXISTS, SIZE %s STRUCURE DID NOT CHANGED !! " % (fullPath, str(actulSize)), "ii")
+
+            if toUpdateFile and config.TRACK_HISTORY:
+                oldName = None
+                if (os.path.isfile(fullPath)):
+                    oldName = fileNameNoExtenseion + "_" + str(time.strftime('%y%m%d')) + fimeNameExtension
+                    oldName = os.path.join(fileDir, oldName)
+                    if (os.path.isfile(oldName)):
+                        num = 1
+                        oldName = os.path.splitext(oldName)[0] + "_" + str(num) + os.path.splitext(oldName)[1]
+                        oldName = os.path.join(fileDir, oldName)
+                        while (os.path.isfile(oldName)):
+                            num += 1
+                            FileNoExt = os.path.splitext(oldName)[0]
+                            FileExt = os.path.splitext(oldName)[1]
+                            oldName = FileNoExt[: FileNoExt.rfind('_')] + "_" + str(num) + FileExt
+                            oldName = os.path.join(fileDir, oldName)
+                if oldName:
+                    p("FILE HISTORY, FILE %s EXISTS, COPY FILE TO %s " % (str(self.fileName), str(oldName)), "ii")
+                    shutil.copy(fullPath, oldName)
+
+    """ Strucutre Dictinary for file: {Column Name: {ColumnType:XXXXX} .... }
+        Types : STR , FLOAD , INT, DATETIME (only if defined)  """
     def getStructure(self, fullPath=None):
         ret     = OrderedDict()
         fullPath= fullPath if fullPath else self.fileFullName
@@ -158,10 +213,6 @@ class connFile (baseBatch):
             p ('FILE NOT EXISTS %s >>> ' %( str(fullPath) ), "ii")
 
         return ret
-
-    def isExists(self, fullPath=None):
-        fullPath = fullPath if fullPath else self.fileFullName
-        return os.path.isfile(fullPath)
 
     def preLoading(self):
         if self.isExists() and self.append:
@@ -295,61 +346,14 @@ class connFile (baseBatch):
         p('LOAD %s ROWS INTO FILE %s >>>>>> ' % (str(totalRows), self.fileFullName), "ii")
         return
 
-    def execMethod(self):
+    def execMethod(self, method=None):
         pass
 
-    """ PUBLIC METHOD FOR DB MANIPULATION  """
-
-    """ INTERNAL USED for create method
-        Create new File is file is exist
-        If config.TRACK_HISTORY will save old table as tablename_currentDate   """
-    def cloneObject(self, stt=None, fullPath=None):
-        fullPath    = fullPath if fullPath else self.fileFullName
-        fileName    = os.path.basename(fullPath)
-        fileDir     = os.path.dirname(fullPath)
-
-        fileNameNoExtenseion = os.path.splitext(fileName)[0]
-        fimeNameExtension = os.path.splitext(fileName)[1]
-        ### check if table exists - if exists, create new table
-        isFileExists = os.path.isfile(fullPath)
-        toUpdateFile = False
-
-        if isFileExists:
-            actulSize = os.stat(fullPath).st_size
-            if actulSize < self.fileMinSize:
-                p("FILE %s EXISTS WITH SIZE SMALLER THAN %s --> WONT UPDATE  ..." %(fullPath, str(actulSize)), "ii")
-                toUpdateFile = False
-
-            fileStructure = self.getStructure(fullPath=fullPath)
-            fileStructureL= [x.lower() for x in fileStructure]
-            sttL = [x.lower() for x in stt]
-
-            if set(fileStructureL) != set(sttL):
-                toUpdateFile = True
-                p("FILE %s EXISTS, SIZE %s STRUCTURE CHANGED !!" % (fullPath, str(actulSize)), "ii")
-            else:
-                p("FILE %s EXISTS, SIZE %s STRUCURE DID NOT CHANGED !! " % (fullPath, str(actulSize)), "ii")
-
-
-            if toUpdateFile and config.TRACK_HISTORY:
-                oldName = None
-                if (os.path.isfile(fullPath)):
-                    oldName = fileNameNoExtenseion + "_" + str(time.strftime('%y%m%d')) + fimeNameExtension
-                    oldName = os.path.join(fileDir, oldName)
-                    if (os.path.isfile(oldName)):
-                        num = 1
-                        oldName = os.path.splitext(oldName)[0] + "_" + str(num) + os.path.splitext(oldName)[1]
-                        oldName = os.path.join(fileDir, oldName)
-                        while (os.path.isfile(oldName)):
-                            num += 1
-                            FileNoExt = os.path.splitext(oldName)[0]
-                            FileExt = os.path.splitext(oldName)[1]
-                            oldName = FileNoExt[: FileNoExt.rfind('_')] + "_" + str(num) + FileExt
-                            oldName = os.path.join(fileDir, oldName)
-                if oldName:
-                    p("FILE HISTORY, FILE %s EXISTS, COPY FILE TO %s " % (str(self.fileName), str(oldName)), "ii")
-                    shutil.copy(fullPath, oldName)
-
-    """ INTERNAL METHOD  """
     def merge (self, fileName, hearKeys=None, sourceFile=None):
+        raise NotImplementedError("Merge need to be implemented")
+
+    def cntRows (self, objName=None):
         raise NotImplementedError("count rows need to be implemented")
+
+    def createFrom(self, stt=None, objName=None, addIndex=None):
+        raise NotImplementedError("createFrom need to be implemented")

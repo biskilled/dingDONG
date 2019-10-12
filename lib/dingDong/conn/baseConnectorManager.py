@@ -33,7 +33,8 @@ CLASS_TO_LOAD = {eConn.SQLSERVER :baseGlobalDb,
                  eConn.MYSQL:baseGlobalDb,
                  eConn.LITE:baseGlobalDb,
                  eConn.FILE:connFile,
-                 eConn.MONGO:mongo}
+                 eConn.MONGO:mongo,
+                 eConn.POSTGESQL:baseGlobalDb}
 
 def addPropToDict (existsDict, newProp):
     if newProp and isinstance(newProp, (dict, OrderedDict)):

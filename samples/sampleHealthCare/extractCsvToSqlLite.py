@@ -18,7 +18,7 @@ Config.LOGS_DEBUG = logging.DEBUG
 Config.CONN_URL = {
     'sampleSql': {'conn': 'sql',"url": "<Sql server connection string>;UID=USER;PWD=PWD;"},
     'file': "C:\\dingDong\\",
-    'sqlite': "C:\\dingDong\\sqlLiteDB.db"}
+    'sqlite': {"url":"C:\\dingDong\\sqlLiteDB.db","create":"tableName"}}
 
 """ This is sample JSON configuration format for:
     1. mapping and loading CSV file named DATAELEMENTDESCRIPTION into SQLLite table named dateElements_Desc

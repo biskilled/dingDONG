@@ -33,7 +33,8 @@ class eJson (object):
         INDEX       = 'index'
         PARTITION   = 'par'           # not inplemented
         INC         = 'inc'           # not implemented
-        NONO        = 'internal'
+        NONO        = 'internal',
+        CREATE      = 'create'
 
         eDict = {
             TARGET: [TARGET, 'target'],  # Target
@@ -47,7 +48,8 @@ class eJson (object):
             COLUMNS: [COLUMNS, 'columns', 'column'],
             INDEX: [INDEX, 'i'],
             PARTITION: [PARTITION, 'partition'],
-            INC: [INC, 'incremental']
+            INC: [INC, 'incremental'],
+            CREATE:[CREATE,'c']
         }
 
     class jValues(object):
@@ -77,6 +79,7 @@ class eJson (object):
         INDEX_CLUSTER = 'ic'
         INDEX_UNIQUE  = 'iu'
         FILE          = 'file'
+        CREATE        = 'create'
 
         eDict = {
             NAME:       [NAME, 'name'],
@@ -93,7 +96,8 @@ class eJson (object):
             INDEX_CLUSTER: [INDEX_CLUSTER, 'cluster'],
             INDEX_UNIQUE:[INDEX_UNIQUE, 'unique'],
             INDEX_COLUMS:[INDEX_COLUMS,'column','columns'],
-            DB_NAME     :[DB_NAME, 'dbname']
+            DB_NAME     :[DB_NAME, 'dbname'],
+            CREATE      :[CREATE, 'created']
         }
         DIC   = {   NAME:None,TYPE:None,CONN:None,OBJ:None,
                     FILTER:None,IS_CHANGE:None,URL:None,URLPARAM:None,
@@ -142,6 +146,7 @@ class eConn (object):
     LITE        = "sqlite"
     MONGO       = 'mongo'
     FILE        = "file"
+    POSTGESQL   = 'postgresql'
     NONO        = 'nono'
 
 
@@ -175,6 +180,10 @@ class eSql (object):
     DELETE      = 'delete'
     INDEX       = 'index'
     INDEX_EXISTS= 'indexexists'
+    COLUMN_UPDATE = 'columnupdate'
+    COLUMN_DELETE = 'columndelete'
+    COLUMN_ADD    = 'columnadd'
+    CREATE_FROM   = 'createfrom'
 
     TABLE_COPY_BY_COLUMN = 'copy'
 

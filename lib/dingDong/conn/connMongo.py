@@ -20,6 +20,7 @@ import os
 import sys
 import re
 import pymongo
+import time
 from collections import OrderedDict
 import pandas as pd
 
@@ -179,6 +180,73 @@ class mongo (baseGlobalDb):
 
     def cloneObject(self, newStructure, tableName, tableSchema=None):
         return baseGlobalDb.cloneObject(self, newStructure=newStructure, tableName=tableName, tableSchema=tableSchema )
+
+    def compareExistToNew(self, existStructure, newStructureL, tableName, tableSchema):
+        isChanged       = False
+        newHistoryTable = None
+        updateDesc = 'UPDATE' if self.update == eJson.jUpdate.UPDATE else 'DROP CREATE' if self.update == eJson.jUpdate.DROP else 'WARNIN, NO UPDATE'
+
+        existStructureL = {x.lower(): x for x in existStructure}
+
+        removeColumns = []
+        for col in existStructureL:
+            if col in newStructureL:
+                ## update column type
+                if existStructure[existStructureL[col]][eJson.jSttValues.TYPE].lower() != newStructureL[col][1].lower():
+                    isChanged = True
+                    existStructure[existStructureL[col]][eJson.jSttValues.TYPE] = newStructureL[col][1]
+
+                    p("%s: CONN:%s, TABLE: %s, COLUMN %s, TYPE CHANGED, OLD: %s, NEW: %s" % (updateDesc, self.conn, tableName, col, existStructure[existStructureL[col]][eJson.jSttValues.TYPE],newStructureL[col][1]), "w")
+
+            ## REMOVE COLUMN
+            else:
+                isChanged = True
+                removeColumns.append (existStructureL[col])
+                p("CONN:%s, TABLE: %s, REMOVING COLUMN: %s " % (self.conn, tableName, col), "w")
+
+        for col in newStructureL:
+            # ADD COLUMN
+            if col not in existStructureL:
+                isChanged = True
+                existStructure[newStructureL[col][0]] =  newStructureL[col][1]
+
+                p("CONN:%s, TABLE: %s, ADD COLUMN: %s " % (self.conn, tableName, newStructureL[col][0]), "w")
+
+        if not isChanged:
+            p("TABLE %s DID NOT CHANGED  >>>>>" % (tableName), "ii")
+            return isChanged, newHistoryTable
+        else:
+            if self.update == eJson.jUpdate.NO_UPDATE:
+                p("TABLE STRUCTURE CHANGED, UPDATE IS NOT ALLOWED, NO CHANGE", "w")
+                return isChanged, newHistoryTable
+            else:
+                if self.update == eJson.jUpdate.UPDATE and isChanged:
+                    collectionValidaton = {}
+                    for col in removeColumns:
+                        del existStructure[col]
+
+                    for col in existStructure:
+                        collectionValidaton[col] = {'bsonType': existStructure[col], 'description': 'must have %s' % (existStructure[col])}
+                    validatior = {'$jsonSchema':{'bsonType': "object",'properties':collectionValidaton}}
+                    self.cursor.runCommand(collmod=tableName, validatior=validatior, validationLevel="moderate")
+
+                if config.TRACK_HISTORY:
+                    p("TABLE HISTORY IS ON ...", "ii")
+                    newHistoryTable = "%s_%s" % (tableName, str(time.strftime('%y%m%d')))
+                    if (self.isExists(tableSchema=tableSchema, tableName=tableName)):
+                        num = 0
+                        while (self.isExists(tableSchema=tableSchema, tableName=newHistoryTable)):
+                            num += 1
+                            newHistoryTable = "%s_%s_%s" % (tableName, str(time.strftime('%y%m%d')), str(num))
+                    if newHistoryTable:
+                        p("TABLE HISTORY IS ON AND CHANGED, TABLE %s EXISTS ... RENAMED TO %s" % (str(tableName), str(newHistoryTable)), "w")
+                        self.cursor[tableName].renameCollection(target=newHistoryTable, dropTarget=False)
+                else:
+
+                    if existStructure and len(existStructure) > 0:
+                        p("TABLE HISTORY IS OFF AND TABLE EXISTS, DROP -> CREATE TABLE %s IN NEW STRUCTURE... " % (str(tableName)), "w")
+                        self.cursor[tableName].drop()
+        return isChanged, newHistoryTable
 
     def getStructure(self, tableName=None, tableSchema=None, sqlQuery=None):
         return baseGlobalDb.getStructure(self, tableName=tableName, tableSchema=tableSchema, sqlQuery=sqlQuery)

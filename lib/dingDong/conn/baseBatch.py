@@ -22,7 +22,7 @@ import re
 import copy
 
 
-from dingDong.misc.logger   import p
+from dingDong.misc.logger   import p, LOGGER_OBJECT
 from dingDong.misc.enumsJson import eConn, eJson, findProp
 from dingDong.misc.misc     import replaceStr, uniocdeStr
 
@@ -55,10 +55,10 @@ class baseBatch ():
         self.connName       = self.setProperties (propKey=eJson.jValues.NAME, propVal=connName)
         self.usingSchema    = True
         self.update         = self.setProperties (propKey=eJson.jValues.UPDATE, propVal=update, propDef=-1 )
+        self.creeateFromObjName = self.setProperties (propKey=eJson.jValues.CREATE )
 
         if not self.conn:
             self.conn = self.connName
-
 
         self.baseDefaults   = DEFAULTS
         self.baseDataTypes  = copy.deepcopy(DATA_TYPES)
@@ -123,6 +123,10 @@ class baseBatch ():
 
     @abc.abstractmethod
     def cntRows(self, objName=None):
+        pass
+
+    @abc.abstractmethod
+    def createFrom (self, stt=None, objName=None, addIndex=None):
         pass
 
     """ -----------------   GLOBAL METHODS -------------------------------------"""
@@ -246,7 +250,7 @@ class baseBatch ():
         if connPropDic is Dictionary and connKey in - return connPropDic value
         if no connProp and connKey not found in connPropDic return defValue
      """
-    def setProperties (self, propKey, propVal, propDict=None, propDef=None):
+    def setProperties (self, propKey, propVal=None, propDict=None, propDef=None):
         propDict = propDict if propDict else self.connPropDict
 
         if propVal and isinstance(propVal, dict) and propKey in propVal and propVal[propKey] is not None:

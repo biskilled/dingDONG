@@ -21,4 +21,5 @@ pymysql
 vertica_python
 cx_Oracle
 pymongo
+psycopg2
 

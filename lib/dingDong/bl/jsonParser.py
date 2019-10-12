@@ -26,7 +26,6 @@ from dingDong.misc.logger import p
 from dingDong.misc.enumsJson import eJson, eConn, findProp
 from dingDong.config      import config
 
-
 #xx = [[{'s':}],[{'prop':{'pp':45}},{}],{'sql1':'', 's':xxx,'t':'dsdsdsd'},{''},{}]
 # s : [obj] [conn,  obj],[conn. obj, filter]  {"conn":conn, "obj":obj, filter:"dddd"} // connection:"s":[]
 
@@ -205,6 +204,8 @@ class jsonParser (object):
                             index = self.__index(propVal=node[prop])
                             if index:
                                 newDict[eJson.jKeys.INDEX] = index
+                        elif k == eJson.jKeys.CREATE:
+                            newDict[k] = self.__createFrom(propVal=node[prop])
                         else:
                             p ("%s not implemented !" %(k), "e")
                     else:
@@ -405,6 +406,17 @@ class jsonParser (object):
                 else:
                     p("INDEX - UNRECOGNIZED KEY %s IN DICT:%s IGNORE. VALID FORMAT: FORMAT {'C'':list_column_index, 'ic':is cluster (True/False), 'iu': is unique (True/False)}" %(str(node),str(indexDict)), "e")
             ret.append(indexDict)
+        return ret
+
+    def __createFrom(self, propVal):
+        ret = OrderedDict()
+        if isinstance(propVal, str):
+            ret[eJson.jValues.CONN] = propVal
+        elif isinstance(propVal, (tuple, list)):
+            ret[eJson.jValues.CONN] = propVal[0]
+            ret[eJson.jValues.OBJ]  = propVal[1]
+        else:
+            p("CREATE VALUES MUST BE STRING (connection name) OR LIST [connection name, object name], NOT VALID VALUES:%s" %str(propVal),"e" )
         return ret
 
 

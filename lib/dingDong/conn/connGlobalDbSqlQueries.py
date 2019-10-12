@@ -40,16 +40,20 @@ class baseSqlQuery (object):
         for c in self.allConn:
             self.connQuery[c] = None
 
-        if eSql.RENAME      == sqlType: self.setSqlRename(**args)
-        elif eSql.DROP      == sqlType: self.setSqlDrop(**args)
-        elif eSql.TRUNCATE  == sqlType: self.setSqlTruncate(**args)
-        elif eSql.STRUCTURE == sqlType: self.setSqlTableStructure(**args)
-        elif eSql.MERGE     == sqlType: self.setSqlMerge(**args)
-        elif eSql.ISEXISTS  == sqlType: self.setSqlIsExists(**args)
-        elif eSql.DELETE    == sqlType: self.setSqlDelete(**args)
+        if eSql.RENAME          == sqlType: self.setSqlRename(**args)
+        elif eSql.DROP          == sqlType: self.setSqlDrop(**args)
+        elif eSql.TRUNCATE      == sqlType: self.setSqlTruncate(**args)
+        elif eSql.STRUCTURE     == sqlType: self.setSqlTableStructure(**args)
+        elif eSql.MERGE         == sqlType: self.setSqlMerge(**args)
+        elif eSql.ISEXISTS      == sqlType: self.setSqlIsExists(**args)
+        elif eSql.DELETE        == sqlType: self.setSqlDelete(**args)
         elif eSql.TABLE_COPY_BY_COLUMN    == sqlType: self.tblCopyByColumn(**args)
-        elif eSql.INDEX_EXISTS == sqlType: self.setSqlExistingIndexes(**args)
-        elif eSql.INDEX     == sqlType: self.setSqlIndex(**args)
+        elif eSql.INDEX_EXISTS  == sqlType: self.setSqlExistingIndexes(**args)
+        elif eSql.INDEX         == sqlType: self.setSqlIndex(**args)
+        elif eSql.COLUMN_UPDATE == sqlType: self.setSqlColumnUpdate(**args)
+        elif eSql.COLUMN_DELETE == sqlType: self.setSqlColumnDelete(**args)
+        elif eSql.COLUMN_ADD    == sqlType: self.setSqlColumnAdd(**args)
+        elif eSql.CREATE_FROM   == sqlType: self.setSqlCreateFrom(**args)
 
         else:
             p("baseConnDbSqlQueries->getSql: %s IS NOT DEFINED  !" % (sqlType.upper()), "e")
@@ -95,7 +99,17 @@ class baseSqlQuery (object):
     def setSqlIndex(self,  tableName, columns, isCluster, isUnique):
         pass
 
+    def setSqlColumnUpdate(self, tableName, columnName, dataType, tableSchema):
+        pass
 
+    def setSqlColumnDelete(self, tableName, columnName, tableSchema):
+        pass
+
+    def setSqlColumnAdd(self, tableName, columnName, dataType, tableSchema):
+        pass
+
+    def setSqlCreateFrom(self, tableName):
+        pass
 
 
 class setSqlQuery (baseSqlQuery):
@@ -107,9 +121,8 @@ class setSqlQuery (baseSqlQuery):
         self.default = "ALTER TABLE %s RENAME TO %s;" %(tableName, tableNewName)
         self.connQuery[eConn.NONO] = self.default
         self.connQuery[eConn.LITE] = self.default
-
         self.connQuery[eConn.SQLSERVER] = "EXEC sp_rename '%s','%s'" %(tableName, tableNewName)
-
+        self.connQuery[eConn.POSTGESQL] = self.default
 
     def setSqlDrop (self, tableName, tableSchema):
         tableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
@@ -117,6 +130,7 @@ class setSqlQuery (baseSqlQuery):
         self.connQuery[eConn.SQLSERVER] = self.default
         self.connQuery[eConn.ORACLE]    = self.default
         self.connQuery[eConn.LITE] = self.default
+        self.connQuery[eConn.POSTGESQL] = "drop table if exists %s " %(tableName)
 
     def setSqlTruncate (self, tableName, tableSchema):
         fullTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
@@ -124,7 +138,9 @@ class setSqlQuery (baseSqlQuery):
         self.connQuery[eConn.SQLSERVER] = self.default
         self.connQuery[eConn.ORACLE]    = self.default
         self.connQuery[eConn.LITE] = "DELETE FROM %s;" %(fullTableName)
+        self.connQuery[eConn.POSTGESQL] = "TRUNCATE %s RESTART IDENTITY;" % (fullTableName)
 
+    """ return column name, columnType"""
     def setSqlTableStructure (self, tableName, tableSchema):
 
         self.default = "SQL Structure is not implemented ;"
@@ -187,21 +203,30 @@ class setSqlQuery (baseSqlQuery):
 
         self.connQuery[eConn.VERTICA] = str(sql)
 
+        ### POSTGRESQL
+        sql = """   SELECT a.attname as "c", pg_catalog.format_type(a.atttypid, a.atttypmod) as "dType" FROM pg_catalog.pg_attribute a
+                    WHERE a.attnum > 0 AND NOT a.attisdropped
+                    AND a.attrelid = 
+	                    (SELECT c.oid FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                        WHERE c.relname ~ '^(hello world)$' AND pg_catalog.pg_table_is_visible(c.oid));"""
+        self.connQuery[eConn.POSTGESQL] = str(sql)
+
     def setSqlMerge (self, dstTable, srcTable, mergeKeys, colList , colFullList):
         ### SQL AND DEFAULT
         sql = "MERGE INTO " + dstTable + " as t USING " + srcTable + " as s ON ("
         colOnMerge = " AND ".join(["ISNULL (t." + c + ",'')= ISNULL (s." + c + ",'')" for c in mergeKeys])
-        sql += colOnMerge + ") \n WHEN MATCHED THEN UPDATE SET \n"
+        sql += colOnMerge + ") \n WHEN MATCHED %s UPDATE SET \n"
         for c in colList:
             # Merge only is source is not null
             sql += "t." + c + "=" + "case when s." + c + " is null or len(s." + c + ")<1 then t." + c + " else s." + c + " End,\n"
         sql = sql[:-2] + "\n"
-        sql += " WHEN NOT MATCHED THEN \n"
+        sql += " WHEN NOT MATCHED %s \n"
         sql += " INSERT (" + ",".join([c for c in colFullList]) + ") \n"
         sql += " VALUES  (" + ",".join(["s." + c for c in colFullList]) + "); "
 
-        self.default = sql
-        self.connQuery[eConn.SQLSERVER] = sql
+        self.default = sql %("THEN","THEN")
+        self.connQuery[eConn.SQLSERVER] = self.default
+        self.connQuery[eConn.POSTGESQL] = sql %("","")
 
     def setSqlIsExists(self, tableName, tableSchema):
         fullTableName = '%s.%s' %(tableSchema, tableName) if tableSchema else tableName
@@ -209,6 +234,7 @@ class setSqlQuery (baseSqlQuery):
         self.default = sql
         self.connQuery[eConn.SQLSERVER] = sql
         self.connQuery[eConn.LITE] = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = '%s';" %(fullTableName)
+        self.connQuery[eConn.POSTGESQL] = "SELECT to_regclass('%s');" %(fullTableName)
 
     def setSqlDelete (self, sqlFilter, tableName, tableSchema):
         fullTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
@@ -243,5 +269,32 @@ class setSqlQuery (baseSqlQuery):
         isUniqueStr  = "UNIQUE" if isUnique else ""
 
         sql = """CREATE %s %s INDEX %s ON %s (%s)""" %(isUniqueStr,isClusterStr,indexName, tableName, ",".join(columns) )
+        self.default = sql
+        self.connQuery[eConn.SQLSERVER] = sql
+
+    def setSqlColumnUpdate(self, tableName, columnName, dataType, tableSchema=None ):
+        fullTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
+        sql = """ALTER TABLE %s ALTER COLUMN %s %s""" %(fullTableName, columnName, dataType)
+
+        self.default = sql
+        self.connQuery[eConn.SQLSERVER] = sql
+
+    def setSqlColumnDelete(self, tableName, columnName, tableSchema=None):
+        fullTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
+        sql = """ALTER TABLE %s DROP COLUMN %s;""" %(fullTableName,columnName)
+
+        self.default = sql
+        self.connQuery[eConn.SQLSERVER] = sql
+
+    def setSqlColumnAdd(self, tableName, columnName, dataType, tableSchema=None):
+        fullTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
+        sql = """ALTER TABLE %s ADD COLUMN %s %s NULL""" %(fullTableName, columnName, dataType)
+
+        self.default = sql
+        self.connQuery[eConn.SQLSERVER] = sql
+
+    def setSqlCreateFrom(self, tableName):
+        sql = """SELECT * FROM %s""" % (tableName)
+
         self.default = sql
         self.connQuery[eConn.SQLSERVER] = sql

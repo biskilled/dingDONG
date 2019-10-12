@@ -99,6 +99,10 @@ class ddManager (object):
 
                     elif eJson.jKeys.STT == k or eJson.jKeys.STTONLY==k or eJson.jKeys.INDEX==k:
                         pass
+
+                    elif eJson.jKeys.CREATE == k or eJson.jKeys.CREATE in node[k]:
+                        modelDict[eJson.jKeys.CREATE] = conn(connPropDic=node[k], connLoadProp=self.connDict)
+
                     else:
                         modelDict[i] = conn(connPropDic=node[k], connLoadProp=self.connDict)
                 orderedNodes.append(modelDict)
@@ -368,3 +372,6 @@ class ddManager (object):
                         mrgTarget.close()
                         mrgSource.close()
                         mrgSource = None
+
+                    if eJson.jKeys.CREATE == k:
+                        node[k].createFrom(stt=self.stt, addIndex=self.addIndex)
