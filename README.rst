@@ -55,7 +55,7 @@ dingDONG modules:
        - Define measures such as counting total input or total output rows
        - Store executions result for compare experiments performance
 
-.. image:: _static/dingDongOneSlide.jpg
+.. image:: https://github.com/biskilled/dingDong/blob/master/docs/_static/dingDongOneSlide.jpg
    :alt: dingDONG architecture
 
 
