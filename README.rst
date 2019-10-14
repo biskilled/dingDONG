@@ -55,6 +55,8 @@ dingDONG modules:
        - Define measures such as counting total input or total output rows
        - Store executions result for compare experiments performance
 
+.. image:: _static/dingDongOneSlide.jpg
+   :alt: dingDONG architecture
 
 
 Installation
@@ -186,6 +188,7 @@ configuration properties can be found at `dingDONG documentation <https://dingdo
 
 Full sample code::
 
+    import logging
     from dingDong import DingDong
     from dingDong import Config
 
@@ -294,3 +297,4 @@ See `COPYING <https://github.com/biskilled/dingDong/blob/master/COPYING>`_ to se
 .. |License| image:: https://img.shields.io/badge/license-GPL%20v3.0-brightgreen.svg
    :target: COPYING
    :alt: Repository License
+

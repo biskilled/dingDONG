@@ -27,17 +27,16 @@ import shutil
 import time
 import stat
 import io
-import random
-import string
+import getpass
 
 # GIT, GITHUB packages
-# from git import Repo
-
 import git
 from github import Github
 
-def p (s):
-    print (s)
+from dingDong.misc.logger   import p
+from dingDong.misc.enumsJson import eConn
+from dingDong.conn.connGlobalDB import baseGlobalDb
+from dingDong.config import config
 
 class gitTypes (object):
     MODIFIED    = 'MODIFIED'
@@ -425,12 +424,73 @@ class ops():
                 except Exception as exc: # (GithubException, IOError)
                     p('Error processing %s: %s' %(content.path, exc))
 
+class dbVersions ():
+    def __init__ (self, folder=None, vFileName=None, vFileData=None, url=None, conn=eConn.SQLSERVER, tbl=None):
+        isValid         = False
+        self.folder     = None
+        self.vFile      = None
+        self.vFileData  = None
+
+        self.db         = None
+        self.tbl        = None
+
+        self.version    = None
+        self.currentUser= getpass.getuser()
+        self.currentTime =time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+
+        if folder and os.path.isdir(folder) and vFileData and vFileName:
+            self.folder     = folder
+            self.vFileName  = os.path.join(folder, vFileName)
+            self.vFileData  = os.path.join(folder, vFileData)
+            self.setVersionFromFile()
+            isValid         = True
+
+        else:
+            p("NOT VALID FOLDER: %s, VERSION FILE:%s, FILE:%s" %(folder, vFileName, vFileData), "e")
+
+        if conn and url and tbl:
+            self.db     = baseGlobalDb(conn=conn, connUrl=url)
+            self.tbl    = tbl
+
+            self.setVersionFromDb()
+            isValid     = True
+
+        if not isValid:
+            p ("NOT VALID VERSION SETTING, MUST HAVE VALID FOLDER OR VALID DB !" , "e")
+
+    def setVersionFromFile (self):
+        if not os.path.isfile(self.vFileName):
+            self.version = config.VERSION
+            with open(self.vFileName, 'w') as f:
+                f.write('%s\n' %str(self.version))
+        else:
+            with open(self.vFileName, 'r+') as f:
+                lines = f.read().splitlines()
+                curr_version = lines[-1]
+                self.version = str(int(curr_version)+1)
+                f.write('%s\n' %(self.version))
+
+        return self.version
+
+    def setVersionFromDb(self):
+        self.version = config.VERSION
+
+        return self.version
+
+    def addChangeSetToFile (self, changeSet):
+        changeSet = [changeSet] if isinstance(changeSet, str) else list(changeSet)
+        with open (self.vFileData, "a") as f:
+            for cs in changeSet:
+                f.write('%s,%s,%s' %(self.currentTime, self.currentUser, cs))
+
+
+
 
 ## TEST #######
-repoName="talTest2"
-localPath = "C:\\gitHub"
+#repoName="talTest2"
+#localPath = "C:\\gitHub"
 
-myDevOps = ops(repoName=repoName, repoFolder=localPath, remoteUser='biskilled', remotePass='Emili1217')
+#myDevOps = ops(repoName=repoName, repoFolder=localPath, remoteUser='biskilled', remotePass='Emili1217')
 #myDevOps.deleteRemoteRepo()
 #myDevOps.getRemoteRepo (create=True)
 
@@ -439,7 +499,7 @@ myDevOps = ops(repoName=repoName, repoFolder=localPath, remoteUser='biskilled', 
 #myDevOps.getVesrion (vId=1)
 #myDevOps.getVesrion (vId=2)
 #myDevOps.getVesrion (vId=3)
-myDevOps.getVesrion (vId=4)
+#myDevOps.getVesrion (vId=4)
 
 
 ############################################################################################################
