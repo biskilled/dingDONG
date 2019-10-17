@@ -227,6 +227,9 @@ class ddManager (object):
                     tarType = tar.defDataType
                 else:
                     targetList = tar.setDataTypeTree (dataTypeTree=newDataTypeTree, allDataTypes=tar.DATA_TYPES, ret=[])
+                    if len (targetList)>2:
+                        targetList = [x for x in targetList if x]
+
                     tarType = '%s%s' %(targetList[-1],postType) if targetList and len(targetList)>0 and targetList[-1] is not None else tar.defDataType
                 retStrucure[targetColName] = {eJson.jSttValues.TYPE:tarType}
 

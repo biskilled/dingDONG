@@ -226,7 +226,6 @@ class baseGlobalDb (baseBatch):
         self.cursor.execute(sql)
         row = self.cursor.fetchone()
         if row and row[0]:
-            p("SCHEMA:%s, TABLE:%s EXISTS" %(tableSchema, tableName), "ii")
             return True
         p("SCHEMA:%s, TABLE:%s NOT EXISTS" % (tableSchema, tableName), "ii")
         return False
@@ -358,7 +357,9 @@ class baseGlobalDb (baseBatch):
             colType = uniocdeStr(col[1])
             val = {eJson.jSttValues.TYPE: colType, eJson.jSttValues.ALIACE: None}
             ret[colName] = val
+
         return ret
+
 
     """ INTERNAL USED: Complex or simple QUERY STRUCURE:  {ColumnName:{Type:ColumnType, ALIACE: ColumnName} .... } """
     def getQueryStructure(self, sqlQuery=None):
@@ -492,9 +493,7 @@ class baseGlobalDb (baseBatch):
                                                    columnType=newStructureL[col][1])
                         self.exeSQL(sql=sql)
                         self.versionManager(sql)
-                    p("%s: CONN:%s, TABLE: %s, COLUMN %s, TYPE CHANGED, OLD: %s, NEW: %s" % (
-                    updateDesc, self.conn, tableName, col, existStructure[existStructureL[col]][eJson.jSttValues.TYPE],
-                    newStructureL[col][1]), "w")
+                    p("%s: CONN:%s, TABLE: %s, COLUMN %s, TYPE CHANGED, OLD: %s, NEW: %s" % (updateDesc, self.conn, tableName, col, existStructure[existStructureL[col]][eJson.jSttValues.TYPE],newStructureL[col][1]), "w")
 
             ## REMOVE COLUMN
             else:

@@ -236,6 +236,12 @@ class setSqlQuery (baseSqlQuery):
         self.connQuery[eConn.LITE] = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = '%s';" %(fullTableName)
         self.connQuery[eConn.POSTGESQL] = "SELECT to_regclass('%s');" %(fullTableName)
 
+        # ORACLE
+        sql = "SELECT * FROM ALL_OBJECTS WHERE OBJECT_NAME = '%s' " %str(tableName)
+        sql+= "AND OWNER = '%s'" %str(tableSchema) if tableSchema and len(tableSchema)>0 else ""
+        self.connQuery[eConn.ORACLE] = sql
+
+
     def setSqlDelete (self, sqlFilter, tableName, tableSchema):
         fullTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
         sql ="Delete From %s where %s " %(fullTableName, sqlFilter)
