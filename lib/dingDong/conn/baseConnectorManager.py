@@ -52,7 +52,7 @@ def addPropToDict (existsDict, newProp):
 
     return existsDict
 
-def mngConnectors(connPropDic, connLoadProp=None):
+def mngConnectors(connPropDic, connLoadProp=None, versionManager=None):
 
     connLoadProp = connLoadProp if connLoadProp else config.CONN_URL
 

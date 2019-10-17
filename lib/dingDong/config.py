@@ -45,6 +45,13 @@ class config:
     LOGS_TMP_NAME  = 'lastLog'
     LOGS_HISTORY_DAYS=5
 
+    VERSION_DIR         = None
+    VERSION_FILE        = 'version.txt'
+    VERSION_FILE_DATA   = 'versionData.txt'
+    VERSION_DB_CONN     = None
+    VERSION_DB_URL      = None
+    VERSION_DB_TABLE    = 'version'
+
     #SMTP and massaging Configuration
     SMTP_SERVER             = ""
     SMTP_SERVER_USER        = ""

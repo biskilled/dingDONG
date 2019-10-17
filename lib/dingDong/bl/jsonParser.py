@@ -236,7 +236,7 @@ class jsonParser (object):
                 ret[eJson.jValues.CONN]  = propVal[0]
                 ret[eJson.jValues.OBJ]   = propVal[1]
 
-                if str(propVal[2]).isdigit():
+                if self.__isDigitStr(propVal[2]):
                     ret[eJson.jValues.UPDATE] =  self.__setUpdate (propVal[2])
                 else:
                     ret[eJson.jValues.FILTER]= propVal[2]
@@ -419,10 +419,16 @@ class jsonParser (object):
             p("CREATE VALUES MUST BE STRING (connection name) OR LIST [connection name, object name], NOT VALID VALUES:%s" %str(propVal),"e" )
         return ret
 
-
     def __notVaildProp(self, propDic, newPropDic, propFullName):
         for k in newPropDic:
             if k not in propDic:
                 p("baseParser->notValidProp: %s: not valid prop %s -> ignore" % (propFullName, k), "e")
                 del newPropDic[k]
         return newPropDic
+
+    def __isDigitStr(self, x):
+        try:
+            int(str(x))
+            return True
+        except ValueError:
+            return False

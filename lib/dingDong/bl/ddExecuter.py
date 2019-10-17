@@ -37,6 +37,7 @@ from dingDong.conn.baseConnectorManager   import mngConnectors as conn
 from dingDong.executers.executeSql import execQuery
 from dingDong.executers.executeAddMsg import executeAddMsg
 from dingDong.executers.executeMicrosoftOLAP import OLAP_Process
+from dingDong.executers.executeVersionsGit import dbVersions
 
 
 class dingDong:
@@ -52,9 +53,15 @@ class dingDong:
 
         self.msg = executeAddMsg()
         self.propcesses = processes if processes else config.NUM_OF_PROCESSES
+        dirLogs = dirLogs if dirLogs else config.LOGS_DIR
 
-        if dirLogs or config.LOGS_DIR:
+        if dirLogs:
             LOGGER_OBJECT.setLogsFiles (logDir=dirLogs)
+
+        ## Set version location
+        ver = dbVersions (folder=config.VERSION_DIR, vFileName=config.VERSION_FILE, vFileData=config.VERSION_FILE_DATA, url=config.VERSION_DB_URL, conn=config.VERSION_DB_CONN, tbl=config.VERSION_DB_TABLE)
+
+        self.versionManager = None
 
         ## Defualt properties
         self.connDict       = self.jsonParser.connDict
@@ -69,7 +76,7 @@ class dingDong:
         for jsName, jsonNodes in allNodes:
             ## ALL On all nodes
             for jMap in jsonNodes:
-                dingObject = ddManager(node=jMap, connDict=self.connDict)
+                dingObject = ddManager(node=jMap, connDict=self.connDict, versionManager=self.versionManager)
                 dingObject.ding()
                 self.msg.addStateCnt()
 

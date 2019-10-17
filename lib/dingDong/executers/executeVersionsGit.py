@@ -29,9 +29,6 @@ import stat
 import io
 import getpass
 
-# GIT, GITHUB packages
-import git
-from github import Github
 
 from dingDong.misc.logger   import p
 from dingDong.misc.enumsJson import eConn
@@ -48,6 +45,10 @@ class gitTypes (object):
 
 class ops():
     def __init__ (self, repoName, repoFolder, remoteUser, remotePass):
+        # GIT, GITHUB packages
+        import git
+        from github import Github
+
         self.repoName   = repoName
         self.repoFolder = repoFolder
 
@@ -426,7 +427,8 @@ class ops():
 
 class dbVersions ():
     def __init__ (self, folder=None, vFileName=None, vFileData=None, url=None, conn=eConn.SQLSERVER, tbl=None):
-        isValid         = False
+        self.isValidFile = False
+        self.isValidDb   = False
         self.folder     = None
         self.vFile      = None
         self.vFileData  = None
@@ -434,56 +436,69 @@ class dbVersions ():
         self.db         = None
         self.tbl        = None
 
-        self.version    = None
+        self.version    = config.VERSION
         self.currentUser= getpass.getuser()
         self.currentTime =time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
 
-        if folder and os.path.isdir(folder) and vFileData and vFileName:
-            self.folder     = folder
-            self.vFileName  = os.path.join(folder, vFileName)
-            self.vFileData  = os.path.join(folder, vFileData)
-            self.setVersionFromFile()
-            isValid         = True
+        if self.version:
+            if folder and os.path.isdir(folder) and vFileData and vFileName:
+                self.folder     = folder
+                self.vFileName  = os.path.join(folder, vFileName)
+                self.vFileData  = os.path.join(folder, vFileData)
+                self.isValidFile = self.__setVersionFromFile()
 
-        else:
-            p("NOT VALID FOLDER: %s, VERSION FILE:%s, FILE:%s" %(folder, vFileName, vFileData), "e")
+                p("FILE VERSION IS ACTIVATED, VERSION:%s LOGGD INTO: %s" %(self.version, str(vFileData)),"i")
 
-        if conn and url and tbl:
-            self.db     = baseGlobalDb(conn=conn, connUrl=url)
-            self.tbl    = tbl
+            else:
+                p("FILE VERSION - NOT VALID PATHS: %s, VERSION FILE:%s, FILE:%s" %(folder, vFileName, vFileData), "e")
 
-            self.setVersionFromDb()
-            isValid     = True
+            if conn and url and tbl:
+                self.db     = baseGlobalDb(conn=conn, connUrl=url)
+                self.tbl    = tbl
+                self.isValidD= self.__setVersionFromDb()
 
-        if not isValid:
-            p ("NOT VALID VERSION SETTING, MUST HAVE VALID FOLDER OR VALID DB !" , "e")
+                p("DB VERSION IS ACTIVATED, VERSION:%s LOGGD INTO TABLE: %s" % (self.version, str(tbl)),"i")
 
-    def setVersionFromFile (self):
-        if not os.path.isfile(self.vFileName):
+    def __setVersionFromFile (self):
+        try:
+            if not os.path.isfile(self.vFileName):
+                self.version = config.VERSION
+                with open(self.vFileName, 'w') as f:
+                    f.write('%s\n' % str(self.version))
+            else:
+                with open(self.vFileName, 'r+') as f:
+                    lines = f.read().splitlines()
+                    curr_version = lines[-1]
+                    self.version = str(int(curr_version) + 1)
+                    f.write('%s\n' % (self.version))
+            return True
+
+        except Exception as e:
+            p("ERROR: %s"  %(e))
+            return False
+
+    def __setVersionFromDb(self):
+        try:
             self.version = config.VERSION
-            with open(self.vFileName, 'w') as f:
-                f.write('%s\n' %str(self.version))
-        else:
-            with open(self.vFileName, 'r+') as f:
-                lines = f.read().splitlines()
-                curr_version = lines[-1]
-                self.version = str(int(curr_version)+1)
-                f.write('%s\n' %(self.version))
+            return True
+        except Exception as e:
+            p("ERROR: %s"  %(e))
+            return False
 
-        return self.version
+    def addCS (self, changeSet):
+        if self.isValidFile:
+            self.__addChangeSetToFile(changeSet=changeSet)
 
-    def setVersionFromDb(self):
-        self.version = config.VERSION
+        if self.isValidDb:
+            self.__addChangeSetToDb (changeSet=changeSet)
 
-        return self.version
-
-    def addChangeSetToFile (self, changeSet):
-        changeSet = [changeSet] if isinstance(changeSet, str) else list(changeSet)
+    def __addChangeSetToFile (self, changeSet):
         with open (self.vFileData, "a") as f:
             for cs in changeSet:
                 f.write('%s,%s,%s' %(self.currentTime, self.currentUser, cs))
 
-
+    def __addChangeSetToDb (self, changeSet):
+        p("NOT IMPLEMENTED YET .... %s" %(str(changeSet)) )
 
 
 ## TEST #######

@@ -28,12 +28,13 @@ from dingDong.config import config
 
 
 class ddManager (object):
-    def __init__(self, node, connDict=None):
+    def __init__(self, node, connDict=None, versionManager=None):
         self.stt            = None
         self.addSourceColumn= True
         self.addIndex       = None
         self.nodes          = None
         self.connDict       = connDict if connDict else config.CONN_URL
+        self.versionManager = versionManager
 
         jsonNodes           = []
 
@@ -82,17 +83,17 @@ class ddManager (object):
                 for i,k in enumerate (node):
                     if eJson.jKeys.SOURCE == k or eJson.jKeys.SOURCE in node[k]:
                         node[k][eJson.jValues.IS_SOURCE] = True
-                        modelDict[eJson.jKeys.SOURCE] = conn(connPropDic=node[k], connLoadProp=self.connDict)
+                        modelDict[eJson.jKeys.SOURCE] = conn(connPropDic=node[k], connLoadProp=self.connDict, versionManager=self.versionManager)
 
                     elif eJson.jKeys.QUERY == k or eJson.jKeys.QUERY in node[k]:
                         if eJson.jKeys.SOURCE in modelDict:
                             p("THERE IS QUERY AND SOURCE, WILL USE QUERY AS SOURCE", "w")
                         node[k][eJson.jValues.IS_SOURCE] = True
-                        modelDict[eJson.jKeys.SOURCE] = conn(connPropDic=node[k], connLoadProp=self.connDict)
+                        modelDict[eJson.jKeys.SOURCE] = conn(connPropDic=node[k], connLoadProp=self.connDict, versionManager=self.versionManager)
 
                     elif eJson.jKeys.TARGET == k or eJson.jKeys.TARGET in node[k]:
                         node[k][eJson.jValues.IS_TARGET] = True
-                        modelDict[eJson.jKeys.TARGET] = conn(connPropDic=node[k], connLoadProp=self.connDict)
+                        modelDict[eJson.jKeys.TARGET] = conn(connPropDic=node[k], connLoadProp=self.connDict, versionManager=self.versionManager)
 
                     elif eJson.jKeys.MERGE == k or eJson.jKeys.MERGE in node[k]:
                         modelDict[eJson.jKeys.MERGE] = node[k]
@@ -101,10 +102,10 @@ class ddManager (object):
                         pass
 
                     elif eJson.jKeys.CREATE == k or eJson.jKeys.CREATE in node[k]:
-                        modelDict[eJson.jKeys.CREATE] = conn(connPropDic=node[k], connLoadProp=self.connDict)
+                        modelDict[eJson.jKeys.CREATE] = conn(connPropDic=node[k], connLoadProp=self.connDict, versionManager=self.versionManager)
 
                     else:
-                        modelDict[i] = conn(connPropDic=node[k], connLoadProp=self.connDict)
+                        modelDict[i] = conn(connPropDic=node[k], connLoadProp=self.connDict, versionManager=self.versionManager)
                 orderedNodes.append(modelDict)
 
         return orderedNodes

@@ -49,13 +49,20 @@ DATA_TYPES = {
 """ baseConn -- get connection propertirs : conn, connUrl,  connExtraUrl, connName,connDataTypes, connDefaultType, connPropDic"""
 @six.add_metaclass(abc.ABCMeta)
 class baseBatch ():
-    def __init__ (self, conn=None, connName=None, connPropDict=None, defaults=None, dataType=None, update=None):
+    def __init__ (self, conn=None, connName=None, connPropDict=None, defaults=None, dataType=None, update=None, versionManager=None):
         self.connPropDict   = connPropDict
         self.conn           = self.setProperties (propKey=eJson.jValues.CONN, propVal=conn)
         self.connName       = self.setProperties (propKey=eJson.jValues.NAME, propVal=connName)
         self.usingSchema    = True
         self.update         = self.setProperties (propKey=eJson.jValues.UPDATE, propVal=update, propDef=-1 )
         self.creeateFromObjName = self.setProperties (propKey=eJson.jValues.CREATE )
+        self.versionManager = versionManager
+
+        if not self.versionManager:
+            p("VERSION MANAGER IS NOT SET", "ii")
+            def tmpVer (s):
+                p("!!! NOT UPDATE : %s" %str(s) )
+            self.versionManager = tmpVer
 
         if not self.conn:
             self.conn = self.connName

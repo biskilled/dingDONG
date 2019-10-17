@@ -99,13 +99,13 @@ class baseSqlQuery (object):
     def setSqlIndex(self,  tableName, columns, isCluster, isUnique):
         pass
 
-    def setSqlColumnUpdate(self, tableName, columnName, dataType, tableSchema):
+    def setSqlColumnUpdate(self, tableName, columnName, columnType, tableSchema):
         pass
 
     def setSqlColumnDelete(self, tableName, columnName, tableSchema):
         pass
 
-    def setSqlColumnAdd(self, tableName, columnName, dataType, tableSchema):
+    def setSqlColumnAdd(self, tableName, columnName, columnType, tableSchema):
         pass
 
     def setSqlCreateFrom(self, tableName):
@@ -272,9 +272,9 @@ class setSqlQuery (baseSqlQuery):
         self.default = sql
         self.connQuery[eConn.SQLSERVER] = sql
 
-    def setSqlColumnUpdate(self, tableName, columnName, dataType, tableSchema=None ):
+    def setSqlColumnUpdate(self, tableName, columnName, columnType, tableSchema=None ):
         fullTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
-        sql = """ALTER TABLE %s ALTER COLUMN %s %s""" %(fullTableName, columnName, dataType)
+        sql = """ALTER TABLE %s ALTER COLUMN %s %s""" %(fullTableName, columnName, columnType)
 
         self.default = sql
         self.connQuery[eConn.SQLSERVER] = sql
@@ -286,9 +286,9 @@ class setSqlQuery (baseSqlQuery):
         self.default = sql
         self.connQuery[eConn.SQLSERVER] = sql
 
-    def setSqlColumnAdd(self, tableName, columnName, dataType, tableSchema=None):
+    def setSqlColumnAdd(self, tableName, columnName, columnType, tableSchema=None):
         fullTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
-        sql = """ALTER TABLE %s ADD COLUMN %s %s NULL""" %(fullTableName, columnName, dataType)
+        sql = """ALTER TABLE %s ADD COLUMN %s %s NULL""" %(fullTableName, columnName, columnType)
 
         self.default = sql
         self.connQuery[eConn.SQLSERVER] = sql

@@ -254,6 +254,7 @@ class baseGlobalDb (baseBatch):
             sql = sql[:-2]+')'
             p("CREATE TABLE: \n" + sql)
             self.exeSQL(sql=sql, commit=True)
+            self.versionManager(sql)
 
         # Check for index
         if addIndex and self.update != eJson.jUpdate.NO_UPDATE:
@@ -490,6 +491,7 @@ class baseGlobalDb (baseBatch):
                                                    tableName=tableName, tableSchema=tableSchema, columnName=col,
                                                    columnType=newStructureL[col][1])
                         self.exeSQL(sql=sql)
+                        self.versionManager(sql)
                     p("%s: CONN:%s, TABLE: %s, COLUMN %s, TYPE CHANGED, OLD: %s, NEW: %s" % (
                     updateDesc, self.conn, tableName, col, existStructure[existStructureL[col]][eJson.jSttValues.TYPE],
                     newStructureL[col][1]), "w")
@@ -500,7 +502,7 @@ class baseGlobalDb (baseBatch):
                 sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.COLUMN_DELETE, tableName=tableName,
                                            tableSchema=tableSchema, columnName=col)
                 self.exeSQL(sql=sql)
-
+                self.versionManager(sql)
                 p("CONN:%s, TABLE: %s, REMOVING COLUMN: %s " % (self.conn, tableName, col), "w")
 
         for col in newStructureL:
@@ -511,6 +513,7 @@ class baseGlobalDb (baseBatch):
                                            tableName=tableName, tableSchema=tableSchema, columnName=col,
                                            columnType=newStructureL[col][1])
                 self.exeSQL(sql=sql)
+                self.versionManager(sql)
 
                 p("CONN:%s, TABLE: %s, ADD COLUMN: %s " % (self.conn, tableName, newStructureL[col][0]), "w")
 
@@ -657,6 +660,7 @@ class baseGlobalDb (baseBatch):
         if tarToSrc and len (tarToSrc)>0:
             existingColumnsDic = OrderedDict()
             existingColumns = qp.extract_tableAndColumns(sql=sourceSql)
+
             preSql = existingColumns[qp.QUERY_PRE]
             postsql = existingColumns[qp.QUERY_POST]
             pre, pos = self.columnFrame[0], self.columnFrame[1]
@@ -665,6 +669,7 @@ class baseGlobalDb (baseBatch):
 
                 for col in allColumns:
                     existingColumnsDic[col[1].replace(pre,"").replace(pos,"").lower()] = ".".join(col[0])
+
             else:
                 allColumns = self.getStructure()
                 for col in allColumns:
@@ -673,15 +678,15 @@ class baseGlobalDb (baseBatch):
             for i,col in  enumerate (tarToSrc):
                 tarColumn = col.replace(pre, "").replace(pos, "")
                 tarColumnName = '%s%s%s' % (pre, tarColumn, pos)
-                if eJson.jSttValues.SOURCE in tarToSrc[col] and tarToSrc[col][eJson.jSttValues.SOURCE]:
+                if tarColumn.lower() in existingColumnsDic:
+                    srcColumnName = '%s As %s' %(existingColumnsDic[ tarColumn.lower() ], tarColumnName) if addAsTaret else existingColumnsDic[ tarColumn.lower() ]
+                elif eJson.jSttValues.SOURCE in tarToSrc[col] and tarToSrc[col][eJson.jSttValues.SOURCE]:
                     srcColumnName = tarToSrc[col][eJson.jSttValues.SOURCE].replace(pre,"").replace(pos,"").lower()
                     if srcColumnName in existingColumnsDic:
                         srcColumnName = '%s As %s' % (existingColumnsDic[srcColumnName], tarColumnName) if addAsTaret else existingColumnsDic[srcColumnName]
                     else:
                         p("%s: %s, SOURCE COLUMN LISTED IN STT NOT EXISTS IN SOURCE TABLE, IGNORE COLUMN !!!!, OBJECT:\n%s" %(self.conn, tarToSrc[col][eJson.jSttValues.SOURCE], self.connObj), "e")
                         continue
-                elif tarColumn.lower() in existingColumnsDic:
-                    srcColumnName = '%s As %s' %(existingColumnsDic[ tarColumn.lower() ], tarColumnName) if addAsTaret else existingColumnsDic[ tarColumn.lower() ]
                 else:
                     srcColumnName =  "'' As %s" %(tarColumnName) if addAsTaret else ''
 
