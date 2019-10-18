@@ -59,9 +59,7 @@ class dingDong:
             LOGGER_OBJECT.setLogsFiles (logDir=dirLogs)
 
         ## Set version location
-        ver = dbVersions (folder=config.VERSION_DIR, vFileName=config.VERSION_FILE, vFileData=config.VERSION_FILE_DATA, url=config.VERSION_DB_URL, conn=config.VERSION_DB_CONN, tbl=config.VERSION_DB_TABLE)
-
-        self.versionManager = None
+        self.versionManager = dbVersions (folder=config.VERSION_DIR, vFileName=config.VERSION_FILE, vFileData=config.VERSION_FILE_DATA, url=config.VERSION_DB_URL, conn=config.VERSION_DB_CONN, tbl=config.VERSION_DB_TABLE)
 
         ## Defualt properties
         self.connDict       = self.jsonParser.connDict

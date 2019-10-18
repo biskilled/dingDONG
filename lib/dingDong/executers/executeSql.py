@@ -101,20 +101,20 @@ def __execParallel (priority, ListOftupleFiles, connObj):
     if priority<0 or len(multiProcessParam)<2:
         p("SINGLE PROCESS: %s" % (str(multiProcessFiles)), "ii")
         for query in multiProcessParam:
-            __execSql(query)
+            _execSql(query)
 
     # multiprocess execution
     else:
         if len(multiProcessParam) > 1:
-            p ("MULTI PROCESS: %s" %(str(multiProcessFiles)), "ii")
+            p ("%s PROCESS RUNING: %s" %(str(len(multiProcessParam)),str(multiProcessFiles)), "ii")
             # Strat runing all processes
-            proc = multiprocessing.Pool(config.NUM_OF_PROCESSES).map( __execSql ,multiProcessParam )
+
+            proc = multiprocessing.Pool(config.NUM_OF_PROCESSES).map( _execSql ,multiProcessParam )
 
     p("FINISH EXECUTING PRIORITY %s, LOADED FILES: %s >>>> " %(str(priority), str (multiProcessFiles)), "i")
 
-def __execSql ( params ):
+def _execSql ( params ):
     (sqlScript, locParams, connObj, logLevel) = params
-
     LOGGER_OBJECT.setLogLevel(logLevel=logLevel)
 
     def __execEachLine (connObj, sqlTxt):

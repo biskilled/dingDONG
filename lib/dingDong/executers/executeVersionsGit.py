@@ -449,9 +449,6 @@ class dbVersions ():
 
                 p("FILE VERSION IS ACTIVATED, VERSION:%s LOGGD INTO: %s" %(self.version, str(vFileData)),"i")
 
-            else:
-                p("FILE VERSION - NOT VALID PATHS: %s, VERSION FILE:%s, FILE:%s" %(folder, vFileName, vFileData), "e")
-
             if conn and url and tbl:
                 self.db     = baseGlobalDb(conn=conn, connUrl=url)
                 self.tbl    = tbl

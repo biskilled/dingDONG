@@ -60,9 +60,7 @@ class baseBatch ():
 
         if not self.versionManager:
             p("VERSION MANAGER IS NOT SET", "ii")
-            def tmpVer (s):
-                p("!!! NOT UPDATE : %s" %str(s) )
-            self.versionManager = tmpVer
+
 
         if not self.conn:
             self.conn = self.connName
@@ -80,6 +78,9 @@ class baseBatch ():
         if not findProp (prop=self.conn, obj=eConn):
             err  = "Connection type is not valid: %s, use valid connection properties" %(str(self.conn))
             raise ValueError(err)
+
+    def __tmpVer (self, s):
+                p("!!! NOT UPDATE : %s" %str(s) )
 
     """ ABSTRACT METHOD THAT MUST BE IMPLEMETED IN ANY CHILD CLASSES """
     @abc.abstractmethod
