@@ -41,22 +41,22 @@ except ImportError:
 DEFAULTS = {
             eConn.NONO: {   eJson.jValues.DEFAULT_TYPE:'varchar(100)',eJson.jValues.SCHEMA:'dbo',
                             eJson.jValues.EMPTY:'Null',eJson.jValues.COLFRAME:("[","]"),
-                            eJson.jValues.SP:{'match':None, 'replace':None}},
+                            eJson.jValues.SP:{'match':None, 'replace':None}, eJson.jValues.UPDATABLE:False},
 
             eConn.ORACLE: {eJson.jValues.DEFAULT_TYPE: 'varchar(100)', eJson.jValues.SCHEMA: 'dbo',
                            eJson.jValues.EMPTY: 'Null', eJson.jValues.COLFRAME: ('"', '"'),
-                           eJson.jValues.SP: {'match': r'([@].*[=])(.*?(;|$))', 'replace': r"[=;@\s']"}},
+                           eJson.jValues.SP: {'match': r'([@].*[=])(.*?(;|$))', 'replace': r"[=;@\s']"}, eJson.jValues.UPDATABLE:True},
 
             eConn.SQLSERVER: {eJson.jValues.DEFAULT_TYPE: 'varchar(100)', eJson.jValues.SCHEMA: 'dbo',
                               eJson.jValues.EMPTY: 'Null', eJson.jValues.COLFRAME: ("[", "]"),
-                              eJson.jValues.SP: {'match': r'([@].*[=])(.*?(;|$))', 'replace': r"[=;@\s']"}  },
+                              eJson.jValues.SP: {'match': r'([@].*[=])(.*?(;|$))', 'replace': r"[=;@\s']"}, eJson.jValues.UPDATABLE:True  },
 
             eConn.POSTGESQL: {eJson.jValues.DEFAULT_TYPE: 'varchar(100)', eJson.jValues.SCHEMA: 'public',
                               eJson.jValues.EMPTY: 'Null', eJson.jValues.COLFRAME: ('"', '"'),
-                              eJson.jValues.SP: {'match': r'([@].*[=])(.*?(;|$))', 'replace': r"[=;@\s']"}  },
+                              eJson.jValues.SP: {'match': r'([@].*[=])(.*?(;|$))', 'replace': r"[=;@\s']"}, eJson.jValues.UPDATABLE:True  },
 
             eConn.LITE: {   eJson.jValues.DEFAULT_TYPE:'varchar(100)',eJson.jValues.SCHEMA:None,
-                            eJson.jValues.EMPTY:'Null'}
+                            eJson.jValues.EMPTY:'Null', eJson.jValues.UPDATABLE:False}
            }
 
 DATA_TYPES = {
@@ -240,7 +240,7 @@ class baseGlobalDb (baseBatch):
 
         isNew,isChanged, newHistoryTable = self.cloneObject(newStructure=stt, tableName=tableName, tableSchema=tableSchema)
 
-        if isNew or  (isChanged and self.update<2):
+        if isNew or  (isChanged and (self.update in [eJson.jUpdate.UPDATE, eJson.jUpdate.DROP])):
             sql = "CREATE TABLE %s \n (" %(tableFullName)
             for col in stt:
                 if eJson.jSttValues.ALIACE in stt[col] and stt[col][eJson.jSttValues.ALIACE] and len (stt[col][eJson.jSttValues.ALIACE])>0:
@@ -259,7 +259,7 @@ class baseGlobalDb (baseBatch):
         if addIndex and self.update != eJson.jUpdate.NO_UPDATE:
             self.addIndexToTable(tableName, addIndex)
 
-        if self.update == eJson.jUpdate.UPDATE:
+        if config.DING_ADD_OBJECT_DATA:
             if newHistoryTable and len (newHistoryTable)>0:
                 columns = []
                 pre, pos = self.columnFrame[0], self.columnFrame[1]
@@ -359,7 +359,6 @@ class baseGlobalDb (baseBatch):
             ret[colName] = val
 
         return ret
-
 
     """ INTERNAL USED: Complex or simple QUERY STRUCURE:  {ColumnName:{Type:ColumnType, ALIACE: ColumnName} .... } """
     def getQueryStructure(self, sqlQuery=None):
@@ -524,7 +523,7 @@ class baseGlobalDb (baseBatch):
                 p("TABLE STRUCTURE CHANGED, UPDATE IS NOT ALLOWED, NO CHANGE", "w")
                 return isChanged, newHistoryTable
             else:
-                if config.TRACK_HISTORY:
+                if config.DING_TRACK_OBJECT_HISTORY:
                     p("TABLE HISTORY IS ON ...", "ii")
                     newHistoryTable = "%s_%s" % (tableName, str(time.strftime('%y%m%d')))
                     if (self.isExists(tableSchema=tableSchema, tableName=tableName)):

@@ -22,14 +22,16 @@ import re
 import copy
 
 
-from dingDong.misc.logger   import p, LOGGER_OBJECT
+from dingDong.misc.logger   import p
 from dingDong.misc.enumsJson import eConn, eJson, findProp
 from dingDong.misc.misc     import replaceStr, uniocdeStr
+from dingDong.config        import config
 
 
 DEFAULTS    =   {
                     eJson.jValues.DEFAULT_TYPE:eConn.dataType.B_STR,
-                    eJson.jValues.BATCH_SIZE:200000
+                    eJson.jValues.BATCH_SIZE:200000,
+                    eJson.jValues.UPDATABLE:False
                 }
 
 # eConn.dataType.B_DEFAULT:'nvarchar(200)',
@@ -57,6 +59,17 @@ class baseBatch ():
         self.update         = self.setProperties (propKey=eJson.jValues.UPDATE, propVal=update, propDef=-1 )
         self.creeateFromObjName = self.setProperties (propKey=eJson.jValues.CREATE )
         self.versionManager = versionManager
+
+        isObjectCanBeUpdate = self.connPropDict[eJson.jValues.UPDATABLE] if eJson.jValues.UPDATABLE in self.connPropDict else DEFAULTS[eJson.jValues.UPDATABLE]
+
+        if not isObjectCanBeUpdate and self.update == eJson.jUpdate.UPDATE:
+            config.DING_ADD_OBJECT_DATA = True
+            self.update = eJson.jUpdate.DROP
+        elif isObjectCanBeUpdate and self.update == eJson.jUpdate.UPDATE:
+            config.DING_ADD_OBJECT_DATA = False
+
+        if self.update == eJson.jUpdate.NO_UPDATE:
+            config.DING_ADD_OBJECT_DATA = False
 
         if not self.versionManager:
             p("VERSION MANAGER IS NOT SET", "ii")

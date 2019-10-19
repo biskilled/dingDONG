@@ -75,6 +75,7 @@ class eJson (object):
         FOLDER      = 'folder'
         BATCH_SIZE  = 'batch'
         UPDATE      = 'update'
+        UPDATABLE   = 'updatable'
         INDEX_COLUMS  = 'c'
         INDEX_CLUSTER = 'ic'
         INDEX_UNIQUE  = 'iu'
@@ -133,9 +134,12 @@ class eJson (object):
         CSV             = 'csv'
 
     class jUpdate(object):
-        DROP      = -1
-        UPDATE    = 1
-        NO_UPDATE = 2
+        DROP      = 1
+        UPDATE    = 2
+        NO_UPDATE = 3
+
+
+
 
 class eConn (object):
     SQLSERVER   = "sql"

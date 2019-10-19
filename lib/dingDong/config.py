@@ -33,9 +33,12 @@ class config:
     PARSER_SQL_MAIN_KEY = "dingDong"
 
     DECODE          = "windows-1255"
-    TRACK_HISTORY   = True
-    LOOP_ON_ERROR   = True
-    NUM_OF_PROCESSES= 4
+
+    DING_TRACK_OBJECT_HISTORY   = True
+    DING_ADD_OBJECT_DATA        = True
+    
+    DONG_LOOP_ON_FAILED_BATCH   = True
+    DONG_MAX_PARALLEL_THREADS   = 4
 
     #LOGGING Properties
     LOGS_DEBUG = logging.DEBUG
