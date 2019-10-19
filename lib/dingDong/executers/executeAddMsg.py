@@ -65,7 +65,7 @@ class executeAddMsg (object):
         tCntFromStart   = str(round ( ((ts - self.startTime) / 60) , 2))
         tCntFromLaststep= str(round ( ((ts - self.lastTime) / 60) , 2))
         self.lastTime   = ts
-        totalTasks = 0 if not totalTasks or totalTasks<1 else totalTasks
+        totalTasks = 1 if not totalTasks or totalTasks<1 else totalTasks
 
         self.currentSateDic = OrderedDict({msgProp.STEP_NUM   : self.stateCnt,
                                         msgProp.DESC       :sDesc,
