@@ -44,7 +44,6 @@ def extract_tableAndColumns (sql):
     sql, pre = removeProps (sql=sql)
     tblTupe , columns, sqlPre, sqlPost = extract_tables(sql)
 
-
     pre = pre if pre and len(pre)>0 else sqlPre
 
     ret = {QUERY_PRE:pre, QUERY_POST:sqlPost}
@@ -69,7 +68,8 @@ def extract_tableAndColumns (sql):
             ret[tableName] = {TABLE_ALIAS:alias, TABLE_SCHEMA:None if schamenName==tableName else schamenName}
 
         if columns and len (columns)>0:
-            ret[tableName][TABLE_COLUMN] = []
+            if TABLE_COLUMN not in ret[tableName]:
+                ret[tableName][TABLE_COLUMN] = []
 
             for col in columns:
                 if str(col) in [tableName,alias]:

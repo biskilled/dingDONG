@@ -136,9 +136,10 @@ class baseGlobalDb (baseBatch):
 
             self.connSql = "SELECT * FROM %s" %self.connObj
 
-            self.connObj        = self.wrapColName(col=self.connObj, remove=True).split(".")
-            self.defaultSchema  = self.connObj[0] if len(self.connObj) > 1 else self.defaultSchema
-            self.connObj        = self.connObj[1] if len(self.connObj) > 1 else self.connObj[0]
+            if self.connIsSrc or self.connIsTar:
+                self.connObj        = self.wrapColName(col=self.connObj, remove=True).split(".")
+                self.defaultSchema  = self.connObj[0] if len(self.connObj) > 1 else self.defaultSchema
+                self.connObj        = self.connObj[1] if len(self.connObj) > 1 else self.connObj[0]
 
             if self.connFilter and len(self.connFilter) > 1:
                 self.connFilter = re.sub(r'WHERE', '', self.connFilter, flags=re.IGNORECASE)
@@ -458,6 +459,7 @@ class baseGlobalDb (baseBatch):
                 p("COLUMN %s NOT FOUND IN ANY TABLE, USING DEFAULT %s" % (colLName, self.defDataType), "ii")
                 ret[colTarName] = {eJson.jSttValues.SOURCE: colLName, eJson.jSttValues.TYPE: self.defDataType}
 
+
         retOrder = OrderedDict()
         for col in allFoundColumns:
             if col[1] in ret:
@@ -488,7 +490,7 @@ class baseGlobalDb (baseBatch):
                     isChanged = True
                     if self.update == eJson.jUpdate.UPDATE:
                         sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.COLUMN_UPDATE,
-                                                   tableName=tableName, tableSchema=tableSchema, columnName=col,
+                                                   tableName=tableName, tableSchema=tableSchema, columnName=existStructureL[col],
                                                    columnType=newStructureL[col][1])
                         self.exeSQL(sql=sql)
                         if self.versionManager: self.versionManager(sql)
@@ -497,21 +499,23 @@ class baseGlobalDb (baseBatch):
             ## REMOVE COLUMN
             else:
                 isChanged = True
-                sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.COLUMN_DELETE, tableName=tableName,
-                                           tableSchema=tableSchema, columnName=col)
-                self.exeSQL(sql=sql)
-                if self.versionManager: self.versionManager(sql)
+                if self.update == eJson.jUpdate.UPDATE:
+                    sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.COLUMN_DELETE, tableName=tableName,
+                                               tableSchema=tableSchema, columnName=existStructureL[col])
+                    self.exeSQL(sql=sql)
+                    if self.versionManager: self.versionManager(sql)
                 p("CONN:%s, TABLE: %s, REMOVING COLUMN: %s " % (self.conn, tableName, col), "w")
 
         for col in newStructureL:
             # ADD COLUMN
             if col not in existStructureL:
                 isChanged = True
-                sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.COLUMN_ADD,
-                                           tableName=tableName, tableSchema=tableSchema, columnName=col,
-                                           columnType=newStructureL[col][1])
-                self.exeSQL(sql=sql)
-                if self.versionManager: self.versionManager(sql)
+                if self.update == eJson.jUpdate.UPDATE:
+                    sql = setSqlQuery().getSql(conn=self.conn, sqlType=eSql.COLUMN_ADD,
+                                               tableName=tableName, tableSchema=tableSchema, columnName=newStructureL[col][0],
+                                               columnType=newStructureL[col][1])
+                    self.exeSQL(sql=sql)
+                    if self.versionManager: self.versionManager(sql)
 
                 p("CONN:%s, TABLE: %s, ADD COLUMN: %s " % (self.conn, tableName, newStructureL[col][0]), "w")
 
@@ -658,6 +662,7 @@ class baseGlobalDb (baseBatch):
         if tarToSrc and len (tarToSrc)>0:
             existingColumnsL            = OrderedDict()
             existingColumnsByTargetL    = OrderedDict()
+            existingColumnsLFull        = OrderedDict()
             existingColumns = qp.extract_tableAndColumns(sql=sourceSql)
 
             preSql = existingColumns[qp.QUERY_PRE]
@@ -668,6 +673,7 @@ class baseGlobalDb (baseBatch):
 
                 for col in allColumns:
                     existingColumnsL[col[0][-1].replace(pre,"").replace(pos,"").lower()] = ".".join(col[0])
+                    existingColumnsLFull[".".join(col[0]).replace(pre, "").replace(pos, "").lower()] = ".".join(col[0])
                     existingColumnsByTargetL[ col[1].replace(pre,"").replace(pos,"").lower() ] = ".".join(col[0])
 
             else:
@@ -682,6 +688,8 @@ class baseGlobalDb (baseBatch):
                     srcColumnName = tarToSrc[col][eJson.jSttValues.SOURCE].replace(pre, "").replace(pos, "").lower()
                     if srcColumnName in existingColumnsL:
                         srcColumnName = '%s As %s' % (existingColumnsL[srcColumnName], tarColumnName) if addAsTaret else existingColumnsL[srcColumnName]
+                    elif srcColumnName in existingColumnsLFull:
+                        srcColumnName = '%s As %s' % (existingColumnsLFull[srcColumnName], tarColumnName) if addAsTaret else existingColumnsLFull[srcColumnName]
                     elif srcColumnName in existingColumnsByTargetL:
                         srcColumnName = '%s As %s' % (existingColumnsByTargetL[srcColumnName], tarColumnName) if addAsTaret else existingColumnsByTargetL[srcColumnName]
                     else:

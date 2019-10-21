@@ -35,7 +35,7 @@ if 2 == sys.version_info[0]:
     sys.setdefaultencoding("utf8")
 
 # sqlWithParamList --> list of tuple (file name, paramas)
-def execQuery (sqlWithParamList, connObj, sqlFolder=None ):
+def execQuery (sqlWithParamList, connObj, sqlFolder=None, msg=None ):
     if sqlWithParamList is None or len(sqlWithParamList)==0:
         p("NOT RECIAVE ANY SQL STATEMENT")
         return
@@ -81,21 +81,20 @@ def execQuery (sqlWithParamList, connObj, sqlFolder=None ):
     for priority  in OrderedDict (sorted (allFiles.items())):
 
         p ('START EXECUTING PRIORITY %s >>>>>>> ' %str(priority), "ii")
-        __execParallel (priority, allFiles[priority], connObj)
+        __execParallel (priority=priority, ListOftupleFiles=allFiles[priority], connObj=connObj, msg=msg)
 
-def __execParallel (priority, ListOftupleFiles, connObj):
+def __execParallel (priority, ListOftupleFiles, connObj, msg=None):
     multiProcessParam = []
     multiProcessFiles = ''
-
 
     for tupleFiles in ListOftupleFiles:
         sqlFiles    = tupleFiles[0]
         locParams   = tupleFiles[1]
 
-
         for sqlScript in sqlFiles:
             multiProcessParam.append( (sqlScript, locParams, connObj, config.LOGS_DEBUG) )
             multiProcessFiles += "'" + sqlScript + "' ; "
+            if msg: msg.addStateCnt()
 
     # single process
     if priority<0 or len(multiProcessParam)<2:
@@ -109,7 +108,7 @@ def __execParallel (priority, ListOftupleFiles, connObj):
             p ("%s PROCESS RUNING: %s" %(str(len(multiProcessParam)),str(multiProcessFiles)), "ii")
             # Strat runing all processes
 
-            proc = multiprocessing.Pool(config.NUM_OF_PROCESSES).map( _execSql ,multiProcessParam )
+            proc = multiprocessing.Pool(config.DONG_MAX_PARALLEL_THREADS).map( _execSql ,multiProcessParam )
 
     p("FINISH EXECUTING PRIORITY %s, LOADED FILES: %s >>>> " %(str(priority), str (multiProcessFiles)), "i")
 

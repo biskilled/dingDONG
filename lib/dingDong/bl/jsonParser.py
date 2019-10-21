@@ -247,7 +247,7 @@ class jsonParser (object):
                 ret[eJson.jValues.UPDATE]   = self.__setUpdate (propVal[3])
 
             else:
-                p("%s: Not valid list valuues, must 1,2 or 3" % (str(propFullName)), "e")
+                p("%s: Not valid list valuues, must 1,2 or 3 VALUE IS: \n %s" % (str(propFullName),str(propVal)), "e")
         elif isinstance(propVal, dict):
             self.__notVaildProp(ret, propVal, propFullName)
         else:
@@ -368,6 +368,9 @@ class jsonParser (object):
                 folderPath = ret[eJson.jValues.FOLDER]
                 if os.path.isfile( os.path.join(folderPath, fileName)):
                     ret[eJson.jValues.FILE] = os.path.join(folderPath, fileName)
+
+        if isinstance(ret[eJson.jValues.OBJ], (list,tuple)):
+            ret[eJson.jValues.OBJ] = "".join(ret[eJson.jValues.OBJ])
 
         return ret
 

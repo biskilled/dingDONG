@@ -45,26 +45,54 @@ class dingDong:
                 dirData=None, includeFiles=None, notIncludeFiles=None,
                 dirLogs=None,connDict=None, processes=None, sqlFolder=None):
 
-        self.sqlFolder = sqlFolder if sqlFolder else config.SQL_FOLDER_DIR
-        self.jsonParser = jsonParser(dicObj=dicObj, filePath=filePath,
-                                     dirData=dirData, includeFiles=includeFiles, notIncludeFiles=notIncludeFiles,
-                                     connDict=connDict, sqlFolder=self.sqlFolder)
+        self._dicObj        = dicObj
+        self._filePath      = filePath
+        self._dirData       = dirData
+        self._includeFiles  = includeFiles
+        self._notIncludeFiles=notIncludeFiles
+        self._dirLogs       = None
+        self.propcesses     = config.DONG_MAX_PARALLEL_THREADS
+        self.sqlFolder      = config.SQL_FOLDER_DIR
+        self.connDict       = connDict
 
+        self.Set(dicObj=self._dicObj, filePath=self._filePath,
+                dirData=self._dirData, includeFiles=self._includeFiles,
+                notIncludeFiles=self._notIncludeFiles,dirLogs=self._dirLogs,
+                connDict=self.connDict, processes=self.propcesses, sqlFolder=self.sqlFolder)
 
         self.msg = executeAddMsg()
-        self.propcesses = processes if processes else config.NUM_OF_PROCESSES
-        dirLogs = dirLogs if dirLogs else config.LOGS_DIR
-
-        if dirLogs:
-            LOGGER_OBJECT.setLogsFiles (logDir=dirLogs)
 
         ## Set version location
         self.versionManager = dbVersions (folder=config.VERSION_DIR, vFileName=config.VERSION_FILE, vFileData=config.VERSION_FILE_DATA, url=config.VERSION_DB_URL, conn=config.VERSION_DB_CONN, tbl=config.VERSION_DB_TABLE)
 
         ## Defualt properties
-        self.connDict       = self.jsonParser.connDict
-
         self.Config         = config
+
+    def Set (self, dicObj=None, filePath=None,
+                dirData=None, includeFiles=None, notIncludeFiles=None,
+                dirLogs=None,connDict=None, processes=None, sqlFolder=None):
+
+        self.sqlFolder = sqlFolder if sqlFolder else self.sqlFolder
+        self._dicObj    = dicObj
+        self._filePath  = filePath
+        self._dirData   = dirData
+        self._includeFiles  = includeFiles
+        self._notIncludeFiles=notIncludeFiles
+        self.connDict = connDict if connDict else self.connDict
+
+        if dicObj or filePath or dirData or includeFiles or notIncludeFiles \
+                or connDict or sqlFolder:
+            self.jsonParser = jsonParser(dicObj=self._dicObj, filePath=self._filePath,
+                                         dirData=self._dirData, includeFiles=self._includeFiles, notIncludeFiles=notIncludeFiles,
+                                         connDict=self.connDict, sqlFolder=self.sqlFolder)
+
+            self.connDict = self.jsonParser.connDict
+
+        self.propcesses = processes if processes else self.propcesses
+
+        self._dirLogs = dirLogs if dirLogs else config.LOGS_DIR
+        if self._dirLogs:
+            LOGGER_OBJECT.setLogsFiles(logDir=self._dirLogs)
 
     def ding (self, destList=None, jsName=None, jsonNodes=None):
         p('STARTING TO MODEL DATA STRUCURE >>>>>' , "i")
@@ -162,7 +190,7 @@ class dingDong:
         if connUrl  : connPropDic[eJson.jValues.URL] = connUrl
 
         connObj = conn(connPropDic=connPropDic , connLoadProp=self.connDict)
-        execQuery(sqlWithParamList=queries, connObj=connObj)
+        execQuery(sqlWithParamList=queries, connObj=connObj, msg=self.msg)
 
     def test (self):
         for connProp in self.connDict:
@@ -173,6 +201,7 @@ class dingDong:
 
     def execMicrosoftOLAP (self, serverName, dbName, cubes=[], dims=[], fullProcess=True):
         OLAP_Process(serverName=serverName, dbName=dbName, cubes=cubes, dims=dims, fullProcess=fullProcess)
+        self.msg.addStateCnt()
 
     def __getNodes(self, destList=None, jsName=None, jsonNodes=None):
         allNodes = []

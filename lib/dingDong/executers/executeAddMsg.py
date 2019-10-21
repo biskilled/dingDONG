@@ -27,12 +27,12 @@ from dingDong.misc.logger   import LOGGER_OBJECT,p
 from dingDong.executers.executeHTMLReport import eHtml, createHtmlFromList
 
 class msgProp (object):
-    STEP_NUM    = "STEP NUMBER"
+    STEP_NUM    = "NUM."
     DESC        = "DESCRIPTION"
     TS          = "TIME STAMP"
-    STEP_TIME   = "TOTAL TIME CURRENT STEP"
-    TOTAL_TIME  = "TOTAL TIME"
-    TASKS       = "TOTAL TASKS"
+    STEP_TIME   = "EXEC TIME"
+    TOTAL_TIME  = "AGG TIME"
+    TASKS       = "CNT. TASKS"
 
     MSG_SUBJECT_SUCCESS = "LOADING JOB %s TOTAL TASKS EXEC: %s"
     MSG_SUBJECT_FAILURE = "ERROR LOADING JOB %s TOTAL TASKS EXEC: %s "
@@ -65,7 +65,7 @@ class executeAddMsg (object):
         tCntFromStart   = str(round ( ((ts - self.startTime) / 60) , 2))
         tCntFromLaststep= str(round ( ((ts - self.lastTime) / 60) , 2))
         self.lastTime   = ts
-        totalTasks = 1 if not totalTasks or totalTasks<1 else totalTasks
+        totalTasks = 0 if not totalTasks or totalTasks<1 else totalTasks
 
         self.currentSateDic = OrderedDict({msgProp.STEP_NUM   : self.stateCnt,
                                         msgProp.DESC       :sDesc,
@@ -77,8 +77,8 @@ class executeAddMsg (object):
         self.stateDic[self.stateCnt] = self.currentSateDic
 
     def addStateCnt (self):
-        if self.currentSateDic and msgProp.TASKS in self.currentSateDic:
-            self.currentSateDic[msgProp.TASKS]+=1
+        if self.currentSateDic and msgProp.TASKS in self.stateDic[self.stateCnt]:
+            self.stateDic[self.stateCnt][msgProp.TASKS]+=1
         self.cntTasks+=1
 
     def end(self, msg=None,pr=True):
@@ -120,8 +120,8 @@ class executeAddMsg (object):
 
             for st in self.stateDic:
                 if not headerNames:
-                    headerNames = list(self.stateDic[st].keys())
-                    dicFirstTable[eHtml.HEADER] = headerNames
+                    for k in self.stateDic[st]:
+                        dicFirstTable[eHtml.HEADER].append (k)
 
                 dicFirstTable[eHtml.ROWS].append ( list(self.stateDic[st].values()) )
 

@@ -294,7 +294,7 @@ class setSqlQuery (baseSqlQuery):
 
     def setSqlColumnAdd(self, tableName, columnName, columnType, tableSchema=None):
         fullTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
-        sql = """ALTER TABLE %s ADD COLUMN %s %s NULL""" %(fullTableName, columnName, columnType)
+        sql = """ALTER TABLE %s ADD %s %s NULL""" %(fullTableName, columnName, columnType)
 
         self.default = sql
         self.connQuery[eConn.SQLSERVER] = sql
