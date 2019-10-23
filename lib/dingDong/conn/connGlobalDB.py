@@ -187,7 +187,8 @@ class baseGlobalDb (baseBatch):
                 self.cursor = self.connDB.cursor()
             else:
                 try:
-                    import ceODBC as odbc
+                    #import ceODBC as odbc
+                    import pyodbc as odbc
                 except ImportError:
                     # p("ceODBC is not installed will try to load pyodbc", "ii")
                     try:
@@ -245,9 +246,9 @@ class baseGlobalDb (baseBatch):
             sql = "CREATE TABLE %s \n (" %(tableFullName)
             for col in stt:
                 if eJson.jSttValues.ALIACE in stt[col] and stt[col][eJson.jSttValues.ALIACE] and len (stt[col][eJson.jSttValues.ALIACE])>0:
-                    colName = self.wrapColName (col=stt[col][eJson.jSttValues.ALIACE], remove=True)
+                    colName = self.wrapColName (col=stt[col][eJson.jSttValues.ALIACE], remove=False)
                 else:
-                    colName =  self.wrapColName (col=col, remove=True)
+                    colName =  self.wrapColName (col=col, remove=False)
                 colType =  stt[col][eJson.jSttValues.TYPE]
                 sql += '\t%s\t%s,\n' %(colName, colType)
 
@@ -351,7 +352,7 @@ class baseGlobalDb (baseBatch):
 
         rows = self.cursor.fetchall()
         if not rows or (rows and len(rows) < 1):
-            p("ERROR CONN: %s RECEIVE DB STRACTURE: TABLE: %s, SCHEMA: %s" % (self.conn, tableName, tableSchema), "e")
+            p("ERROR(no rows) CONN: %s RECEIVE DB STRACTURE: TABLE: %s, SCHEMA: %s" % (self.conn, tableName, tableSchema), "e")
 
         for col in rows:
             colName = uniocdeStr(col[0])
@@ -405,7 +406,10 @@ class baseGlobalDb (baseBatch):
             colDict = OrderedDict()
             tableName = tbl
             tableSchema = queryTableAndColunDic[tbl][qp.TABLE_SCHEMA]
+            tableDb     = queryTableAndColunDic[tbl][qp.TABLE_DB]
             tableColumns = queryTableAndColunDic[tbl][qp.TABLE_COLUMN]
+
+            tableSchema = '%s.%s'%(tableDb, tableSchema) if tableDb else tableSchema
 
             for colD in tableColumns:
                 colTupleName = colD[0]
@@ -415,6 +419,7 @@ class baseGlobalDb (baseBatch):
                 colDict[colTargetName] = (colName, colFullName)
 
             tableStrucure = self.getDBStructure(tableName=tableName, tableSchema=tableSchema)
+
             tableColL = {x.replace(pre, "").replace(pos, "").lower(): x for x in tableStrucure}
 
             for col in colDict:
@@ -440,16 +445,27 @@ class baseGlobalDb (baseBatch):
 
             ## Search for Column that ther is no table mapping
             for col in notFoundColumns:
+                isFound = False
                 colTarName = col
-                colSName = notFoundColumns[col][0]
+                colSName = notFoundColumns[col][0].replace (pre, "").replace (pos,"")
+                colSName2= notFoundColumns[col][0]
                 colLName = notFoundColumns[col][1]
                 for colTbl in tableColL:
-                    if colTbl.lower() in colSName.lower():
+                    if colTbl.lower() == colSName.lower():
+                        isFound = True
                         ret[colTarName] = {eJson.jSttValues.SOURCE: colLName,
                                            eJson.jSttValues.TYPE: tableStrucure[tableColL[colTbl]][
                                                eJson.jSttValues.TYPE]}
                         foundColumns.append(colLName)
                         break
+                if not isFound:
+                    for colTbl in tableColL:
+                        if colTbl.lower() in colSName2.lower():
+                            ret[colTarName] = {eJson.jSttValues.SOURCE: colLName,
+                                               eJson.jSttValues.TYPE: tableStrucure[tableColL[colTbl]][
+                                                   eJson.jSttValues.TYPE]}
+                            foundColumns.append(colLName)
+                            break
 
         for col in notFoundColumns:
             colTarName = col
@@ -792,21 +808,18 @@ class baseGlobalDb (baseBatch):
             self.connDB.commit()
             p('LOAD %s into target: %s >>>>>> ' % (str(totalRows), self.connObj), "ii")
 
-
         except Exception as e:
             p(u"TYPE:%s, OBJCT:%s ERROR in cursor.executemany !!!!" % (self.conn, self.connObj), "e")
             p(u"ERROR QUERY:%s " % execQuery, "e")
             sampleRes = ['Null' if not r else "'%s'" % r for r in rows[0]]
             p(u"SAMPLE:%s " % u", ".join(sampleRes), "e")
             p(e, "e")
-            if config.LOOP_ON_ERROR:
+            if config.DONG_LOOP_ON_FAILED_BATCH:
                 iCnt = 0
                 tCnt = len(rows)
-                errDict = {}
                 totalErrorToLooap = int(tCnt * 0.1)
                 totalErrorsFound = 0
-                p("ROW BY ROW ERROR-> LOADING %s OUT OF %s ROWS " % (str(totalErrorToLooap), str(tCnt)),
-                  "e")
+                p("ROW BY ROW ERROR-> LOADING %s OUT OF %s ROWS " % (str(totalErrorToLooap), str(tCnt)),"e")
                 for r in rows:
                     try:
                         iCnt += 1
@@ -817,25 +830,15 @@ class baseGlobalDb (baseBatch):
                         totalErrorsFound += 1
                         if totalErrorsFound > totalErrorToLooap:
                             break
-                        errMsg = str(e).lower()
-
-                        if errMsg not in errDict:
-                            errDict[errMsg] = 0
-                            ret = ""
-                            for col in r[0]:
-                                if col is None:
-                                    ret += "Null, "
-                                else:
-                                    ret += "'%s'," % (col)
-                            p("ROW BY ROW ERROR-> %s" %execQuery, "e")
-                            p(ret, "e")
-                            p(e, "e")
-                        else:
-                            errDict[errMsg] += 1
-
+                        errMsg = str(e)
+                        ret = ""
+                        for col in r[0]:
+                            if col is None: ret += "Null, "
+                            else:           ret += "'%s'," % (col)
+                        p("ROW BY ROW ERROR-> %s" %execQuery, "e")
+                        p(ret, "e")
+                        p(errMsg, "e")
                 p("ROW BY ROW ERROR-> LOADED %s OUT OF %s ROWS" % (str(totalErrorToLooap), str(tCnt)), "e")
-                for err in errDict:
-                    p("TOTAL ERRORS: %s, MSG: %s: " % (str(err), str(errDict[err])), "e")
 
     def execMethod(self, method=None):
         method = method if method else self.connObj

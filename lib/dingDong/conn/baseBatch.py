@@ -71,8 +71,8 @@ class baseBatch ():
         if self.update == eJson.jUpdate.NO_UPDATE:
             config.DING_ADD_OBJECT_DATA = False
 
-        if not self.versionManager:
-            p("VERSION MANAGER IS NOT SET", "ii")
+        if self.versionManager:
+            p("VERSION MANAGER IS SET", "ii")
 
 
         if not self.conn:

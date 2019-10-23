@@ -42,6 +42,7 @@ class __myLogger (object):
         self.isLogsFilesInit= False
         self.logTmpFileErr  = None
         self.logTmpFileWar  = None
+        self.logDir         = config.LOGS_DIR
         self.logg =  logging.getLogger(__name__)
 
         if config.LOGS_DIR and os.path.isdir(config.LOGS_DIR):

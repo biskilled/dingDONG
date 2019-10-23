@@ -33,6 +33,7 @@ QUERY_PRE               = '~pre~'
 QUERY_POST              = '~post~'
 
 TABLE_ALIAS = 'alias'
+TABLE_DB    = 'db'
 TABLE_SCHEMA= 'schema'
 TABLE_NAME  = 'tbl'
 TABLE_COLUMN= 'column'
@@ -42,6 +43,7 @@ TABLE_COLUMN= 'column'
 ##      Using extract_table_identifiers which return list of [(table aliace, table schema, table Name) ...]
 def extract_tableAndColumns (sql):
     sql, pre = removeProps (sql=sql)
+
     tblTupe , columns, sqlPre, sqlPost = extract_tables(sql)
 
     pre = pre if pre and len(pre)>0 else sqlPre
@@ -58,14 +60,15 @@ def extract_tableAndColumns (sql):
     foundTables = []
     for tbl in tblTupe:
         alias       = tbl[0]
-        schamenName = tbl[1]
-        tableName   = tbl[2]
+        dbName      = tbl[1]
+        schamenName = tbl[2]
+        tableName   = tbl[3]
 
         aliasTbl = alias if alias is not None and len(alias)>0 else tableName
         tableAliasVsName[aliasTbl] = tableName
 
         if tableName not in ret:
-            ret[tableName] = {TABLE_ALIAS:alias, TABLE_SCHEMA:None if schamenName==tableName else schamenName}
+            ret[tableName] = {TABLE_ALIAS:alias, TABLE_SCHEMA:schamenName, TABLE_DB: dbName}
 
         if columns and len (columns)>0:
             if TABLE_COLUMN not in ret[tableName]:
@@ -76,12 +79,14 @@ def extract_tableAndColumns (sql):
                     ret[tableName][TABLE_COLUMN].extend  (columns[col])
                     foundTables.append (col)
 
-
     for tbl in columns:
+
         if tbl not in foundTables:
             if QUERY_NO_TABLE not in ret:
-                ret[QUERY_NO_TABLE] = {TABLE_ALIAS:None, TABLE_SCHEMA:None,TABLE_COLUMN:[]}
+                ret[QUERY_NO_TABLE] = {TABLE_ALIAS:None, TABLE_SCHEMA:None,TABLE_DB:None, TABLE_COLUMN:[]}
             ret[QUERY_NO_TABLE][TABLE_COLUMN].extend ( columns[tbl] )
+
+
     return ret
 
 def removeProps (sql):
@@ -109,9 +114,11 @@ def extract_tables(sql):
     preSql = ""
     postSql= ""
     # replacements to SQL queries
+
     sql = replaceStr (sString=sql,findStr="ISNULL (", repStr="ISNULL(", ignoreCase=True,addQuotes=None)
     sql = replaceStr(sString=sql, findStr="CONVERT (",repStr="CONVERT(", ignoreCase=True, addQuotes=None)
     sql = sql.replace("\t"," ")
+
     statements = list(sqlparse.parse(sql))
 
     for statement in statements:
@@ -120,6 +127,7 @@ def extract_tables(sql):
             # will get only last table column definistion !
             extracted_last_columns_Dic,preSql,postSql  = extract_select_part(statement)
             extracted_last_tables_Tuple = list (extract_table_identifiers(stream))
+
             #extracted_tables.append(list(extract_table_identifiers(stream)))
     #return list(itertools.chain(*extracted_tables))
     return (extracted_last_tables_Tuple , extracted_last_columns_Dic,preSql,postSql)
@@ -179,9 +187,8 @@ def extract_select_part (parsed):
                 for identifier in item.get_identifiers():
                     identifier = str(identifier)
                     srcName = identifier
-
-                    if identifier.lower().rfind(" as ") > 0:
-                        srcName = identifier[:identifier.lower().rfind(" as ")].strip()
+                    if srcName.lower().rfind(" as ") > 0:
+                        srcName = identifier[:identifier.lower().rfind(" as ")]
                         tarName = identifier[identifier.lower().rfind(" as ")+4:].strip()
                     else:
                         tarName = srcName.split(".")
@@ -226,23 +233,36 @@ def extract_select_part (parsed):
         dicValue = tuple(dicValue) if isinstance(dicValue,list) else dicValue
         dicValue = (dicValue,) if isinstance(dicValue,basestring) else dicValue
         columnDic[dicKey].append ((dicValue,tarName))
-
     return columnDic, preSql, postSql
 
+# return (alias, dbName, schemaName, tableName)
 def extract_table_identifiers(token_stream):
     for item in token_stream:
         if isinstance(item, IdentifierList):
             for identifier in item.get_identifiers():
-                value = ( identifier.get_alias() , identifier._get_first_name(), identifier.get_real_name())
-                value = [x.replace('"', '').replace("'", "") if x else None for x in  value]
-                value = tuple( value )
-                yield value
+                #value = ( identifier.get_alias() , identifier._get_first_name(), identifier.get_real_name())
+                #value = tuple( value )
+                yield parseColumn (identifier)
+                #value = [x.replace('"', '').replace("'", "") if x else None for x in  value]
 
         elif isinstance(item, Identifier):
-            value = (item.get_alias(), item._get_first_name(), item.get_real_name())
-            value = [x.replace('"', '').replace("'", "") if x else None for x in value]
-            value = tuple(value)
-            yield value
+            yield parseColumn(item)
+
+def parseColumn (item):
+    ret = []
+    ret.append (item.get_alias())
+    realColName = item.value.split(" ")[0].split(".")
+    if len(realColName) == 1:
+        ret.append(None)
+        ret.append(None)
+        ret.extend(realColName)
+    elif len(realColName) == 2:
+        ret.append(None)
+        ret.extend(realColName)
+    else:
+        ret.extend(realColName)
+    return ret
+
 
 """ PARSE QUERY --> GET QUERIES BY USING REGEX """
 def querySqriptParserIntoList(sqlScript, getPython=True, removeContent=True, dicProp=None):

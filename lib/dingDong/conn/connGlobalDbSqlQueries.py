@@ -142,7 +142,9 @@ class setSqlQuery (baseSqlQuery):
 
     """ return column name, columnType"""
     def setSqlTableStructure (self, tableName, tableSchema):
-
+        tableSchema = tableSchema.split(".")
+        tableDb = '%s.' %tableSchema[0] if len(tableSchema)>1 else ""
+        tableSchema = ".".join(tableSchema[1:]) if len(tableSchema) > 1 else tableSchema[0]
         self.default = "SQL Structure is not implemented ;"
         #### SQL SERVER
         sql = """
@@ -161,14 +163,14 @@ class setSqlQuery (baseSqlQuery):
             ELSE ''
             END as colType
 
-        FROM sys.columns c WITH (NOWAIT)
-        JOIN sys.types tp WITH (NOWAIT) ON c.user_type_id = tp.user_type_id
+        FROM %ssys.columns c WITH (NOWAIT)
+        JOIN %ssys.types tp WITH (NOWAIT) ON c.user_type_id = tp.user_type_id
         WHERE c.[object_id] =
             (Select top 1 object_id as obID from
-            (SELECT SCHEMA_NAME(schema_id) schemaDesc , name , object_id FROM sys.tables
+            (SELECT SCHEMA_NAME(schema_id) schemaDesc , name , object_id FROM %ssys.tables
              Union
-            Select SCHEMA_NAME(schema_id) schemaDesc , name , object_id FROM sys.views) tt
-            Where """
+            Select SCHEMA_NAME(schema_id) schemaDesc , name , object_id FROM %ssys.views) tt
+            Where """ %(tableDb,tableDb,tableDb,tableDb)
         sql += "schemaDesc='" + tableSchema.replace("[", "").replace("]", "") + "' and " if tableSchema else ""
         sql += "name='" + tableName.replace("[", "").replace("]", "") + "') ORDER BY c.column_id"
 

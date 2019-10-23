@@ -67,12 +67,20 @@ class executeAddMsg (object):
         self.lastTime   = ts
         totalTasks = 0 if not totalTasks or totalTasks<1 else totalTasks
 
-        self.currentSateDic = OrderedDict({msgProp.STEP_NUM   : self.stateCnt,
-                                        msgProp.DESC       :sDesc,
-                                        msgProp.TS         :tsStr,
-                                        msgProp.STEP_TIME  :tCntFromLaststep,
-                                        msgProp.TOTAL_TIME :tCntFromStart,
-                                        msgProp.TASKS      :totalTasks})
+        self.currentSateDic = OrderedDict()
+        self.currentSateDic[msgProp.STEP_NUM]   = self.stateCnt
+        self.currentSateDic[msgProp.DESC]       = sDesc
+        self.currentSateDic[msgProp.TS]         = tsStr
+        self.currentSateDic[msgProp.STEP_TIME]  = tCntFromLaststep
+        self.currentSateDic[msgProp.TOTAL_TIME] = tCntFromStart
+        self.currentSateDic[msgProp.TASKS]      = totalTasks
+
+        if self.stateCnt>1:
+            self.stateDic[self.stateCnt-1][msgProp.STEP_TIME]  = tCntFromLaststep
+            self.stateDic[self.stateCnt - 1][msgProp.TOTAL_TIME] = tCntFromStart
+
+            self.currentSateDic[msgProp.STEP_TIME] = 0
+            self.currentSateDic[msgProp.TOTAL_TIME]= 0
 
         self.stateDic[self.stateCnt] = self.currentSateDic
 
@@ -114,7 +122,7 @@ class executeAddMsg (object):
             # First table - general knowledge
             self.addState(sDesc='')
 
-            headerNames = None
+            headerNames = False
             dicFirstTable = {eHtml.HEADER:[],eHtml.ROWS:[]}
 
 
@@ -122,6 +130,7 @@ class executeAddMsg (object):
                 if not headerNames:
                     for k in self.stateDic[st]:
                         dicFirstTable[eHtml.HEADER].append (k)
+                    headerNames = True
 
                 dicFirstTable[eHtml.ROWS].append ( list(self.stateDic[st].values()) )
 

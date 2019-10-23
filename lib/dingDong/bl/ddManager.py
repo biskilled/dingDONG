@@ -262,7 +262,6 @@ class ddManager (object):
 
                         if eJson.jSttValues.ALIACE in self.stt[col]:
                             retStrucure[col][eJson.jSttValues.ALIACE] = self.stt[col][eJson.jSttValues.ALIACE]
-
         return retStrucure
 
     """ Check Source values in STT - remove invalid values """
