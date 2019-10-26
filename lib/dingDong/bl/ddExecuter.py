@@ -57,8 +57,8 @@ class dingDong:
 
         self.Set(dicObj=self._dicObj, filePath=self._filePath,
                 dirData=self._dirData, includeFiles=self._includeFiles,
-                notIncludeFiles=self._notIncludeFiles,dirLogs=self._dirLogs,
-                connDict=self.connDict, processes=self.propcesses, sqlFolder=self.sqlFolder)
+                notIncludeFiles=self._notIncludeFiles,dirLogs=dirLogs,
+                connDict=self.connDict, processes=processes, sqlFolder=sqlFolder)
 
         self.msg = executeAddMsg()
 

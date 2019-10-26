@@ -142,9 +142,11 @@ class setSqlQuery (baseSqlQuery):
 
     """ return column name, columnType"""
     def setSqlTableStructure (self, tableName, tableSchema):
-        tableSchema = tableSchema.split(".")
-        tableDb = '%s.' %tableSchema[0] if len(tableSchema)>1 else ""
-        tableSchema = ".".join(tableSchema[1:]) if len(tableSchema) > 1 else tableSchema[0]
+        tableDb = ""
+        if tableSchema and len (tableSchema)>0:
+            tableSchema = tableSchema.split(".")
+            tableDb = '%s.' %tableSchema[0] if len(tableSchema)>1 else ""
+            tableSchema = ".".join(tableSchema[1:]) if len(tableSchema) > 1 else tableSchema[0]
         self.default = "SQL Structure is not implemented ;"
         #### SQL SERVER
         sql = """

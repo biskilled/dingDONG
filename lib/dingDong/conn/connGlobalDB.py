@@ -110,7 +110,8 @@ class baseGlobalDb (baseBatch):
         self.connIsTar  = self.setProperties (propKey=eJson.jValues.IS_TARGET, propVal=connIsTar)
         self.connIsSql  = self.setProperties (propKey=eJson.jValues.IS_SQL, propVal=connIsSql)
         self.sqlFolder  = self.setProperties (propKey=eJson.jValues.FOLDER, propVal=None)
-        self.sqlFullFile= self.setProperties(propKey=eJson.jValues.URL_FILE, propVal=None)
+        self.sqlFullFile= self.setProperties(propKey=eJson.jValues.FILE, propVal=None)
+
 
         self.defaultSchema  = self.DEFAULTS[eJson.jValues.SCHEMA]
         self.defaulNull     = self.DEFAULTS[eJson.jValues.EMPTY]
@@ -153,6 +154,7 @@ class baseGlobalDb (baseBatch):
         p("CONNECTED, DB TYPE: %s, %s" % (self.conn, objName, ), "ii")
 
     def connect(self):
+        odbc = None
         try:
             if eConn.MYSQL == self.conn:
                 import pymysql
@@ -185,10 +187,12 @@ class baseGlobalDb (baseBatch):
                 import sqlite3 as sqlite
                 self.connDB = sqlite.connect(self.connUrl)  # , ansi=True
                 self.cursor = self.connDB.cursor()
-            else:
+            elif eConn.SQLSERVER == self.conn:
                 try:
-                    #import ceODBC as odbc
-                    import pyodbc as odbc
+                    if self.connExtraUrl and "py" in self.connExtraUrl:
+                        import pyodbc as odbc
+                    else:
+                        import ceODBC as odbc
                 except ImportError:
                     # p("ceODBC is not installed will try to load pyodbc", "ii")
                     try:
@@ -198,6 +202,11 @@ class baseGlobalDb (baseBatch):
                 if odbc:
                     self.connDB = odbc.connect(self.connUrl)  # ansi=True
                     self.cursor = self.connDB.cursor()
+            else:
+                import pyodbc as odbc
+                self.connDB = odbc.connect(self.connUrl)  # ansi=True
+                self.cursor = self.connDB.cursor()
+                p("CONN %s is not defined, using PYODBC connection " %self.conn, "w")
             return True
         except ImportError:
             p("%s is not installed" % (self.conn), "e")
@@ -409,7 +418,7 @@ class baseGlobalDb (baseBatch):
             tableDb     = queryTableAndColunDic[tbl][qp.TABLE_DB]
             tableColumns = queryTableAndColunDic[tbl][qp.TABLE_COLUMN]
 
-            tableSchema = '%s.%s'%(tableDb, tableSchema) if tableDb else tableSchema
+            tableSchema = '%s.%s'%(tableDb, tableSchema) if tableDb else tableSchema if tableSchema else None
 
             for colD in tableColumns:
                 colTupleName = colD[0]

@@ -41,7 +41,7 @@ def execQuery (sqlWithParamList, connObj, sqlFolder=None, msg=None ):
         return
 
     if isinstance(sqlWithParamList, basestring):
-        sqlWithParamList = [(sqlWithParamList,{})]
+        sqlWithParamList = [(sqlWithParamList,config.QUERY_PARAMS)]
 
     allFiles    = OrderedDict()
     sqlFiles    = []
