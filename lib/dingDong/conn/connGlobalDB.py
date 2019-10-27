@@ -548,7 +548,7 @@ class baseGlobalDb (baseBatch):
             p("TABLE %s DID NOT CHANGED  >>>>>" % (tableName), "ii")
             return isChanged, newHistoryTable
         else:
-            if self.update > 1:
+            if self.update == eJson.jUpdate.NO_UPDATE:
                 p("TABLE STRUCTURE CHANGED, UPDATE IS NOT ALLOWED, NO CHANGE", "w")
                 return isChanged, newHistoryTable
             else:

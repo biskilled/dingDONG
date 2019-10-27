@@ -60,7 +60,7 @@ class baseBatch ():
         self.creeateFromObjName = self.setProperties (propKey=eJson.jValues.CREATE )
         self.versionManager = versionManager
 
-        isObjectCanBeUpdate = self.connPropDict[eJson.jValues.UPDATABLE] if eJson.jValues.UPDATABLE in self.connPropDict else DEFAULTS[eJson.jValues.UPDATABLE]
+        isObjectCanBeUpdate = self.connPropDict[eJson.jValues.UPDATABLE] if self.connPropDict and eJson.jValues.UPDATABLE in self.connPropDict else DEFAULTS[eJson.jValues.UPDATABLE]
 
         if not isObjectCanBeUpdate and self.update == eJson.jUpdate.UPDATE:
             config.DING_ADD_OBJECT_DATA = True

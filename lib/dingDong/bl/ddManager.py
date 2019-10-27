@@ -370,6 +370,8 @@ class ddManager (object):
                         mrgTarget.connObj   = node[k][eJson.jMergeValues.TARGET]
                         mrgTarget.connIsTar = True
                         mrgTarget.connIsSrc = False
+                        if eJson.jValues.UPDATE in node[k]:
+                            mrgTarget.update = node[k][eJson.jValues.UPDATE]
                         sttMerge = self.updateTargetBySourceAndStt(src=mrgSource, tar=mrgTarget)
                         mrgTarget.create(stt=sttMerge,addIndex=self.addIndex)
                         mrgTarget.close()
