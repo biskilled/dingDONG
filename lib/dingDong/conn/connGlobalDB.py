@@ -711,12 +711,13 @@ class baseGlobalDb (baseBatch):
                 tarColumnName = '%s%s%s' % (pre, tarColumn, pos)
                 if eJson.jSttValues.SOURCE in tarToSrc[col] and tarToSrc[col][eJson.jSttValues.SOURCE]:
                     srcColumnName = tarToSrc[col][eJson.jSttValues.SOURCE].replace(pre, "").replace(pos, "").lower()
-                    if srcColumnName in existingColumnsL:
+                    if srcColumnName in existingColumnsByTargetL:
+                        srcColumnName = '%s As %s' % (existingColumnsByTargetL[srcColumnName], tarColumnName) if addAsTaret else existingColumnsByTargetL[srcColumnName]
+                    elif srcColumnName in existingColumnsL:
                         srcColumnName = '%s As %s' % (existingColumnsL[srcColumnName], tarColumnName) if addAsTaret else existingColumnsL[srcColumnName]
                     elif srcColumnName in existingColumnsLFull:
                         srcColumnName = '%s As %s' % (existingColumnsLFull[srcColumnName], tarColumnName) if addAsTaret else existingColumnsLFull[srcColumnName]
-                    elif srcColumnName in existingColumnsByTargetL:
-                        srcColumnName = '%s As %s' % (existingColumnsByTargetL[srcColumnName], tarColumnName) if addAsTaret else existingColumnsByTargetL[srcColumnName]
+
                     else:
                         p("%s: %s, SOURCE COLUMN LISTED IN STT NOT EXISTS IN SOURCE TABLE, IGNORE COLUMN !!!!, OBJECT:\n%s" % (self.conn, tarToSrc[col][eJson.jSttValues.SOURCE], self.connObj), "e")
                         continue

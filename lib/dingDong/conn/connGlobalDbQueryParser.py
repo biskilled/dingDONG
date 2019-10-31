@@ -86,7 +86,6 @@ def extract_tableAndColumns (sql):
                 ret[QUERY_NO_TABLE] = {TABLE_ALIAS:None, TABLE_SCHEMA:None,TABLE_DB:None, TABLE_COLUMN:[]}
             ret[QUERY_NO_TABLE][TABLE_COLUMN].extend ( columns[tbl] )
 
-
     return ret
 
 def removeProps (sql):

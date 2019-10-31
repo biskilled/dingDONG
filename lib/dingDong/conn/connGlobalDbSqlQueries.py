@@ -218,7 +218,7 @@ class setSqlQuery (baseSqlQuery):
     def setSqlMerge (self, dstTable, srcTable, mergeKeys, colList , colFullList):
         ### SQL AND DEFAULT
         sql = "MERGE INTO " + dstTable + " as t USING " + srcTable + " as s ON ("
-        colOnMerge = " AND ".join(["ISNULL (t." + c + ",'')= ISNULL (s." + c + ",'')" for c in mergeKeys])
+        colOnMerge = " AND ".join(["t." + c + " = s." + c  for c in mergeKeys])
         sql += colOnMerge + ") \n WHEN MATCHED %s UPDATE SET \n"
         for c in colList:
             # Merge only is source is not null
