@@ -219,18 +219,27 @@ class setSqlQuery (baseSqlQuery):
         ### SQL AND DEFAULT
         sql = "MERGE INTO " + dstTable + " as t USING " + srcTable + " as s ON ("
         colOnMerge = " AND ".join(["t." + c + " = s." + c  for c in mergeKeys])
-        sql += colOnMerge + ") \n WHEN MATCHED %s UPDATE SET \n"
-        for c in colList:
-            # Merge only is source is not null
-            sql += "t." + c + "=" + "case when s." + c + " is null or len(s." + c + ")<1 then t." + c + " else s." + c + " End,\n"
-        sql = sql[:-2] + "\n"
+        if colList and len(colList)>0:
+            sql += colOnMerge + ") \n WHEN MATCHED %s UPDATE SET \n"
+            for c in colList:
+                # Merge only is source is not null
+                sql += "t." + c + "=" + "case when s." + c + " is null or len(s." + c + ")<1 then t." + c + " else s." + c + " End,\n"
+            sql = sql[:-2] + "\n"
+        else:
+            sql += colOnMerge + ") \n"
+
         sql += " WHEN NOT MATCHED %s \n"
         sql += " INSERT (" + ",".join([c for c in colFullList]) + ") \n"
         sql += " VALUES  (" + ",".join(["s." + c for c in colFullList]) + "); "
 
-        self.default = sql %("THEN","THEN")
+        if colList and len(colList) > 0:
+            self.default = sql %("THEN","THEN")
+            self.connQuery[eConn.POSTGESQL] = sql %("","")
+        else:
+            self.default = sql % ("THEN")
+            self.connQuery[eConn.POSTGESQL] = sql % ("")
+
         self.connQuery[eConn.SQLSERVER] = self.default
-        self.connQuery[eConn.POSTGESQL] = sql %("","")
 
     def setSqlIsExists(self, tableName, tableSchema):
         fullTableName = '%s.%s' %(tableSchema, tableName) if tableSchema else tableName

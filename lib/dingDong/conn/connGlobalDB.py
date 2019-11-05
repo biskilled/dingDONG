@@ -1096,6 +1096,7 @@ class baseGlobalDb (baseBatch):
                             p("USING %s AS SQL QUERY " %(q[0]),"ii")
                             self.connObj = q[1]
                             self.connIsSql = True
+                            self.connSql = q[1]
                             foundQuery = True
                             break
                     else:

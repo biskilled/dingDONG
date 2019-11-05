@@ -167,7 +167,7 @@ class connFile (baseBatch):
             else:
                 p("FILE %s EXISTS, SIZE %s STRUCURE DID NOT CHANGED !! " % (fullPath, str(actulSize)), "ii")
 
-            if toUpdateFile and config.TRACK_HISTORY:
+            if toUpdateFile and config.DING_TRACK_OBJECT_HISTORY:
                 oldName = None
                 if (os.path.isfile(fullPath)):
                     oldName = fileNameNoExtenseion + "_" + str(time.strftime('%y%m%d')) + fimeNameExtension
