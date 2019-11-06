@@ -31,6 +31,8 @@ Config.CONN_URL = {
 
     file default datatype can be found at dingDong.conn.baseBatch under DEFAULTS values (currently set to VARCHAR(200) for all relation Dbs   
 """
+source : ["s"]
+
 nodesToLoad = [
     {"source": ["file", "DATAELEMENTDESCRIPTION.csv"],
      "target": ["sqlite", "dateElements_Desc"]},
