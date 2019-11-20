@@ -54,6 +54,7 @@ class dingDong:
         self.propcesses     = config.DONG_MAX_PARALLEL_THREADS
         self.sqlFolder      = config.SQL_FOLDER_DIR
         self.connDict       = connDict
+        self.setCounter     = 0
 
         self.Set(dicObj=self._dicObj, filePath=self._filePath,
                 dirData=self._dirData, includeFiles=self._includeFiles,
@@ -79,6 +80,7 @@ class dingDong:
         self._includeFiles  = includeFiles
         self._notIncludeFiles=notIncludeFiles
         self.connDict = connDict if connDict else self.connDict
+        self.setCounter +=1
 
         if dicObj or filePath or dirData or includeFiles or notIncludeFiles \
                 or connDict or sqlFolder:
@@ -91,7 +93,10 @@ class dingDong:
         self.propcesses = processes if processes else self.propcesses
 
         self._dirLogs = dirLogs if dirLogs else config.LOGS_DIR
-        if self._dirLogs:
+
+        ## Set logs only once !!
+        if self._dirLogs and self.setCounter==1:
+            print ("Why like this .... ")
             LOGGER_OBJECT.setLogsFiles(logDir=self._dirLogs)
 
     def ding (self, destList=None, jsName=None, jsonNodes=None):
