@@ -96,7 +96,6 @@ class dingDong:
 
         ## Set logs only once !!
         if self._dirLogs and self.setCounter==1:
-            print ("Why like this .... ")
             LOGGER_OBJECT.setLogsFiles(logDir=self._dirLogs)
 
     def ding (self, destList=None, jsName=None, jsonNodes=None):
