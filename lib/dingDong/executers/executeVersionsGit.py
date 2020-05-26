@@ -30,10 +30,10 @@ import io
 import getpass
 
 
-from dingDong.misc.logger   import p
-from dingDong.misc.enumsJson import eConn
-from dingDong.conn.connGlobalDB import baseGlobalDb
-from dingDong.config import config
+from dingDONG.misc.logger   import p
+from dingDONG.misc.enums import eConn
+from dingDONG.conn.connDB import connDb
+from dingDONG.config import config
 
 class gitTypes (object):
     MODIFIED    = 'MODIFIED'
@@ -426,7 +426,7 @@ class ops():
                     p('Error processing %s: %s' %(content.path, exc))
 
 class dbVersions ():
-    def __init__ (self, folder=None, vFileName=None, vFileData=None, url=None, conn=eConn.SQLSERVER, tbl=None):
+    def __init__ (self, folder=None, vFileName=None, vFileData=None, url=None, conn=eConn.types.SQLSERVER, tbl=None):
         self.isValidFile = False
         self.isValidDb   = False
         self.folder     = None
@@ -450,7 +450,7 @@ class dbVersions ():
                 p("FILE VERSION IS ACTIVATED, VERSION:%s LOGGD INTO: %s" %(self.version, str(vFileData)),"i")
 
             if conn and url and tbl:
-                self.db     = baseGlobalDb(conn=conn, connUrl=url)
+                self.db     = connDb(connType=conn, connUrl=url)
                 self.tbl    = tbl
                 self.isValidD= self.__setVersionFromDb()
 

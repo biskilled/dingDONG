@@ -18,27 +18,29 @@
 
 from collections import OrderedDict
 
-from dingDong.conn.connGlobalDB   import baseGlobalDb
-from dingDong.misc.enumsJson      import eConn, eJson, findProp
+from dingDONG.conn.connDB   import connDb
+from dingDONG.misc.enums     import eConn, eJson
 
-DEFAULTS    = { eJson.jValues.DEFAULT_TYPE: 'varchar(100)', eJson.jValues.SCHEMA: 'dbo',
-                eJson.jValues.EMPTY: 'Null', eJson.jValues.COLFRAME: ("[", "]"), eJson.jValues.SP: {}}
+DEFAULTS    = { eConn.defaults.DEFAULT_TYPE: 'varchar(100)', eConn.defaults.TABLE_SCHEMA: 'dbo',
+                eConn.defaults.COLUMNS_NULL: 'Null', eConn.defaults.COLUMN_FRAME: ("[", "]"), eConn.defaults.SP: {}}
 
-DATA_TYPES  = { eConn.dataType.DB_VARCHAR:['varchar', 'longchar', 'bit', 'ntext'],
-                    eConn.dataType.DB_INT:['integer', 'counter'],
-                    eConn.dataType.DB_FLOAT:['double'],
-                    eConn.dataType.DB_DECIMAL:['decimal']
+DATA_TYPES  = { eConn.dataTypes.DB_VARCHAR:['varchar', 'longchar', 'bit', 'ntext'],
+                    eConn.dataTypes.DB_INT:['integer', 'counter'],
+                    eConn.dataTypes.DB_FLOAT:['double'],
+                    eConn.dataTypes.DB_DECIMAL:['decimal']
                     }
 
 
-class access (baseGlobalDb):
-    def __init__ (self, conn=None, connUrl=None, connExtraUrl=None, connName=None,
-                  connObj=None, connPropDict=None, connFilter=None, connIsTar=False,
-                  connIsSrc=False, connIsSql=False):
+class access (connDb):
+    def __init__ (self, propertyDict=None, connType=None, connName=None,
+                  connIsTar=False, connIsSrc=False, connIsSql=False,
+                  connUrl=None,  connTbl=None, connFilter=None):
 
-        baseGlobalDb.__init__(self, conn=conn, connUrl=connUrl, connExtraUrl=connExtraUrl, connName=connName,
-                                    connObj=connObj, connPropDict=connPropDict, connFilter=connFilter,
-                                    connIsTar=connIsTar, connIsSrc=connIsSrc, connIsSql=connIsSql)
+        connDb.__init__(self, propertyDict=propertyDict,connType=connType,connName=connName,
+                        connIsTar=connIsTar, connIsSrc=connIsSrc, connIsSql=connIsSql,
+                        connUrl=connUrl, connTbl=connTbl, connFilter=connFilter,
+                        defaults=DEFAULTS, dataTypes=DATA_TYPES
+                                    )
 
     def getStructure(self, tableName=None, tableSchema=None, sqlQuery=None):
         return self.__getAccessStructure(tableSchema=tableSchema, tableName=tableName)
@@ -50,23 +52,23 @@ class access (baseGlobalDb):
         tableName = '%s.%s' %(tableSchema, tableName) if tableSchema else tableName
         ret = OrderedDict()
 
-        if self.conn == eConn.ACCESS:
+        if self.conn == eConn.types.ACCESS:
             for row in self.cursor.columns():
-                val = {eJson.jSttValues.TYPE:self.defDataType, eJson.jSttValues.ALIACE:None}
+                val = {eJson.stt.TYPE:self.defDataType, eJson.stt.ALIACE:None}
 
                 if len(row) > 3:
                     curTblName = row[2].encode("utf-8")
                     if curTblName == tableName:
                         colName = row.column_name.encode("utf-8")
                         colType = row.type_name.lower()
-                        if colType in DATA_TYPES[eConn.ACCESS][eConn.dataType.DB_VARCHAR]:
+                        if colType in DATA_TYPES[eConn.types.ACCESS][eConn.dataTypes.DB_VARCHAR]:
                             colDefType = 'varchar(MAX)' if row.column_size > 4098 else 'varchar(%s)' % str(row.column_size)
-                        elif colType in DATA_TYPES[eConn.ACCESS][eConn.dataType.DB_DECIMAL]:
+                        elif colType in DATA_TYPES[eConn.types.ACCESS][eConn.dataTypes.DB_DECIMAL]:
                             colDefType = 'decimal(%s,%s)' % (str(row.column_size), str(row.decimal_digits))
                         else:
                             colDefType = colType
 
-                        val[eJson.jSttValues.TYPE] = colDefType
+                        val[eJson.stt.TYPE] = colDefType
 
                         ret[colName] = val
         return ret

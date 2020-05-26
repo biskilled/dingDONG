@@ -1,20 +1,20 @@
-# Copyright (c) 2017-2019, BPMK LTD (BiSkilled) Tal Shany <tal.shany@biSkilled.com>
+# Copyright (c) 2017-2020, BPMK LTD (BiSkilled) Tal Shany <tal.shany@biSkilled.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 #
-# This file is part of dingDong
+# This file is part of dingDONG
 #
 # dingDong is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# dingDong is distributed in the hope that it will be useful,
+# dingDONG is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
+# along with dingDONG.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import io
@@ -22,9 +22,10 @@ import json
 
 from collections import OrderedDict
 
-from dingDong.misc.logger import p
-from dingDong.misc.enumsJson import eJson, eConn, findProp
-from dingDong.config      import config
+from dingDONG.misc.logger import p
+from dingDONG.misc.enums import eJson, eConn
+from dingDONG.misc.globalMethods import findEnum, getAllProp
+from dingDONG.config      import config
 
 #xx = [[{'s':}],[{'prop':{'pp':45}},{}],{'sql1':'', 's':xxx,'t':'dsdsdsd'},{''},{}]
 # s : [obj] [conn,  obj],[conn. obj, filter]  {"conn":conn, "obj":obj, filter:"dddd"} // connection:"s":[]
@@ -36,9 +37,9 @@ class jsonParser (object):
                   dirData=None, includeFiles=None, notIncludeFiles=None, connDict=None, sqlFolder=None):
 
         if connDict and isinstance(connDict ,(dict, OrderedDict)):
-            config.CONN_URL.update(connDict)
+            config.CONNECTIONS.update(connDict)
 
-        self.connDict = config.CONN_URL
+        self.connDict = config.CONNECTIONS
         self.sqlFolder= sqlFolder
         self.__initConnDict ()
         self.listObj    = []
@@ -57,14 +58,14 @@ class jsonParser (object):
                 with io.open(filePath, encoding="utf-8") as jsonFile:  #
                     dicObj = json.load(jsonFile, object_pairs_hook=OrderedDict)
                     self.listObj.append (dicObj)
-                    msg+="loading data from file"
+                    msg+="Loading data from file"
             else:
                 p("file %s is not exists " %(filePath),"e")
 
         if dirData:
             self.dirData = dirData
             if not os.path.isdir(dirData):
-                p ("Folder not  exists : %s" % dirData, "e")
+                p ("Folder not exists : %s" % dirData, "e")
                 return
             else:
                 msg += "loading data from folder: %s" %dirData
@@ -97,7 +98,7 @@ class jsonParser (object):
         if self.listObj and len (self.listObj)>0:
             self.jsonMapp = list([])
             self.jsonName = ''
-            self.__initMetaDict(listObj=self.listObj, destList=None)
+            self.__initMetaDict(listObj=self.listObj, destList=destList)
 
             yield {self.jsonName:self.jsonMapp}
         elif self.listFiles and len (self.listFiles)>0:
@@ -106,7 +107,7 @@ class jsonParser (object):
                 self.jsonName = js
                 with io.open(os.path.join(self.dirData, js), encoding="utf-8") as jsonFile:  #
                     jText = json.load(jsonFile, object_pairs_hook=OrderedDict)
-                    self.__initMetaDict(listObj=jText, destList=None)
+                    self.__initMetaDict(listObj=jText, destList=destList)
                     yield {self.jsonName:self.jsonMapp}
 
     def getAllConnection (self, pr=True):
@@ -120,13 +121,13 @@ class jsonParser (object):
     def __initConnDict (self):
         newConnDict =  {}
         for conn in self.connDict:
-            dictProp = eJson.jValues.DIC.copy()
-            dictProp[eJson.jValues.NAME] = conn
-            dictProp[eJson.jValues.CONN] = conn
+            dictProp = {}
+            dictProp[eConn.props.NAME] = conn
+            dictProp[eConn.props.TYPE] = conn
 
             if isinstance( self.connDict[conn], dict ):
                 for k in self.connDict[conn]:
-                    origK = findProp(prop=k, obj=eJson.jValues )
+                    origK = findEnum(prop=k, obj=eConn.props )
                     if origK:
                         dictProp[origK] = self.connDict[conn][k]
                     elif k.lower() in newConnDict:
@@ -135,14 +136,14 @@ class jsonParser (object):
                         dictProp[k] = self.connDict[conn][k]
 
             elif isinstance( self.connDict[conn], str ):
-                dictProp[eJson.jValues.URL] = self.connDict[conn]
+                dictProp[eConn.props.URL] = self.connDict[conn]
             newConnDict[conn] = dictProp
 
             ### VALID CONNECTION TYPES
             errConn = []
             for conn in newConnDict:
-                if not findProp(prop=newConnDict[conn][eJson.jValues.CONN], obj=eConn):
-                    p("Remove Connection %s becouse prop: %s  is NOT VALID !!" %(str(conn), str(newConnDict[conn][eJson.jValues.CONN])), "e")
+                if not findEnum(prop=newConnDict[conn][eConn.props.TYPE], obj=eConn.types):
+                    p("Remove Connection %s becouse prop: %s  is NOT VALID !!" %(str(conn), str(newConnDict[conn][eConn.props.TYPE])), "e")
                     errConn.append (conn)
             for err in errConn:
                 del newConnDict[err]
@@ -159,16 +160,16 @@ class jsonParser (object):
                 newDict = OrderedDict()
 
                 for prop in node:
-                    k =  findProp (prop=prop.lower(), obj=eJson.jKeys, dictProp=node[prop])
+                    k =  findEnum (prop=prop, obj=eJson )
                     if k:
-                        if eJson.jKeys.SOURCE  in newDict and k == eJson.jKeys.QUERY:
+                        if eJson.SOURCE in newDict and k == eJson.QUERY:
                             p("Source and Query exists - Will use Query", "ii")
-                            del newDict[eJson.jKeys.SOURCE]
-                        elif eJson.jKeys.QUERY in newDict and k == eJson.jKeys.SOURCE:
+                            del newDict[eJson.SOURCE]
+                        elif eJson.QUERY in newDict and k == eJson.SOURCE:
                             p("Query and Source exists - Will use Source", "ii")
-                            del newDict[eJson.jKeys.QUERY]
+                            del newDict[eJson.QUERY]
 
-                        if k == eJson.jKeys.STT or k == eJson.jKeys.STTONLY:
+                        if k == eJson.STT or k == eJson.STTONLY:
                             newSttL = {x.lower(): x for x in node[prop]}
                             sttL = {x.lower(): x for x in stt}
                             for s in stt:
@@ -180,31 +181,31 @@ class jsonParser (object):
                                     stt[newSttL[s]] = node[prop][newSttL[s]]
                             newDict[k] =stt
                         # parse source / target / query
-                        elif k == eJson.jKeys.SOURCE or k == eJson.jKeys.TARGET or k == eJson.jKeys.QUERY:
+                        elif k == eJson.SOURCE or k == eJson.TARGET or k == eJson.QUERY:
                             newDict[k] = self.__sourceOrTargetOrQueryConn(propFullName=prop, propVal=node[prop])
                         # parse merge
-                        elif k == eJson.jKeys.MERGE:
+                        elif k == eJson.MERGE:
                             newDict[k] = self.__mergeConn(existsNodes=newDict, propFullName=prop, propVal=node[prop])
                         # parse column data types
-                        elif k == eJson.jKeys.COLUMNS:
+                        elif k == eJson.COLUMNS:
                             stt = self.__sttAddColumns (stt=stt, propVal=node[prop])
-                            newDict[eJson.jKeys.STTONLY] = stt
+                            newDict[eJson.STTONLY] = stt
 
-                            if eJson.jKeys.STT in newDict:
-                                del newDict[eJson.jKeys.STT]
+                            if eJson.STT in newDict:
+                                del newDict[eJson.STT]
 
                         # parse column mapping
-                        elif k == eJson.jKeys.MAP:
+                        elif k == eJson.MAP:
                             stt = self.__sttAddMappings(stt=stt, propVal=node[prop])
-                            if eJson.jKeys.STT in newDict:
-                                newDict[eJson.jKeys.STT] = stt
+                            if eJson.STT in newDict:
+                                newDict[eJson.STT] = stt
                             else:
-                                newDict[eJson.jKeys.STTONLY] = stt
-                        elif k == eJson.jKeys.INDEX:
+                                newDict[eJson.STTONLY] = stt
+                        elif k == eJson.INDEX:
                             index = self.__index(propVal=node[prop])
                             if index:
-                                newDict[eJson.jKeys.INDEX] = index
-                        elif k == eJson.jKeys.CREATE:
+                                newDict[eJson.INDEX] = index
+                        elif k == eJson.CREATE:
                             newDict[k] = self.__createFrom(propVal=node[prop])
                         else:
                             p ("%s not implemented !" %(k), "e")
@@ -218,102 +219,106 @@ class jsonParser (object):
     ### List option : [obj] [conn,  obj],[conn. obj, filter]  // connection Name defoult
     ### FINAL : {eJK.CONN:None, eJK.OBJ:None, eJK.FILTER:None, eJK.URL:None, eJK.URLPARAM:None}
     def __sourceOrTargetOrQueryConn(self, propFullName, propVal):
-        ret = eJson.jValues.DIC.copy()
+        ret = {}
         if isinstance(propVal, str):
-            ret[eJson.jValues.NAME] = propFullName
-            ret[eJson.jValues.TYPE] = propFullName
-            ret[eJson.jValues.OBJ]  = propVal
+            ret[eConn.props.NAME] = propFullName
+            ret[eConn.props.TYPE] = propFullName
+            ret[eConn.props.TBL]  = propVal
         elif isinstance(propVal, list):
-            ret[eJson.jValues.NAME] = propFullName
-            ret[eJson.jValues.TYPE] = propFullName
+            ret[eConn.props.NAME] = propFullName
+            ret[eConn.props.TYPE] = propFullName
             if len(propVal) == 1:
-                ret[eJson.jValues.CONN] = propFullName
-                ret[eJson.jValues.OBJ] = propVal[0]
+                ret[eConn.props.TYPE] = propFullName
+                ret[eConn.props.TBL] = propVal[0]
             elif len(propVal) == 2:
-                ret[eJson.jValues.CONN] = propVal[0]
-                ret[eJson.jValues.OBJ]  = propVal[1]
+                ret[eConn.props.TYPE] = propVal[0]
+                ret[eConn.props.TBL]  = propVal[1]
             elif len(propVal) == 3:
-                ret[eJson.jValues.CONN]  = propVal[0]
-                ret[eJson.jValues.OBJ]   = propVal[1]
+                ret[eConn.props.TYPE]  = propVal[0]
+                ret[eConn.props.TBL]   = propVal[1]
 
                 if self.__isDigitStr(propVal[2]):
-                    ret[eJson.jValues.UPDATE] =  self.__setUpdate (propVal[2])
+                    ret[eConn.props.UPDATE] =  self.__setUpdate (propVal[2])
                 else:
-                    ret[eJson.jValues.FILTER]= propVal[2]
+                    ret[eConn.props.FILTER]= propVal[2]
             elif len(propVal) == 4:
-                ret[eJson.jValues.CONN]     = propVal[0]
-                ret[eJson.jValues.OBJ]      = propVal[1]
-                ret[eJson.jValues.FILTER]   = propVal[2]
-                ret[eJson.jValues.UPDATE]   = self.__setUpdate (propVal[3])
+                ret[eConn.props.TYPE]     = propVal[0]
+                ret[eConn.props.TBL]      = propVal[1]
+                ret[eConn.props.FILTER]   = propVal[2]
+                ret[eConn.props.UPDATE]   = self.__setUpdate (propVal[3])
 
             else:
                 p("%s: Not valid list valuues, must 1,2 or 3 VALUE IS: \n %s" % (str(propFullName),str(propVal)), "e")
         elif isinstance(propVal, dict):
-            self.__notVaildProp(ret, propVal, propFullName)
+            ret = self.__notVaildProp( currentPropDic=propVal, enumPropertyClass=eConn.props)
+
+            if eConn.props.NAME not in ret and eConn.props.TYPE in ret:
+                ret[ eConn.props.NAME ] = ret[ eConn.props.TYPE ]
+
+            if eConn.props.TYPE not in ret and eConn.props.NAME in ret:
+                ret[ eConn.props.TYPE ] = ret[ eConn.props.NAME ]
+
         else:
             p("Not valid values: %s " %(propVal),"e")
             return {}
 
-        if findProp (prop=ret[eJson.jValues.TYPE], obj=eJson.jKeys)  == eJson.jKeys.QUERY:
-            ret[eJson.jValues.IS_SQL] = True
+        if findEnum (prop=ret[eConn.props.NAME], obj=eJson)  == eJson.QUERY:
+            ret[eConn.props.IS_SQL] = True
         return ret
 
     # Must have source / target / query in existing nodes
     # [obj], [obj, keys]
     def __mergeConn (self, existsNodes, propFullName, propVal):
-        ret     = eJson.jMergeValues.DIC.copy()
+        ret     = eJson.merge.DIC.copy()
         srcConn = None
 
-        if eJson.jKeys.TARGET in existsNodes:
-            srcConn = existsNodes[eJson.jKeys.TARGET]
-        elif eJson.jKeys.SOURCE in existsNodes:
-            srcConn = existsNodes[eJson.jKeys.SOURCE]
-        elif eJson.jKeys.QUERY in existsNodes:
-            srcConn = existsNodes[eJson.jKeys.QUERY]
+        if eJson.TARGET in existsNodes:
+            srcConn = existsNodes[eJson.TARGET]
+        elif eJson.SOURCE in existsNodes:
+            srcConn = existsNodes[eJson.SOURCE]
+        elif eJson.QUERY in existsNodes:
+            srcConn = existsNodes[eJson.QUERY]
 
         if not srcConn:
             p("There is no query/ source or target to merge with. quiting. val: %s " %(str(propVal)) ,"e")
             return {}
 
         ### Update values from Source connection
-        ret[eJson.jMergeValues.SOURCE]  = srcConn[eJson.jValues.OBJ]
-        ret[eJson.jValues.CONN]         = srcConn[eJson.jValues.CONN]
-        ret[eJson.jValues.URL]          = srcConn[eJson.jValues.URL]
-        ret[eJson.jValues.URLPARAM]     = srcConn[eJson.jValues.URLPARAM]
-        ret[eJson.jValues.URL_FILE]     = srcConn[eJson.jValues.URL_FILE]
+        ret[eJson.merge.SOURCE]  = srcConn[eConn.props.TBL]
+        ret[eConn.props.TYPE]    = srcConn[eConn.props.TYPE]
 
         if isinstance(propVal, str):
-            ret[eJson.jValues.NAME]         = propFullName
-            ret[eJson.jMergeValues.TARGET]  = propVal
+            ret[eConn.props.NAME]         = propFullName
+            ret[eJson.merge.TARGET]  = propVal
 
         elif isinstance(propVal, list):
-            ret[eJson.jValues.NAME] = propFullName
+            ret[eConn.props.NAME] = propFullName
             if len(propVal) == 1:
-                ret[eJson.jMergeValues.TARGET]  = propVal[0]
+                ret[eJson.merge.TARGET]  = propVal[0]
             elif len(propVal) == 2:
-                ret[eJson.jMergeValues.TARGET] = propVal[0]
+                ret[eJson.merge.TARGET] = propVal[0]
                 if str(propVal[1]).isdigit():
-                    ret[eJson.jValues.UPDATE] = self.__setUpdate(propVal[1])
+                    ret[ eConn.props.UPDATE] = self.__setUpdate(propVal[1])
                 else:
-                    ret[eJson.jMergeValues.MERGE]  = propVal[1]
+                    ret[eJson.merge.MERGE]  = propVal[1]
             elif len(propVal) == 3:
-                ret[eJson.jMergeValues.TARGET]  = propVal[0]
-                ret[eJson.jMergeValues.MERGE]   = propVal[1]
-                ret[eJson.jValues.UPDATE]       = self.__setUpdate (propVal[2])
+                ret[eJson.merge.TARGET]  = propVal[0]
+                ret[eJson.merge.MERGE]   = propVal[1]
+                ret[eConn.props.UPDATE]       = self.__setUpdate (propVal[2])
             else:
                 p("%s: Not valid merge valuues, must have obj and merge key..." % (str(propVal)), "e")
         elif isinstance(propVal, dict):
-            self.__notVaildProp( ret, propVal, propFullName )
+            self.__notVaildProp( currentPropDic=propVal, enumPropertyClass=eJson.merge )
         else:
             p("Not valid values")
 
-        ret[eJson.jValues.OBJ] = ret[eJson.jMergeValues.TARGET]
+        ret[ eConn.props.TBL ] = ret[eJson.merge.TARGET]
 
         return ret
 
     def __setUpdate (self, val):
         if str(val).isdigit():
-            if findProp(prop=val, obj=eJson.jUpdate):
+            if findEnum(prop=val, obj=eConn.updateMethod):
                 return val
             else:
                 p("THERE IS %s WHICH IS MAPPED TO UPDATE PROPERTY, MUST HAVE -1(drop), 1(UPDATE), 2(NO_UPDATE), USING -1 DROP--> CREATE METHOD ")
@@ -330,9 +335,9 @@ class jsonParser (object):
 
         for tar in propVal:
             if tar.lower() in existsColumnsDict:
-                stt[ existsColumnsDict[tar.lower()] ][eJson.jSttValues.TYPE] = propVal[tar]
+                stt[ existsColumnsDict[tar.lower()] ][eJson.stt.TYPE] = propVal[tar]
             else:
-                stt[tar] = {eJson.jSttValues.TYPE:propVal[tar]}
+                stt[tar] = {eJson.stt.TYPE:propVal[tar]}
         return stt
 
     # Insert / Add new column types
@@ -343,9 +348,9 @@ class jsonParser (object):
         existsColumnsDict = {x.lower(): x for x in stt.keys()}
         for tar in propVal:
             if tar.lower() in existsColumnsDict:
-                stt[ existsColumnsDict[tar.lower()] ][eJson.jSttValues.SOURCE] = propVal[tar]
+                stt[ existsColumnsDict[tar.lower()] ][eJson.stt.SOURCE] = propVal[tar]
             else:
-                stt[tar][eJson.jSttValues.SOURCE] = propVal[tar]
+                stt[tar][eJson.stt.SOURCE] = propVal[tar]
         return stt
 
     # Special connection execution
@@ -353,24 +358,24 @@ class jsonParser (object):
     def __uniqueProc(self, propVal):
         ret= {}
         if isinstance(propVal ,list) and len(propVal)==2:
-            ret[eJson.jValues.CONN]     = propVal[0]
-            ret[eJson.jValues.OBJ]      = propVal[1]
-            ret[eJson.jValues.FOLDER]   = self.sqlFolder
+            ret[eConn.props.TYPE]     = propVal[0]
+            ret[eConn.props.TBL]      = propVal[1]
+            ret[eConn.props.FOLDER]   = self.sqlFolder
 
-        elif isinstance(propVal ,dict) and eJson.jValues.CONN in propVal and eJson.jValues.OBJ in propVal:
+        elif isinstance(propVal ,dict) and eConn.props.TYPE in propVal and eConn.props.TBL in propVal:
             ret = propVal
 
-        if eJson.jValues.OBJ in ret and ret[eJson.jValues.OBJ] is not None and '.sql' in ret[eJson.jValues.OBJ]:
-            fileName = ret[eJson.jValues.OBJ]
+        if eConn.props.TBL in ret and ret[eConn.props.TBL] is not None and '.sql' in ret[eConn.props.TBL]:
+            fileName = ret[eConn.props.TBL]
             if os.path.isfile(fileName):
-                ret[eJson.jValues.FILE] = fileName
-            if eJson.jValues.FOLDER in ret and ret[eJson.jValues.FOLDER] is not None:
-                folderPath = ret[eJson.jValues.FOLDER]
+                ret[eConn.props.FILE] = fileName
+            if eConn.props.FOLDER in ret and ret[eConn.props.FOLDER] is not None:
+                folderPath = ret[eConn.props.FOLDER]
                 if os.path.isfile( os.path.join(folderPath, fileName)):
-                    ret[eJson.jValues.FILE] = os.path.join(folderPath, fileName)
+                    ret[eConn.props.FILE] = os.path.join(folderPath, fileName)
 
-        if isinstance(ret[eJson.jValues.OBJ], (list,tuple)):
-            ret[eJson.jValues.OBJ] = "".join(ret[eJson.jValues.OBJ])
+        if isinstance(ret[eConn.props.TBL], (list,tuple)):
+            ret[eConn.props.TBL] = "".join(ret[eConn.props.TBL])
 
         return ret
 
@@ -389,23 +394,23 @@ class jsonParser (object):
                 p("INDEX MUST BE DICTIOANY, FORMAT {'C'':list_column_index, 'ic':is cluster (True/False), 'iu': is unique (True/False)}")
                 continue
 
-            returnDict = {eJson.jValues.INDEX_COLUMS:[],eJson.jValues.INDEX_CLUSTER:True,eJson.jValues.INDEX_UNIQUE:False}
+            returnDict = {eConn.props.DB_INDEX_COLUMS:[],eConn.props.DB_INDEX_CLUSTER:True,eConn.props.DB_INDEX_UNIQUE:False}
             for node in indexDict:
-                k =  findProp (prop=node.lower(), obj=eJson.jValues, dictProp=indexDict[node])
+                k =  findEnum (prop=node.lower(), obj=eJson.index)
 
                 if not k:
                     p("INDEX VALUES IS NOT VALID: %s, IGNORE INDEX. VALID FORMAT: FORMAT {'C'':list_column_index, 'ic':is cluster (True/False), 'iu': is unique (True/False)}")
                     break
 
-                if k == eJson.jValues.INDEX_COLUMS:
+                if k == eConn.props.DB_INDEX_COLUMS:
                     if isinstance(indexDict[node], list ):
-                        returnDict[eJson.jValues.INDEX_COLUMS].extend(indexDict[node])
+                        returnDict[eConn.props.DB_INDEX_COLUMS].extend(indexDict[node])
                     else:
-                        returnDict[eJson.jValues.INDEX_COLUMS].append(indexDict[node])
-                elif k == eJson.jValues.INDEX_CLUSTER:
-                    if not indexDict[node]: returnDict[eJson.jValues.INDEX_CLUSTER] = False
-                elif k == eJson.jValues.INDEX_UNIQUE:
-                    if indexDict[node]: returnDict[eJson.jValues.INDEX_UNIQUE] = True
+                        returnDict[eConn.props.DB_INDEX_COLUMS].append(indexDict[node])
+                elif k == eConn.props.DB_INDEX_CLUSTER:
+                    if not indexDict[node]: returnDict[eConn.props.DB_INDEX_CLUSTER] = False
+                elif k == eConn.props.DB_INDEX_UNIQUE:
+                    if indexDict[node]: returnDict[eConn.props.DB_INDEX_UNIQUE] = True
                 else:
                     p("INDEX - UNRECOGNIZED KEY %s IN DICT:%s IGNORE. VALID FORMAT: FORMAT {'C'':list_column_index, 'ic':is cluster (True/False), 'iu': is unique (True/False)}" %(str(node),str(indexDict)), "e")
             ret.append(indexDict)
@@ -414,20 +419,23 @@ class jsonParser (object):
     def __createFrom(self, propVal):
         ret = OrderedDict()
         if isinstance(propVal, str):
-            ret[eJson.jValues.CONN] = propVal
+            ret[eConn.props.TYPE] = propVal
         elif isinstance(propVal, (tuple, list)):
-            ret[eJson.jValues.CONN] = propVal[0]
-            ret[eJson.jValues.OBJ]  = propVal[1]
+            ret[eConn.props.TYPE] = propVal[0]
+            ret[eConn.props.TBL]  = propVal[1]
         else:
             p("CREATE VALUES MUST BE STRING (connection name) OR LIST [connection name, object name], NOT VALID VALUES:%s" %str(propVal),"e" )
         return ret
 
-    def __notVaildProp(self, propDic, newPropDic, propFullName):
-        for k in newPropDic:
-            if k not in propDic:
-                p("baseParser->notValidProp: %s: not valid prop %s -> ignore" % (propFullName, k), "e")
-                del newPropDic[k]
-        return newPropDic
+    def __notVaildProp(self, currentPropDic, enumPropertyClass):
+        ret = {}
+        for k in currentPropDic:
+            prop = findEnum(prop=k, obj=enumPropertyClass)
+            if not prop:
+                p("%s: NOT VALID. LEGAL VALUES: %s -> ignore" % (k, str(getAllProp(enumPropertyClass))), "e")
+
+            ret[prop] = currentPropDic[k]
+        return ret
 
     def __isDigitStr(self, x):
         try:

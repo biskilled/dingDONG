@@ -15,5 +15,5 @@
 # You should have received a copy of the GNU General Public License
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
 
-from dingDong.bl.ddExecuter import dingDong         as DingDong
-from dingDong.config import config                  as Config
+from dingDONG.bl.dd import dingDONG as dingDONG
+from dingDONG.config import config  as Config

@@ -26,9 +26,9 @@ import multiprocessing
 from collections import OrderedDict
 from past.builtins import basestring
 
-from dingDong.config        import config
-from dingDong.misc.logger   import p, LOGGER_OBJECT
-from dingDong.misc.misc     import uniocdeStr
+from dingDONG.config                import config
+from dingDONG.misc.logger           import p, LOGGER_OBJECT
+from dingDONG.misc.globalMethods import uniocdeStr
 
 if 2 == sys.version_info[0]:
     reload(sys)

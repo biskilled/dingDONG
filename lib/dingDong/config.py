@@ -21,12 +21,14 @@ __metaclass__ = type
 import logging
 
 class config:
-    CONN_URL    =  {    'sql'    :"DRIVER={SQL Server};SERVER=server,1433;DATABASE=database;UID=uid;PWD=pass;",
+    CONNECTIONS   =  {    'sql'    :"DRIVER={SQL Server};SERVER=server,1433;DATABASE=database;UID=uid;PWD=pass;",
                         'oracle' :"DRIVER={SQL Server};SERVER=server,1433;DATABASE=database;UID=uid;PWD=pass;",
                         'mysql'  :"host=host, user=user, passwd=pass, db=db",
                         'vertica':"DRIVER=HPVertica;SERVER=server;DATABASE=database;PORT=5433;UID=user;PWD=pass",
                         'file'   :{'delimiter':',','header':True, 'folder':""}
                    }
+
+    VERSION_MANAGER = 'ttttt'
 
     QUERY_PARAMS    = {}
     SQL_FOLDER_DIR  = None

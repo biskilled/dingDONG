@@ -20,7 +20,7 @@ import logging
 import inspect
 import os
 
-from dingDong.config import config
+from dingDONG.config import config
 
 
 ### INTERNAL LOGGING CLASSES

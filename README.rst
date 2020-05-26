@@ -107,7 +107,7 @@ configuration properties can be found at `dingDONG documentation <https://dingdo
         available connection can be found at dingDong.misc.enumsJson.eConn
 
     """
-    Config.CONN_URL = {
+    Config.CONNECTIONS = {
         'sampleSql': {'conn': 'sql',"url": "<Sql server connection string>;UID=USER;PWD=PWD;"},
         'file': "C:\\dingDong\\",
         'sqlite': "C:\\dingDong\\sqlLiteDB.db"}
@@ -151,7 +151,7 @@ configuration properties can be found at `dingDONG documentation <https://dingdo
 :dirData:       Loading JSON files in this folder
 :includeFiles:  Include files to load from directory folder (dirData)
 :notIncldeFiles: Exclude files to load from directory folder (dirData)
-:connDict:      Equal to Config.CONN_URL, set connection URLs string
+:connDict:      Equal to Config.CONNECTIONS, set connection URLs string
 :processes:     Max number of parallel threading to load data (DONG module)
 
 ::
@@ -192,7 +192,7 @@ Full sample code::
     from dingDong import DingDong
     from dingDong import Config
 
-    Config.CONN_URL = {
+    Config.CONNECTIONS = {
         'x1'    : {'conn':'sql',"url":"DRIVER={SQL Server};SERVER=CPX-VLQ5GA42TW2\SQLEXPRESS;DATABASE=ContosoRetailDW;UID=bpmk;PWD=bpmk;"},
         'x2'    : {'conn':'sql',"url":"DRIVER={SQL Server};SERVER=CPX-VLQ5GA42TW2\SQLEXPRESS;DATABASE=ContosoRetailDW;UID=bpmk;PWD=bpmk;"},
         'file'  : "C:\\dingDong\\",

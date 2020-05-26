@@ -24,36 +24,36 @@ import time
 from collections import OrderedDict
 import pandas as pd
 
-from dingDong.conn.connGlobalDB import baseGlobalDb
-from dingDong.misc.enumsJson    import eConn, eJson, findProp
-from dingDong.misc.logger       import p
-from dingDong.misc.misc         import uniocdeStr
-from dingDong.config            import config
+from dingDONG.conn.connDB       import connDb
+from dingDONG.misc.enums        import eConn, eJson
+from dingDONG.misc.logger       import p
+from dingDONG.misc.globalMethods import uniocdeStr,setProperty
+from dingDONG.config            import config
 
-DEFAULTS    = { eJson.jValues.DEFAULT_TYPE: 'string', eJson.jValues.SCHEMA: None,
-                eJson.jValues.EMPTY: 'null', eJson.jValues.COLFRAME: ("", ""), eJson.jValues.SP: {}}
+DEFAULTS    = { eConn.defaults.DEFAULT_TYPE: 'string', eConn.defaults.TABLE_SCHEMA: None,
+                eConn.defaults.COLUMNS_NULL: 'null', eConn.defaults.COLUMN_FRAME: ("", ""), eConn.defaults.SP: {}}
 
-DATA_TYPES  = { eConn.dataType.DB_VARCHAR:['string', 'regex', 'array', 'ntext'],
-                    eConn.dataType.DB_INT:['int', 'long'],
-                    eConn.dataType.DB_FLOAT:['double'],
-                    eConn.dataType.DB_DATE:['date','timestamp']
+DATA_TYPES  = { eConn.dataTypes.DB_VARCHAR:['string', 'regex', 'array', 'ntext'],
+                    eConn.dataTypes.DB_INT:['int', 'long'],
+                    eConn.dataTypes.DB_FLOAT:['double'],
+                    eConn.dataTypes.DB_DATE:['date','timestamp']
                     }
 
 
-class mongo (baseGlobalDb):
-    def __init__ (self, connPropDict=None, conn=None, connUrl=None, connExtraUrl=None,
-                  connName=None,connObj=None,  connFilter=None, connIsTar=None,
-                  connIsSrc=None, connIsSql=None,
+class connMongo (connDb):
+    def __init__ (self, propertyDict=None, connType=None, connName=None,
+                  connIsTar=None, connIsSrc=None, connIsSql=None,
+                  connUrl=None, connTbl=None,  connFilter=None,
                   dbName=None, isStrict=True):
 
-        self.dbName = self.setProperties(propKey=eJson.jValues.DB_NAME, propDict=connPropDict, propVal=dbName)
+        self.dbName = setProperty( k=eConn.props.DB_NAME, o=propertyDict, setVal=dbName)
         self.isStrict = isStrict
         self.removeId = False
 
-        baseGlobalDb.__init__(self, connPropDict=connPropDict, conn=conn, connUrl=connUrl, connExtraUrl=connExtraUrl,
-                                    connName=connName, connObj=connObj, connFilter=connFilter,
-                                    connIsTar=connIsTar, connIsSrc=connIsSrc, connIsSql=connIsSql,
-                                    defaults=DEFAULTS, dataType=DATA_TYPES)
+        connDb.__init__(self, propertyDict=propertyDict, connType=connType, connName=connName,connUrl=connUrl,
+                        connIsTar=connIsTar, connIsSrc=connIsSrc, connIsSql=connIsSql,
+                        connTbl=connTbl, connFilter=connFilter,
+                        defaults=DEFAULTS, dataTypes=DATA_TYPES)
 
         ## MongoDb -> {filter}, {projection}
         self.connSql = None
@@ -99,7 +99,7 @@ class mongo (baseGlobalDb):
                 self.connObj = self.connSql
 
     def connect(self):
-        connDbName = self.setProperties(propKey=eJson.jValues.DB_NAME, propVal=self.dbName)
+        connDbName = self.setProperties(propKey=eConn.props.DB_NAME, propVal=self.dbName)
         self.connDB = pymongo.MongoClient(self.connUrl)
         if connDbName:
             self.cursor = self.connDB[connDbName]
@@ -158,33 +158,33 @@ class mongo (baseGlobalDb):
             ### loading strict collection
             collectionValidaton = {}
             for col in stt:
-                if eJson.jSttValues.ALIACE in stt[col] and stt[col][eJson.jSttValues.ALIACE] and len(
-                        stt[col][eJson.jSttValues.ALIACE]) > 0:
-                    colName = self.wrapColName(col=stt[col][eJson.jSttValues.ALIACE], remove=True)
+                if eJson.stt.ALIACE in stt[col] and stt[col][eJson.stt.ALIACE] and len(
+                        stt[col][eJson.stt.ALIACE]) > 0:
+                    colName = self.wrapColName(col=stt[col][eJson.stt.ALIACE], remove=True)
                 else:
                     colName = self.wrapColName(col=col, remove=True)
-                colType = stt[col][eJson.jSttValues.TYPE]
+                colType = stt[col][eJson.stt.TYPE]
                 collectionValidaton[colName] = {'bsonType':colType,'description':'must have %s' %(colType)}
 
             self.cursor.create_collection(tableName, validator = {'$jsonSchema':{'bsonType': "object",'properties':collectionValidaton}})
             p("MONGODB: %s COLLECTION CREATED, VALIDATION: %s" %(tableName, collectionValidaton))
 
         # Check for index
-        if addIndex and self.update != eJson.jUpdate.NO_UPDATE:
+        if addIndex and self.update !=  eConn.updateMethod.NO_UPDATE:
             self.addIndexToTable(tableName, addIndex)
 
         # uppdate = chane current structure (add, remove, update) and load history data into new structure
-        if self.update == eJson.jUpdate.UPDATE:
+        if self.update == eConn.updateMethod.UPDATE:
             if newHistoryTable and len(newHistoryTable) > 0:
                 pipeline = [{"$match": {}},{"$out": newHistoryTable}]
 
     def cloneObject(self, newStructure, tableName, tableSchema=None):
-        return baseGlobalDb.cloneObject(self, newStructure=newStructure, tableName=tableName, tableSchema=tableSchema )
+        return connDb.cloneObject(self, newStructure=newStructure, tableName=tableName, tableSchema=tableSchema )
 
     def compareExistToNew(self, existStructure, newStructureL, tableName, tableSchema):
         isChanged       = False
         newHistoryTable = None
-        updateDesc = 'UPDATE' if self.update == eJson.jUpdate.UPDATE else 'DROP CREATE' if self.update == eJson.jUpdate.DROP else 'WARNIN, NO UPDATE'
+        updateDesc = 'UPDATE' if self.update == eConn.updateMethod.UPDATE else 'DROP CREATE' if self.update == eConn.updateMethod.DROP else 'WARNIN, NO UPDATE'
 
         existStructureL = {x.lower(): x for x in existStructure}
 
@@ -192,11 +192,11 @@ class mongo (baseGlobalDb):
         for col in existStructureL:
             if col in newStructureL:
                 ## update column type
-                if existStructure[existStructureL[col]][eJson.jSttValues.TYPE].lower() != newStructureL[col][1].lower():
+                if existStructure[existStructureL[col]][eJson.stt.TYPE].lower() != newStructureL[col][1].lower():
                     isChanged = True
-                    existStructure[existStructureL[col]][eJson.jSttValues.TYPE] = newStructureL[col][1]
+                    existStructure[existStructureL[col]][eJson.stt.TYPE] = newStructureL[col][1]
 
-                    p("%s: CONN:%s, TABLE: %s, COLUMN %s, TYPE CHANGED, OLD: %s, NEW: %s" % (updateDesc, self.conn, tableName, col, existStructure[existStructureL[col]][eJson.jSttValues.TYPE],newStructureL[col][1]), "w")
+                    p("%s: CONN:%s, TABLE: %s, COLUMN %s, TYPE CHANGED, OLD: %s, NEW: %s" % (updateDesc, self.conn, tableName, col, existStructure[existStructureL[col]][eJson.stt.TYPE],newStructureL[col][1]), "w")
 
             ## REMOVE COLUMN
             else:
@@ -216,11 +216,11 @@ class mongo (baseGlobalDb):
             p("TABLE %s DID NOT CHANGED  >>>>>" % (tableName), "ii")
             return isChanged, newHistoryTable
         else:
-            if self.update == eJson.jUpdate.NO_UPDATE:
+            if self.update == eConn.updateMethod.NO_UPDATE:
                 p("TABLE STRUCTURE CHANGED, UPDATE IS NOT ALLOWED, NO CHANGE", "w")
                 return isChanged, newHistoryTable
             else:
-                if self.update == eJson.jUpdate.UPDATE and isChanged:
+                if self.update == eConn.updateMethod.UPDATE and isChanged:
                     collectionValidaton = {}
                     for col in removeColumns:
                         del existStructure[col]
@@ -230,7 +230,7 @@ class mongo (baseGlobalDb):
                     validatior = {'$jsonSchema':{'bsonType': "object",'properties':collectionValidaton}}
                     self.cursor.runCommand(collmod=tableName, validatior=validatior, validationLevel="moderate")
 
-                if config.TRACK_HISTORY:
+                if config.DING_TRACK_OBJECT_HISTORY:
                     p("TABLE HISTORY IS ON ...", "ii")
                     newHistoryTable = "%s_%s" % (tableName, str(time.strftime('%y%m%d')))
                     if (self.isExists(tableSchema=tableSchema, tableName=tableName)):
@@ -249,7 +249,7 @@ class mongo (baseGlobalDb):
         return isChanged, newHistoryTable
 
     def getStructure(self, tableName=None, tableSchema=None, sqlQuery=None):
-        return baseGlobalDb.getStructure(self, tableName=tableName, tableSchema=tableSchema, sqlQuery=sqlQuery)
+        return connDb.getStructure(self, tableName=tableName, tableSchema=tableSchema, sqlQuery=sqlQuery)
 
     """ INTERNAL USED: TABLE STRUCTURE : {ColumnName:{Type:ColumnType, ALIACE: ColumnName} .... } """
     def getDBStructure(self, tableName, tableSchema):
@@ -301,7 +301,7 @@ class mongo (baseGlobalDb):
         p("MONGODB ---> NOT IMPLEMENTED !!!!")
 
     def preLoading(self, tableName=None, tableSchema=None, sqlFilter=None):
-        return baseGlobalDb.preLoading(self, tableName=tableName, tableSchema=tableSchema, sqlFilter=sqlFilter)
+        return connDb.preLoading(self, tableName=tableName, tableSchema=tableSchema, sqlFilter=sqlFilter)
 
     """ INTERNAL USED: preLoading method """
     def truncate(self, tableName=None, tableSchema=None):
@@ -336,8 +336,8 @@ class mongo (baseGlobalDb):
             mongoColumnsL = [x.lower() for x in mongoColumns]
 
             for i, col in enumerate(tarToSrc):
-                if eJson.jSttValues.SOURCE in tarToSrc[col] and tarToSrc[col][eJson.jSttValues.SOURCE]:
-                    srcColumnName = tarToSrc[col][eJson.jSttValues.SOURCE].lower()
+                if eJson.stt.SOURCE in tarToSrc[col] and tarToSrc[col][eJson.stt.SOURCE]:
+                    srcColumnName = tarToSrc[col][eJson.stt.SOURCE].lower()
                     if srcColumnName in mongoColumnsL:
                         srcColumns.append(mongoColumnsL[srcColumnName])
                         tarColumns.append(col)
@@ -354,16 +354,16 @@ class mongo (baseGlobalDb):
                     tarColumns.append(col)
 
                 ### ADD FUNCTION
-                if eJson.jSttValues.FUNCTION in tarToSrc[col] and tarToSrc[col][eJson.jSttValues.FUNCTION]:
-                    fnc = eval(tarToSrc[col][eJson.jSttValues.FUNCTION])
+                if eJson.stt.FUNCTION in tarToSrc[col] and tarToSrc[col][eJson.stt.FUNCTION]:
+                    fnc = eval(tarToSrc[col][eJson.stt.FUNCTION])
                     fnOnRowsDic[i] = fnc if isinstance(fnc, (list, tuple)) else [fnc]
 
                 ### ADD EXECUTION FUNCTIONS
-                elif eJson.jSttValues.EXECFUNC in tarToSrc[col] and len(
-                        tarToSrc[col][eJson.jSttValues.EXECFUNC]) > 0:
-                    newExcecFunction = tarToSrc[col][eJson.jSttValues.EXECFUNC]
+                elif eJson.stt.EXECFUNC in tarToSrc[col] and len(
+                        tarToSrc[col][eJson.stt.EXECFUNC]) > 0:
+                    newExcecFunction = tarToSrc[col][eJson.stt.EXECFUNC]
                     regex = r"(\{.*?\})"
-                    matches = re.finditer(regex, tarToSrc[col][eJson.jSttValues.EXECFUNC], re.MULTILINE | re.DOTALL)
+                    matches = re.finditer(regex, tarToSrc[col][eJson.stt.EXECFUNC], re.MULTILINE | re.DOTALL)
                     for matchNum, match in enumerate(matches):
                         for groupNum in range(0, len(match.groups())):
                             colName = match.group(1)
@@ -433,7 +433,7 @@ class mongo (baseGlobalDb):
             sampleRes = ['Null' if not r else "'%s'" % r for r in rows[0]]
             p(u"SAMPLE:%s " % u", ".join(sampleRes), "e")
             p(e, "e")
-            if config.LOOP_ON_ERROR:
+            if config.DONG_LOOP_ON_FAILED_BATCH:
                 iCnt = 0
                 tCnt = len(rows)
                 errDict = {}

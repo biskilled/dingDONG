@@ -8,18 +8,16 @@
 #pythonNet - needs to be installed from gitHub. follow : http://pythonnet.github.io/
 #Microsoft.AnalysisServices.DLL For using SSAS processing
 six
-future
 sqlparse
-csv23
-pythonnet
-gitpython
-wget
-pandas
+future
 
-pyodbc
-pymysql
-vertica_python
+# Connection modules
 cx_Oracle
-pymongo
+pymysql
 psycopg2
-
+vertica_python
+pyodbc
+psycopg2
+pyodbc
+pymongo
+pandas

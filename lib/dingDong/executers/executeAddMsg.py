@@ -22,9 +22,9 @@ from collections            import OrderedDict
 from email.mime.multipart   import MIMEMultipart
 from email.mime.text        import MIMEText
 
-from dingDong.config        import config
-from dingDong.misc.logger   import LOGGER_OBJECT,p
-from dingDong.executers.executeHTMLReport import eHtml, createHtmlFromList
+from dingDONG.config        import config
+from dingDONG.misc.logger   import LOGGER_OBJECT,p
+from dingDONG.executers.executeHTMLReport import eHtml, createHtmlFromList
 
 class msgProp (object):
     STEP_NUM    = "NUM."
@@ -183,11 +183,14 @@ class executeAddMsg (object):
         try:
             server = smtplib.SMTP(serverSMTP)
             server.ehlo()
-            server.starttls()
 
-            server.login(serverUsr, serverPass)
+            if serverUsr and  serverPass:
+                server.starttls()
+                server.login(serverUsr, serverPass)
+
             server.sendmail(sender, receiversList, msg.as_string())
             server.quit()
+
         except smtplib.SMTPException:
             err = "gFunc->sendMsg: unable to send email to %s, subject is: %s " % (str(receivers), str(msgSubj))
             raise ValueError(err)

@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
 
-from dingDong.misc.logger import  p
-from dingDong.misc.misc import uniocdeStr
+from dingDONG.misc.logger import  p
+from dingDONG.misc.globalMethods import uniocdeStr
 
 
 def OLAP_Process(serverName,dbName, cubes=[], dims=[], fullProcess=True):

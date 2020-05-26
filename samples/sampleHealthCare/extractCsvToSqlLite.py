@@ -1,14 +1,14 @@
 """ import modules -> logging used fr setting log level"""
 import logging
-from dingDong import DingDong
-from dingDong import Config
+from dingDONG import dingDONG
+from dingDONG import Config
 
 """ set log level: logging.INFO, logging.DEBUG, logging.ERROR """
 Config.LOGS_DEBUG = logging.DEBUG
 Config.VERSION_DIR = "C:\\dingDong"
 
 """ Config all connection URL
-    Can be used by update Config.CONN_URL property or by send dictionary into connDict property at DingDong class init`
+    Can be used by update Config.CONNECTIONS property or by send dictionary into connDict property at DingDong class init`
     key : can be general connection name , or connection type (sql, oracle, file .. )
     value: 
         String--> connection string URL (key will be used to defined connection type: sql, oracle, mySql....
@@ -16,7 +16,7 @@ Config.VERSION_DIR = "C:\\dingDong"
             'conn' -> connenction type. full type list can be found at dingDong.misc.enumsJson.eConn static class 
             'url'  -> connection URL  
 """
-Config.CONN_URL = {
+Config.CONNECTIONS = {
     'sampleSql': {'conn': 'sql',"url": "<Sql server connection string>;UID=USER;PWD=PWD;"},
     'file': "C:\\dingDong\\",
     'sqlite': {"url":"C:\\dingDong\\sqlLiteDB.db","create":"tableName"}}
@@ -31,7 +31,6 @@ Config.CONN_URL = {
 
     file default datatype can be found at dingDong.conn.baseBatch under DEFAULTS values (currently set to VARCHAR(200) for all relation Dbs   
 """
-source : ["s"]
 
 nodesToLoad = [
     {"source": ["file", "DATAELEMENTDESCRIPTION.csv"],
@@ -59,11 +58,11 @@ nodesToLoad = [
         dirData-> will load all JSON configuration file located at this folder
         includeFiles    -> FILTER to load list of files in dirData folder
         notIncldeFiles  -> FILTER to remove list of files in dirData folder
-        connDixt -> update all connection url. same property as Config.CONN_URL
+        connDixt -> update all connection url. same property as Config.CONNECTIONS
         processes -> number of parrallel processing for loading data (DONG module) 
 """
 
-dd = DingDong(dicObj=nodesToLoad, filePath=None, dirData=None,
+dd = dingDONG(dicObj=nodesToLoad, filePath=None, dirData=None,
              includeFiles=None,notIncludeFiles=None,connDict=None, processes=1)
 
 dd.msg.addState("Start Ding")
@@ -75,7 +74,7 @@ dd.msg.addState("Start Ding")
         2. create new table schema, store old schema in a copied table with date prefix and merge data from the old structure into a new structure (CODE: 1, updated at target or merge key values)
         3. no change can be made into this table. CODE number 2. can be added only to target or merge objects    
 """
-dd.ding()
+#dd.ding()
 
 """ Extracting and loading data from source to target or to merge
     if STT node exists in JSON mapping -> will update fields accordingly 
@@ -84,9 +83,7 @@ dd.ding()
 
     more detild can be found at decumentation 
 """
-dd.msg.addState("Start Dong")
+#dd.msg.addState("Start Dong")
 dd.dong()
 
-dd.msg.end(msg="FINISHED",pr=True)
-
-
+#dd.msg.end(msg="FINISHED",pr=True)
