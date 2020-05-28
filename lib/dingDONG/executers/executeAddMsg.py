@@ -180,6 +180,15 @@ class executeAddMsg (object):
         if msgHtml and len(msgHtml)>0:
             msg.attach( MIMEText(msgHtml, 'html') )
 
+        if not sender or len(sender)==0:
+            p("SENDER IS NOT DEFINES  !!!", "e" )
+            return
+
+        if not receiversList or len(receiversList)==0:
+            p("THERE IS NO EMAIL RECIVER ", "e")
+            return
+
+
         try:
             server = smtplib.SMTP(serverSMTP)
             server.ehlo()
