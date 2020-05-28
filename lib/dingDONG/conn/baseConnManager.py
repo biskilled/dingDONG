@@ -48,7 +48,7 @@ def mngConnectors(propertyDict, connLoadProp=None):
             propertyDict[ val ] = connValues[ val ]
 
     ## MERGE propertyDict with values from CONNECTION by tableName (Full DB loading !)
-    if eConn.props.TBL in propertyDict and propertyDict[eConn.props.TBL] in connLoadProp:
+    if eConn.props.TBL in propertyDict and str(propertyDict[eConn.props.TBL]) in connLoadProp:
         connValues = connLoadProp [ propertyDict[eConn.props.TBL] ]
         for val in connValues:
             propertyDict[ val ] = connValues[ val ]

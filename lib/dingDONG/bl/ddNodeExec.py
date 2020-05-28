@@ -259,21 +259,31 @@ class nodeExec (object):
                     ## if source exists in stt, remove original column and add new naming column
                     if eJson.stt.SOURCE in self.stt[col]:
                         sourceName = self.stt[col][eJson.stt.SOURCE]
+
                         if sourceName.lower() in retStrucureL:
-                           if col.lower() not in retStrucureL:
-                               newSttVal[col] = self.stt[col]
-                               del newSttVal[ retStrucureL[ sourceName.lower()] ]
-                           else:
+                            if col.lower() not in retStrucureL:
+                                newSttVal[col] = self.stt[col]
+                                del newSttVal[ retStrucureL[ sourceName.lower()] ]
+                            else:
                                colName = retStrucureL[col.lower()]
                                for prop in self.stt[col]:
                                    newSttVal[ colName ][prop] = self.stt[col][prop]
+                        else:
+                            if col.lower() in retStrucureL:
+                                for prop in self.stt[col]:
+                                    newSttVal[ retStrucureL[col.lower()] ][prop] = self.stt[col][prop]
+
+                            else:
+                                newSttVal[col] =  self.stt[col]
 
                     elif col.lower() not in retStrucureL:
                         newSttVal[col] = self.stt[col]
+
                     else:
                         for prop in self.stt[col]:
                             colName = retStrucureL[col.lower()]
                             newSttVal[ colName ][prop] = self.stt[col][prop]
+
 
                     if eJson.stt.TYPE not in newSttVal[ colName ] or not newSttVal[ colName ][eJson.stt.TYPE]:
                         newSttVal[colName][eJson.stt.TYPE] = tar.defDataType

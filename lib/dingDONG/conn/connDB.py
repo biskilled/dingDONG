@@ -258,7 +258,7 @@ class connDb (baseConnBatch):
         baseConnBatch.test(self)
 
     def isExists(self, tableName, tableSchema=None):
-        tableSchema, tableName = self.setTableAndSchema(tableName=tableName, tableSchema=None, wrapTable=False)
+        tableSchema, tableName = self.setTableAndSchema(tableName=tableName, tableSchema=tableSchema, wrapTable=False)
         sql = setSqlQuery().getSql(conn=self.connType, sqlType=eSql.ISEXISTS, tableName=tableName, tableSchema=tableSchema)
         self.cursor.execute(sql)
         row = self.cursor.fetchone()
@@ -400,7 +400,7 @@ class connDb (baseConnBatch):
         tableSchema, tableName = self.setTableAndSchema(tableName=tableName, tableSchema=tableSchema, wrapTable=False)
         ret = OrderedDict()
 
-        if not self.isExists(tableName=tableName):
+        if not self.isExists(tableName=tableName, tableSchema=tableSchema):
             p ("%s: TABLE %s, SCHEMA %s NOT EXISTS.. " %(self.connType, tableName, tableSchema), "ii")
             return ret
 
@@ -437,6 +437,7 @@ class connDb (baseConnBatch):
         ### Return dictionary : {Table Name:[{SOURCE:ColumnName, ALIASE: column aliase}, ....]}
         ### And empty table -> all column that not related to any table '':[{SOURCE:columnName, ALIASE: .... } ...]
         queryTableAndColunDic = qp.extract_tableAndColumns(sql=sqlQuery)
+
 
         if qp.QUERY_COLUMNS_KEY in queryTableAndColunDic:
             allFoundColumns = queryTableAndColunDic[qp.QUERY_COLUMNS_KEY]
