@@ -404,7 +404,7 @@ class nodeExec (object):
                         if eConn.updateMethod.UPDATE  in node[k]:
                             mrgTarget.update = node[k][eConn.updateMethod.UPDATE]
                         sttMerge = self.updateTargetBySourceAndStt(src=mrgSource, tar=mrgTarget)
-                        mrgTarget.create(stt=sttMerge,addIndex=self.addIndex)
+                        mrgTarget.create(sttDict=sttMerge,addIndex=self.addIndex)
                         mrgTarget.close()
                         mrgSource.close()
                         mrgSource = None
