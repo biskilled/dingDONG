@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2020, BPMK LTD (BiSkilled) Tal Shany <tal.shany@biSkilled.com>
+# Copyright (c) 2017-2020, BPMK LTD (BiSkilled) Tal Shany <tal@biSkilled.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 #
 # This file is part of dingDONG
@@ -374,7 +374,7 @@ class jsonParser (object):
                 if os.path.isfile( os.path.join(folderPath, fileName)):
                     ret[eConn.props.FILE] = os.path.join(folderPath, fileName)
 
-        if isinstance(ret[eConn.props.TBL], (list,tuple)):
+        if eConn.props.TBL in ret and isinstance(ret[eConn.props.TBL], (list,tuple)):
             ret[eConn.props.TBL] = "".join(ret[eConn.props.TBL])
 
         return ret

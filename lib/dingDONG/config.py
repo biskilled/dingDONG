@@ -65,3 +65,4 @@ class config:
     SMTP_RECEIVERS          = ['info@biSkilled.com']
 
     VERSION = 1
+

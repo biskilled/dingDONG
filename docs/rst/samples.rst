@@ -10,8 +10,8 @@ Global varaible will be used at dingDong init
 
 ::
 
-    from dingDong import DingDong
-    from dingDong import Config
+    from dingDONG import DingDONG
+    from dingDONG import Config
 
     Config.SMTP_RECEIVERS   = [<email1>, <email2>...]   # SEND EMAIL: TO
     Config.SMTP_SERVER      = "<SMTP server>"

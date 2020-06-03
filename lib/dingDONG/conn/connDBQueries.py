@@ -58,15 +58,15 @@ class baseSqlQuery (object):
         elif eSql.ALL_TABLES    == sqlType: self.setSqlGetAllTables(**args)
 
         else:
-            p("baseConnDbSqlQueries->getSql: %s IS NOT DEFINED  !" % (sqlType.upper()), "e")
+            p("%s COMMAND IS NOT DEFINED  !" % (sqlType.upper()), "e")
             return None
 
         if conn not in self.connQuery:
-            p("baseConnDbSqlQueries->getSqlRename: %s SQL QUERY FOR CONNENTION %s NOT IMPLEMENTED !" % (sqlType.upper(),conn), "e")
+            p("%s SQL QUERY FOR CONNENTION %s NOT IMPLEMENTED !" % (sqlType.upper(),conn), "e")
             return None
 
         if not self.connQuery[conn]:
-            p("baseConnDbSqlQueries->getSqlRename: %s SQL QUERY FOR CONNECTION %s USING DEFAULT SQL " % (sqlType.upper(),conn),"ii")
+            p("%s SQL QUERY FOR CONNECTION %s USING DEFAULT SQL " % (sqlType.upper(),conn),"ii")
             return self.default
 
         return self.connQuery[conn]
@@ -258,7 +258,6 @@ class setSqlQuery (baseSqlQuery):
         sql+= "AND OWNER = '%s'" %str(tableSchema) if tableSchema and len(tableSchema)>0 else ""
         self.connQuery[eConn.types.ORACLE] = sql
 
-
     def setSqlDelete (self, sqlFilter, tableName, tableSchema):
         fullTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
         sql ="Delete From %s where %s " %(fullTableName, sqlFilter)
@@ -273,6 +272,7 @@ class setSqlQuery (baseSqlQuery):
         sql = "insert into %s (%s) select %s from %s" % (targetTableName,columns,columns, sourceTableName)
         self.default = sql
         self.connQuery[eConn.types.SQLSERVER] = sql
+        self.connQuery[eConn.types.LITE] = sql
 
     def setSqlExistingIndexes(self, tableName):
         sql = """

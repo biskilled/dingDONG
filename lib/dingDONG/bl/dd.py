@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2020, BPMK LTD (BiSkilled) Tal Shany <tal.shany@biSkilled.com>
+# Copyright (c) 2017-2020, BPMK LTD (BiSkilled) Tal Shany <tal@biSkilled.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 #
 # This file is part of dingDONG
@@ -31,7 +31,7 @@ from dingDONG.config            import config
 from dingDONG.misc.logger       import p, LOGGER_OBJECT
 from dingDONG.bl.jsonParser     import jsonParser
 from dingDONG.misc.enums        import eJson, eConn
-from dingDONG.conn.baseConnManager import mngConnectors as conn
+from dingDONG.conn.baseConnManager import mngConnectors as connManager
 
 ## Execters
 from dingDONG.executers.executeSql import execQuery
@@ -192,12 +192,12 @@ class dingDONG:
         if connName : connPropDic[eConn.props.NAME] = connName
         connPropDic[eConn.props.TYPE] = connType if connType else connName
         if connUrl  : connPropDic[eConn.props.URL] = connUrl
-        connObj = conn(propertyDict=connPropDic , connLoadProp=self.connDict)
+        connObj = connManager(propertyDict=connPropDic , connLoadProp=self.connDict)
         execQuery(sqlWithParamList=queries, connObj=connObj, msg=self.msg)
 
     def test (self):
         for connProp in self.connDict:
-            c = conn(propertyDict=self.connDict[connProp], connLoadProp=None)
+            c = connManager(propertyDict=self.connDict[connProp], connLoadProp=None)
             c.test ()
 
     def execMicrosoftOLAP (self, serverName, dbName, cubes=[], dims=[], fullProcess=True):

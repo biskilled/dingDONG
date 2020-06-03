@@ -17,3 +17,11 @@
 
 from dingDONG.bl.dd import dingDONG as dingDONG
 from dingDONG.config import config  as Config
+
+from dingDONG.misc.enums import eConn
+
+UPDATE  = eConn.updateMethod.UPDATE
+DROP    = eConn.updateMethod.DROP
+NO_UPDATE=eConn.updateMethod.NO_UPDATE
+
+

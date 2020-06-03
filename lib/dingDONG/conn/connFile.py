@@ -327,9 +327,10 @@ class connFile (baseConnBatch):
                         for matchNum, match in enumerate(matches):
                             for groupNum in range(0, len(match.groups())):
                                 colName = match.group(1)
-                                if colName and len(colName) > 0 and colName in fileStructureL:
+                                if colName and len(colName) > 0:
                                     colName = colName.replace("{", "").replace("}", "")
-                                    newExcecFunction.replace(colName, colName)
+                                    if colName.lower() in fileStructureL:
+                                        newExcecFunction = newExcecFunction.replace(colName, str(fileStructureL[colName.lower()]))
                         execOnRowsDic[i] = newExcecFunction
 
                 for colNum in listOfColumnsH:

@@ -2,28 +2,30 @@
 import logging
 from dingDONG import dingDONG
 from dingDONG import Config
+from dingDONG import UPDATE, NO_UPDATE, DROP
 
 """ set log level: logging.INFO, logging.DEBUG, logging.ERROR """
 Config.LOGS_DEBUG = logging.DEBUG
-Config.VERSION_DIR = "C:\\dingDong"
 
 """ Config all connection URL
-    Can be used by update Config.CONNECTIONS property or by send dictionary into connDict property at DingDong class init`
-    key : can be general connection name , or connection type (sql, oracle, file .. )
-    value: 
-        String--> connection string URL (key will be used to defined connection type: sql, oracle, mySql....
+    key : An internal connection name, or connection type (sql, oracle, file .. )
+    values: 
+        String--> connection URL, SAMPLE: "sql":"<Sql server connection string>;UID=USER;PWD=PWD;"
         Dictionary --> 
-            'conn' -> connenction type. full type list can be found at dingDong.misc.enumsJson.eConn static class 
-            'url'  -> connection URL  
+            'conn'  -> connenction type. support: 'sql', 'oracle', 'access', 'mysql', 'sqllite', 'mongo' ...  
+            'url'   -> connection string URL
+            'filter'-> filter objects
+            ... additional paramters can be found under   
 """
 Config.CONNECTIONS = {
-    'sampleSql': {'conn': 'sql',"url": "<Sql server connection string>;UID=USER;PWD=PWD;"},
-    'file': "C:\\dingDong\\",
-    'sqlite': {"url":"C:\\dingDong\\sqlLiteDB.db","create":"tableName"}}
+    'sampleSql': {'type': 'sql',"url": "<Sql server connection string>;UID=USER;PWD=PWD;"},
+    'file': {"url":"C:\\dingDONG\\data\\", "csv":True, "change":1},
+    'sqlite': {"url":"C:\\dingDONG\\data\\sqlLiteDB.db"}}
 
-""" This is sample JSON configuration format for:
-    1. mapping and loading CSV file named DATAELEMENTDESCRIPTION into SQLLite table named dateElements_Desc
-    2. mapping and loading CSV file named DEMOGRAPHICS into SQLLite table named demographics
+""" pipeline sample JSON configuration:
+    1. MAP and LOAD DEMOGRAPHICS CSV file into SQLLite US_demographics table 
+    2. MAP and LOAD MEASURESOFBIRTHANDDEATH CSV file into SQLLite US_measures_birth_death table
+    3. MAP and LOAD VUNERABLEPOPSANDENVHEALTH CSV file into SQLLite US_global_measures table
     3. mapping and loading CSV file named MEASURESOFBIRTHANDDEATH into SQLLite table named birthDate
     4. create a new query based on demographics and birthDate  into new table named Final
     5. Update sample field at the Final table by using direct PL/SQL query
@@ -33,57 +35,104 @@ Config.CONNECTIONS = {
 """
 
 nodesToLoad = [
-    {"source": ["file", "DATAELEMENTDESCRIPTION.csv"],
-     "target": ["sqlite", "dateElements_Desc"]},
-
     {"source": ["file", "DEMOGRAPHICS.csv"],
-     "target": ["sqlite", "demographics"]},
+     "target": ["sqlite", "US_demographics"]},
 
     {"source": ["file", "MEASURESOFBIRTHANDDEATH.csv"],
-     "target": ["sqlite", "birthDate"]},
+     "target": ["sqlite", "US_measures_birth_death"]},
 
-    {"query": ["sqlite", """   Select d.[State_FIPS_Code] AS A, d.[County_FIPS_Code] AS B, d.[County_FIPS_Code] AS G,d.[County_FIPS_Code], d.[CHSI_County_Name], d.[CHSI_State_Name],[Population_Size],[Total_Births],[Total_Deaths]
-                                    From demographics d INNER JOIN birthDate b ON d.[County_FIPS_Code] = b.[County_FIPS_Code] AND d.[State_FIPS_Code] = b.[State_FIPS_Code]"""],
-     "target": ["sqlite", "Final", -1]},
-
-    {"myexec": ["sqlite", "Update dateElements_Desc Set [Data_Type] = 'dingDong';"]},
-
-    {"source": ["sqlite", "Final"],
-     "target": ["file", "finall.csv"]}
+    {"source": ["file", "VUNERABLEPOPSANDENVHEALTH.csv"],
+     "target": ["sqlite", "US_global_measures"]}
 ]
 
 """
-    Init class DingDong"
-        dicObj -> loading node mapping dictionay (as the listed sample)
-        dirData-> will load all JSON configuration file located at this folder
-        includeFiles    -> FILTER to load list of files in dirData folder
-        notIncldeFiles  -> FILTER to remove list of files in dirData folder
-        connDixt -> update all connection url. same property as Config.CONNECTIONS
-        processes -> number of parrallel processing for loading data (DONG module) 
+    Init DingDONG class
+        dicObj -> data pipeline dictionary 
+        dirData-> directory for all JSON pipelines 
+        includeFiles    -> using specific defined JSON files located at dirData 
+        notIncldeFiles  -> ignore specific defined JSON files located at dirData 
+        connDict        -> set Config.CONNECTIONS property 
+        processes       -> data loading maximum parrallel processing (DONG module) 
 """
 
 dd = dingDONG(dicObj=nodesToLoad, filePath=None, dirData=None,
              includeFiles=None,notIncludeFiles=None,connDict=None, processes=1)
 
-dd.msg.addState("Start Ding")
+""" Add step massages """
+dd.msg.addState("DING: check csv files schema  ")
 
-""" Mapping files structure into a table structure
-    Target not exists   -> create new target table based on source table definitions 
-    Target exists       -> if there is change, there are 3 option to update the target table structure  
-        1. copy old data into a table with date prefix and create a new table with updated metadata (default, CODE:-1)
-        2. create new table schema, store old schema in a copied table with date prefix and merge data from the old structure into a new structure (CODE: 1, updated at target or merge key values)
-        3. no change can be made into this table. CODE number 2. can be added only to target or merge objects    
+""" DING -> manage target strucuture
+    create target if not exists. 
+    compare source strucuture to existing target strucure and update accordingly using 3 methods :
+    - defualt: save old strucutre with old data and create new strucure
+    - update:  update existing strucure
+    - no update: target object is not chamges  
 """
 #dd.ding()
 
-""" Extracting and loading data from source to target or to merge
-    if STT node exists in JSON mapping -> will update fields accordingly 
-    if the column node exists -> will map column types by column node definition
-    if mapping node exists-> will map source to target accordingly
-
-    more detild can be found at decumentation 
+""" DONG: Load, maniulate and merge data 
+    "stt":      manage target data type, target naming, add calculaed columns  
+    "column":   target column types 
+    "mapping":  map source column to target column 
 """
-#dd.msg.addState("Start Dong")
+
+
+#dd.dong()
+dd.msg.addState("DONG: Loading csv files ")
+""" For each massage there is  """
+dd.msg.end(pr=True)
+
+""" Add calculated column into all tables """
+nodesToLoad = [
+    {"source": ["file", "DEMOGRAPHICS.csv"],
+     "target": ["sqlite", "US_demographics"],
+     "sttappend":{"Strata_Determining_Factors":{"f":"fR(', ','-> ')"},
+                  "LOCATION_DESC": {"t": "nvarchar(128)", "e": "{CHSI_State_Name} -> {CHSI_County_Name}"},
+                  "LOCATION_CODE": {"t": "nvarchar(128)", "e": "{State_FIPS_Code}{County_FIPS_Code}"},
+                  "etlDate":{"t":"smalldatetime","f":"fDCurr()"},
+                 }
+     },
+    {"source": ["file", "MEASURESOFBIRTHANDDEATH.csv"],
+     "target": ["sqlite", "US_measures_birth_death"],
+     "sttappend": { "LOCATION_CODE": {"t": "nvarchar(128)", "e": "{State_FIPS_Code}{County_FIPS_Code}"},
+                    "etlDate": {"t": "smalldatetime", "f": "fDCurr()"}}
+     },
+# State_FIPS_Code, County_FIPS_Code
+    {"source": ["file", "VUNERABLEPOPSANDENVHEALTH.csv"],
+     "target": ["sqlite", "US_global_measures"],
+     "sttappend": { "LOCATION_CODE": {"t": "nvarchar(128)", "e": "{State_FIPS_Code}{County_FIPS_Code}"},
+                    "etlDate": {"t": "smalldatetime", "f": "fDCurr()"}}
+     },
+]
+
+dd.Set(dicObj=nodesToLoad)
+dd.msg.addState("DING: update csv files schema  ")
+dd.ding()
+dd.msg.addState("DONG: load new CSV structure  ")
 dd.dong()
 
-#dd.msg.end(msg="FINISHED",pr=True)
+businessLogic = [
+    {
+        "query": ["sqlite", """   
+            Select d.LOCATION_CODE, d.Population_Size, d.Poverty, d.Age_19_Under, d.Age_19_64, Age_65_84, 
+                    bd.LBW, bd.Stroke, bd.Suicide, bd.Total_Births, bd.Total_Deaths, g.Unemployed, g.Major_Depression
+            From US_demographics d  LEFT OUTER JOIN US_measures_birth_death bd ON d.LOCATION_CODE=bd.LOCATION_CODE
+                LEFT OUTER JOIN US_global_measures g ON d.LOCATION_CODE=g.LOCATION_CODE"""],
+         "target": ["sqlite", "FINAL" ],
+        "sttappend": { "etlDate": {"t": "smalldatetime", "f": "fDCurr()"}}
+    },
+    {
+        "myexec": ["sqlite", "UPDATE FINAL SET Suicide='UnKnown' WHERE Suicide<0;"]
+    },
+    {
+        "source": ["sqlite", "FINAL"],
+        "target": ["file", "finall.csv"]
+    }
+]
+
+### Add business logic
+dd.Set(dicObj=businessLogic)
+dd.msg.addState("DING: update business logic tables  ")
+dd.ding()
+dd.msg.addState("DONG: load business logic tables   ")
+dd.dong()

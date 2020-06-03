@@ -62,7 +62,7 @@ class baseConnBatch ( baseConn ):
         pass
 
     @abc.abstractmethod
-    def extract(self, tarToSrcDict, **args):
+    def extract(self, tar, tarToSrcDict, **args):
         pass
 
     @abc.abstractmethod

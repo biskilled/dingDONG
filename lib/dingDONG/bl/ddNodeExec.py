@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2019, BPMK LTD (BiSkilled) Tal Shany <tal.shany@biSkilled.com>
+# Copyright (c) 2017-2020, BPMK LTD (BiSkilled) Tal Shany <tal@biSkilled.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 #
 # This file is part of dingDong
@@ -22,7 +22,7 @@ from collections import OrderedDict
 
 from dingDONG.misc.enums           import eJson, eConn
 from dingDONG.misc.logger          import p
-from dingDONG.conn.baseConnManager import mngConnectors as conn
+from dingDONG.conn.baseConnManager import mngConnectors as connManager
 from dingDONG.misc.globalMethods import uniocdeStr
 from dingDONG.config               import config
 
@@ -83,17 +83,17 @@ class nodeExec (object):
                 for i,k in enumerate (node):
                     if eJson.SOURCE == k or eJson.SOURCE in node[k]:
                         node[k][eConn.props.IS_SOURCE] = True
-                        modelDict[eJson.SOURCE] = conn(propertyDict=node[k], connLoadProp=self.connDict)
+                        modelDict[eJson.SOURCE] = connManager(propertyDict=node[k], connLoadProp=self.connDict)
 
                     elif eJson.QUERY == k or eJson.QUERY in node[k]:
                         if eJson.SOURCE in modelDict:
                             p("THERE IS QUERY AND SOURCE, WILL USE QUERY AS SOURCE", "w")
                         node[k][eConn.props.IS_SOURCE] = True
-                        modelDict[eJson.SOURCE] = conn(propertyDict=node[k], connLoadProp=self.connDict)
+                        modelDict[eJson.SOURCE] = connManager(propertyDict=node[k], connLoadProp=self.connDict)
 
                     elif eJson.TARGET == k or eJson.TARGET in node[k]:
                         node[k][eConn.props.IS_TARGET] = True
-                        modelDict[eJson.TARGET] = conn(propertyDict=node[k], connLoadProp=self.connDict)
+                        modelDict[eJson.TARGET] = connManager(propertyDict=node[k], connLoadProp=self.connDict)
 
                     elif eJson.MERGE == k or eJson.MERGE in node[k]:
                         modelDict[eJson.MERGE] = node[k]
@@ -102,10 +102,9 @@ class nodeExec (object):
                         pass
 
                     elif eJson.CREATE == k or eJson.CREATE in node[k]:
-                        modelDict[eJson.CREATE] = conn(propertyDict=node[k], connLoadProp=self.connDict)
-
+                        modelDict[eJson.CREATE] = connManager(propertyDict=node[k], connLoadProp=self.connDict)
                     else:
-                        modelDict[i] = conn(propertyDict=node[k], connLoadProp=self.connDict)
+                        modelDict[i] = connManager(propertyDict=node[k], connLoadProp=self.connDict)
                 orderedNodes.append(modelDict)
 
         return orderedNodes
@@ -135,7 +134,10 @@ class nodeExec (object):
 
             self.__updateSTTBySourceOrTarget(srcStructure=srcStructure, pre=srcPre, pos=srcPos)
             srcColumns = OrderedDict()
-            tarColumns = OrderedDict({x.replace(tarPre, "").replace(tarPos, "").lower(): x for x in tarStructure})
+            if tarStructure and len(tarStructure)>0:
+                tarColumns = OrderedDict({x.replace(tarPre, "").replace(tarPos, "").lower(): x for x in tarStructure})
+            else:
+                tarColumns = []
 
             sttColumns = OrderedDict({x.replace(tarPre, "").replace(tarPos, "").lower(): x for x in self.stt}) if self.stt else OrderedDict()
             tarToSrc[src] = OrderedDict()

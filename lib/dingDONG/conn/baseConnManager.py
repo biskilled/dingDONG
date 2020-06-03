@@ -60,7 +60,7 @@ def mngConnectors(propertyDict, connLoadProp=None):
         else:
             p("CONNECTION %s is NOT DEFINED. PROP: %s" % (str(cType), str(propertyDict)), "e")
     else:
-        p ("connectorMng->mngConnectors: must have TYPE prop. prop: %s " %(str(propertyDict)), "e")
+        p ("MUST have TYPE property. prop: %s " %(str(propertyDict)), "e")
 
 def __queryParsetIntoList(self, sqlScript, getPython=True, removeContent=True, dicProp=None, pythonWord="dingDONG"):
         if isinstance(sqlScript, (tuple, list)):

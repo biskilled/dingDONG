@@ -1,6 +1,6 @@
 from __future__ import print_function
-__version__ = '1.0.13'
-__author__  = 'BiSkilled'
+__version__ = '1.0.15'
+__author__  = 'Tal@BiSkilled.com'
 __codename__= 'Why not?'
 
 import os.path
@@ -13,7 +13,7 @@ try:
     from setuptools.command.install_lib import install_lib as InstallLib
     from setuptools.command.install_scripts import install_scripts as InstallScripts
 except ImportError:
-    print("dingDong now needs setuptools in order to build. Install it using"
+    print("dingDONG now needs setuptools in order to build. Install it using"
           " your package manager (usually python-setuptools) or via pip (pip"
           " install setuptools).", file=sys.stderr)
     sys.exit(1)
@@ -53,21 +53,21 @@ def get_dynamic_setup_params():
 #install_requires = ['pyodbc', 'pymysql', 'vertica_python', 'cx_Oracle', 'pymongo', 'sqlparse', 'clr', 'pandas'],
 
 static_setup_params = dict(
-    name        = 'dingDong',  # How you named your package folder (MyLib)
+    name        = 'dingDONG',  # How you named your package folder (MyLib)
     version     = __version__,
     description = 'Data modeling managing and transforming data',  # Give a short description about your library
     author      = __author__,
     author_email= 'Tal@BiSkilled.com',  # Type in your E-Mail
-    keywords    = ['ETL', 'Data modeling', 'Python', 'Integration', 'Mapping'],   # Keywords that define your package best
-    url         = 'https://github.com/biskilled/dingDong',  # Provide either the link to your github or to your website
+    keywords    = ['ETL', 'Data preparation', 'Data modeling', 'Python', 'Integration', 'Mapping', 'ML devops', 'CI', 'CD'],   # Keywords that define your package best
+    url         = 'https://github.com/biskilled/dingDONG',  # Provide either the link to your github or to your website
 
     project_urls={
-        'Bug Tracker'    : 'https://github.com/ansible/ansible/issues',
+        'Bug Tracker'    : 'https://github.com/biskilled/dingDONG/issues',
         'CI: Shippable'  : 'https://app.shippable.com/github/biskilled/dingDong',
         'Code of Conduct': '',
         'Documentation'  : 'https://readthedocs.org/projects/dingDong/',
         'Mailing lists'  : '',
-        'Source Code'    : 'https://github.com/biskilled/dingDong',
+        'Source Code'    : 'https://github.com/biskilled/dingDONG',
     },
     license='GPLv3+',
     python_requires= '>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*',
