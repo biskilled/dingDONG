@@ -2,10 +2,17 @@
 import logging
 from dingDONG import dingDONG
 from dingDONG import Config
-from dingDONG import UPDATE, NO_UPDATE, DROP
 
 """ set log level: logging.INFO, logging.DEBUG, logging.ERROR """
 Config.LOGS_DEBUG = logging.DEBUG
+
+""" SMTP Configuration for sending pipeLine status by Email """
+Config.SMTP_RECEIVERS = []      #'pipe@line.com' ...
+Config.SMTP_SERVER = ""         # 'smtp.gmail.com '
+Config.SMTP_SERVER_USER = ""
+Config.SMTP_SERVER_PASS = ""
+Config.SMTP_SENDER  = ""
+
 
 """ Config all connection URL
     key : An internal connection name, or connection type (sql, oracle, file .. )
@@ -18,9 +25,9 @@ Config.LOGS_DEBUG = logging.DEBUG
             ... additional paramters can be found under   
 """
 Config.CONNECTIONS = {
-    'sampleSql': {'type': 'sql',"url": "<Sql server connection string>;UID=USER;PWD=PWD;"},
     'file': {"url":"C:\\dingDONG\\data\\", "csv":True, "change":1},
-    'sqlite': {"url":"C:\\dingDONG\\data\\sqlLiteDB.db"}}
+    'sqlite': {"url":"C:\\dingDONG\\data\\sqlLiteDB.db"}
+}
 
 """ pipeline sample JSON configuration:
     1. MAP and LOAD DEMOGRAPHICS CSV file into SQLLite US_demographics table 
@@ -34,7 +41,7 @@ Config.CONNECTIONS = {
     file default datatype can be found at dingDong.conn.baseBatch under DEFAULTS values (currently set to VARCHAR(200) for all relation Dbs   
 """
 
-nodesToLoad = [
+simplePipeLine = [
     {"source": ["file", "DEMOGRAPHICS.csv"],
      "target": ["sqlite", "US_demographics"]},
 
@@ -55,11 +62,7 @@ nodesToLoad = [
         processes       -> data loading maximum parrallel processing (DONG module) 
 """
 
-dd = dingDONG(dicObj=nodesToLoad, filePath=None, dirData=None,
-             includeFiles=None,notIncludeFiles=None,connDict=None, processes=1)
-
-""" Add step massages """
-dd.msg.addState("DING: check csv files schema  ")
+dd = dingDONG(dicObj=simplePipeLine, filePath=None, dirData=None, includeFiles=None,notIncludeFiles=None,connDict=None, processes=1)
 
 """ DING -> manage target strucuture
     create target if not exists. 
@@ -68,22 +71,17 @@ dd.msg.addState("DING: check csv files schema  ")
     - update:  update existing strucure
     - no update: target object is not chamges  
 """
-#dd.ding()
+dd.ding()
 
 """ DONG: Load, maniulate and merge data 
     "stt":      manage target data type, target naming, add calculaed columns  
     "column":   target column types 
     "mapping":  map source column to target column 
 """
-
-
-#dd.dong()
-dd.msg.addState("DONG: Loading csv files ")
-""" For each massage there is  """
-dd.msg.end(pr=True)
+dd.dong()
 
 """ Add calculated column into all tables """
-nodesToLoad = [
+advancedPipeLine = [
     {"source": ["file", "DEMOGRAPHICS.csv"],
      "target": ["sqlite", "US_demographics"],
      "sttappend":{"Strata_Determining_Factors":{"f":"fR(', ','-> ')"},
@@ -97,7 +95,6 @@ nodesToLoad = [
      "sttappend": { "LOCATION_CODE": {"t": "nvarchar(128)", "e": "{State_FIPS_Code}{County_FIPS_Code}"},
                     "etlDate": {"t": "smalldatetime", "f": "fDCurr()"}}
      },
-# State_FIPS_Code, County_FIPS_Code
     {"source": ["file", "VUNERABLEPOPSANDENVHEALTH.csv"],
      "target": ["sqlite", "US_global_measures"],
      "sttappend": { "LOCATION_CODE": {"t": "nvarchar(128)", "e": "{State_FIPS_Code}{County_FIPS_Code}"},
@@ -105,7 +102,7 @@ nodesToLoad = [
      },
 ]
 
-dd.Set(dicObj=nodesToLoad)
+dd.Set(dicObj=advancedPipeLine)
 dd.msg.addState("DING: update csv files schema  ")
 dd.ding()
 dd.msg.addState("DONG: load new CSV structure  ")
@@ -126,7 +123,7 @@ businessLogic = [
     },
     {
         "source": ["sqlite", "FINAL"],
-        "target": ["file", "finall.csv"]
+        "target": ["file", "final.csv"]
     }
 ]
 
@@ -136,3 +133,5 @@ dd.msg.addState("DING: update business logic tables  ")
 dd.ding()
 dd.msg.addState("DONG: load business logic tables   ")
 dd.dong()
+dd.msg.end(pr=True)
+dd.msg.sendSMTPmsg(msgName="FINISH dingDONG pipeLine !", onlyOnErr=True, withErr=True, withWarning=True)
