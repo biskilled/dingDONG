@@ -1,5 +1,5 @@
 from __future__ import print_function
-__version__ = '1.0.15'
+__version__ = '1.0.16'
 __author__  = 'Tal@BiSkilled.com'
 __codename__= 'Why not?'
 
