@@ -139,7 +139,10 @@ class nodeExec (object):
             else:
                 tarColumns = []
 
-            sttColumns = OrderedDict({x.replace(tarPre, "").replace(tarPos, "").lower(): x for x in self.stt}) if self.stt else OrderedDict()
+            sttColumns = OrderedDict()
+            if self.stt:
+                for x in self.stt:
+                    sttColumns[x.replace(tarPre, "").replace(tarPos, "").lower()] = x
             tarToSrc[src] = OrderedDict()
 
             ## {srcName in Target: Source column }
@@ -400,7 +403,7 @@ class nodeExec (object):
                         mrgTarget = copy.copy(mrgSource)
                         mrgSource.connect()
                         mrgTarget.connect()
-                        mrgTarget.connObj   = node[k][eJson.merge.TARGET]
+                        mrgTarget.connTbl   = node[k][eJson.merge.TARGET]
                         mrgTarget.connIsTar = True
                         mrgTarget.connIsSrc = False
                         if eConn.updateMethod.UPDATE  in node[k]:

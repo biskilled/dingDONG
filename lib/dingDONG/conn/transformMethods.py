@@ -1,4 +1,4 @@
-# (c) 2017-2019, Tal Shany <tal.shany@biSkilled.com>
+# (c) 2017-2020, Tal Shany <tal.shany@biSkilled.com>
 #
 # This file is part of dingDong
 #
@@ -26,8 +26,7 @@ from dingDONG.misc.logger import p
 
 class fncBase ():
     def __init__(self,*args, **kargs):
-        self.cDate = datetime.datetime.today().strftime('%m/%d/%y')
-        #self.cDate = self.cDate
+        self.cDate = datetime.datetime.today().strftime('%m/%d/%y %H:%M:%S')
         self.errMsg = None
 
     def handler(self, col, colNum=''):

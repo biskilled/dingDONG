@@ -22,8 +22,6 @@ class eConn (object):
         DB_INDEX_CLUSTER= 'ic'
         DB_INDEX_UNIQUE = 'iu'
 
-        FILE                = 'file'
-
         eDict = {
             NAME:       [NAME, 'name'],
             TYPE:       [TYPE, 'type'],

@@ -170,7 +170,8 @@ class jsonParser (object):
                             del newDict[eJson.QUERY]
 
                         if k == eJson.STT or k == eJson.STTONLY:
-                            newSttL = {x.lower(): x for x in node[prop]}
+                            newSttL = OrderedDict([x.lower(),x] for x in node[prop])
+
                             sttL = {x.lower(): x for x in stt}
                             for s in stt:
                                 if s.lower() in newSttL:
@@ -332,7 +333,6 @@ class jsonParser (object):
 
         existsColumnsDict   = {x.lower():x for x in stt.keys()}
 
-
         for tar in propVal:
             if tar.lower() in existsColumnsDict:
                 stt[ existsColumnsDict[tar.lower()] ][eJson.stt.TYPE] = propVal[tar]
@@ -368,11 +368,11 @@ class jsonParser (object):
         if eConn.props.TBL in ret and ret[eConn.props.TBL] is not None and '.sql' in ret[eConn.props.TBL]:
             fileName = ret[eConn.props.TBL]
             if os.path.isfile(fileName):
-                ret[eConn.props.FILE] = fileName
+                ret[eConn.props.SQL_FILE] = fileName
             if eConn.props.FOLDER in ret and ret[eConn.props.FOLDER] is not None:
                 folderPath = ret[eConn.props.FOLDER]
                 if os.path.isfile( os.path.join(folderPath, fileName)):
-                    ret[eConn.props.FILE] = os.path.join(folderPath, fileName)
+                    ret[eConn.props.SQL_FILE] = os.path.join(folderPath, fileName)
 
         if eConn.props.TBL in ret and isinstance(ret[eConn.props.TBL], (list,tuple)):
             ret[eConn.props.TBL] = "".join(ret[eConn.props.TBL])

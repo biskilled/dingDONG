@@ -121,7 +121,6 @@ class connDb (baseConnBatch):
         self.connTbl    = setProperty(k=eConn.props.TBL, o=self.propertyDict, defVal=None)
         self.sqlFolder  = setProperty(k=eConn.props.FOLDER, o=self.propertyDict, defVal=None)
         self.sqlFile    = setProperty(k=eConn.props.SQL_FILE, o=self.propertyDict, defVal=None)
-
         self.defaultSchema  = self.defaults[eConn.defaults.TABLE_SCHEMA]
         self.defaulNull     = self.defaults[eConn.defaults.COLUMNS_NULL]
         self.defaultSP      = self.defaults[eConn.defaults.SP]
@@ -130,6 +129,7 @@ class connDb (baseConnBatch):
         self.cursor         = None
         self.connDB         = None
         self.connSql        = None
+
 
         self.isExtractSqlIsOnlySTR  = False
 
@@ -328,7 +328,6 @@ class connDb (baseConnBatch):
                 stt = sttDict[sttKey]
                 self.__create(stt=stt, tableName=sttKey, tableSchema=None, addIndex=addIndex)
 
-
     """ INTERNAL USED: for create method: Compare existing stucture to new one, if 
             object exists call compareExistToNew - compare 2 object and update   """
     def cloneObject(self, stt, tableName):
@@ -360,7 +359,6 @@ class connDb (baseConnBatch):
     """ Strucutre Dictinary: {Column Name: {ColumnType:XXXXX } .... } 
         Help methods: getQueryStructure (baseConnDB), getDBStructure (baseConnDB)"""
     def getStructure(self, objects=None, tableName=None, sqlQuery=None):
-
 
         sqlQuery        = sqlQuery if sqlQuery else self.connSql
         objDict         = objects if objects else self.objNames
@@ -490,7 +488,7 @@ class connDb (baseConnBatch):
                     ret.update(tableStrucure)
                 else:
                     for colTbl in tableColL:
-                        if colTbl.lower() in colSName.lower():
+                        if colTbl.lower().strip() == colSName.replace(pre, "").replace(pos, "").lower().strip():
                             ret[colTarName] = {eJson.stt.SOURCE: tableColL[colTbl],
                                                eJson.stt.TYPE: tableStrucure[tableColL[colTbl]][eJson.stt.TYPE]}
                             isFound = True
@@ -541,7 +539,7 @@ class connDb (baseConnBatch):
             if col not in retOrder:
                 p("!!!!ERROR: COLUMN %s NOT FOUND " % col, "w")
 
-        return ret
+        return retOrder
 
     """ INTERNAL USED: for clone method - update object is exists
             -1: create history table base on config.TRACK_HISTORY. new name: tablename_currentDate
@@ -739,7 +737,7 @@ class connDb (baseConnBatch):
     def delete (self, sqlFilter, tableName=None, tableSchema=None):
         tableSchema, tableName = self.setTableAndSchema(tableName=tableName, tableSchema=tableSchema, wrapTable=True)
         sql = setSqlQuery().getSql(conn=self.connType, sqlType=eSql.DELETE, tableName=tableName, tableSchema=tableSchema, sqlFilter=sqlFilter)
-        self.exeSQL(sql=sql)
+        self.exeSQL(sql=self.setQueryWithParams(sql))
         p("TYPE:%s, DELETE FROM TABLE:%s, WHERE:%s" % (self.connType, self.connTbl, self.connFilter), "ii")
 
     def extract(self, tar, tarToSrcDict, batchRows=None):
@@ -790,7 +788,7 @@ class connDb (baseConnBatch):
                         srcColumnName = '%s As %s' % (existingColumnsLFull[srcColumnName], tarColumnName)
 
                     else:
-                        p("%s: %s, SOURCE COLUMN LISTED IN STT NOT EXISTS IN SOURCE TABLE, IGNORE COLUMN !!!!, OBJECT:\n%s" % (self.connType, tarToSrc[col][eJson.stt.SOURCE], self.connTbl), "e")
+                        p("%s: %s, SOURCE COLUMN LISTED IN STT NOT EXISTS IN SOURCE TABLE, IGNORE COLUMN !!!!, OBJECT:\n%s" % (self.connType, tarToSrcDict[col][eJson.stt.SOURCE], self.connTbl), "e")
                         continue
                 elif tarColumn.lower() in existingColumnsL:
                     srcColumnName = '%s As %s' %(existingColumnsL[ tarColumn.lower() ], tarColumnName)
@@ -903,11 +901,20 @@ class connDb (baseConnBatch):
             p('LOAD %s into target: %s >>>>>> ' % (str(totalRows), tableName), "ii")
 
         except Exception as e:
-            p(u"TYPE:%s, OBJCT:%s ERROR in cursor.executemany !!!!" % (self.connType, self.connTbl), "e")
+            p(u"TYPE:%s, OBJCT:%s ERROR EXECUTEMANY !!!!" % (self.connType, self.connTbl), "e")
+            p(e)
             p(u"ERROR QUERY:%s " % execQuery, "e")
-            sampleRes = ['Null' if not r else "'%s'" % r for r in rows[0]]
+
+            sampleRes = []
+            for col in rows[0]:
+                if not col:
+                    sampleRes.append ('Null')
+                elif isinstance(col, basestring):
+                    sampleRes.append(u"'%s'" %uniocdeStr(col, decode=True))
+                else:
+                    sampleRes.append(str(col))
+
             p(u"SAMPLE:%s " % u", ".join(sampleRes), "e")
-            p(e, "e")
             if config.DONG_LOOP_ON_FAILED_BATCH:
                 iCnt = 0
                 tCnt = len(rows)
@@ -917,21 +924,23 @@ class connDb (baseConnBatch):
                 for r in rows:
                     try:
                         iCnt += 1
-                        r = [r]
-                        self.cursor.executemany(execQuery, r)
+                        self.cursor.executemany(execQuery, [r])
                         self.connDB.commit()
                     except Exception as e:
                         totalErrorsFound += 1
                         if totalErrorsFound > totalErrorToLooap:
                             break
-                        errMsg = str(e)
-                        ret = ""
-                        for col in r[0]:
-                            if col is None: ret += "Null, "
-                            else:           ret += "'%s'," % (col)
-                        p("ROW BY ROW ERROR-> %s" %execQuery, "e")
-                        p(ret, "e")
-                        p(errMsg, "e")
+                        ret = []
+                        for col in r:
+                            if col is None: ret.append ('Null')
+                            elif isinstance(col, basestring):
+                                ret.append(u"'%s'" % uniocdeStr(col, decode=True))
+                            else:
+                                ret.append(str(col))
+                        p ("---------   LINE %s     --------------" %str(iCnt))
+                        p("%s" %execQuery, "e")
+                        p(u", ".join(ret), "e")
+                        p(str(e), "e")
                 p("ROW BY ROW ERROR-> LOADED %s OUT OF %s ROWS" % (str(totalErrorToLooap), str(tCnt)), "e")
 
     def execMethod(self, method=None):
@@ -1177,9 +1186,10 @@ class connDb (baseConnBatch):
                         allParams.append(q[1])
                         if q[0] and q[0].lower() == str(self.connTbl).lower():
                             p("USING %s AS SQL QUERY " %(q[0]),"ii")
-                            self.connTbl = q[1]
+                            sql = self.setQueryWithParams(q[1])
+                            self.connTbl = sql
                             self.connIsSql = True
-                            self.connSql = q[1]
+                            self.connSql = sql
                             foundQuery = True
                             break
                     else:

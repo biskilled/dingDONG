@@ -14,9 +14,9 @@ def setProperty (k, o, defVal=None, setVal=None):
                 else:
                     if prop.lower().replace('_', '') == k.lower().replace('_', ''):
                         return o.__dict__[prop]
-
     if setVal:
         return setVal
+
 
     if isinstance(o, (dict, OrderedDict)):
         lDict = {str(x).lower().replace('_', ''): x for x in o}
@@ -25,11 +25,12 @@ def setProperty (k, o, defVal=None, setVal=None):
             if o[lDict[k.lower().replace('_', '')]]: return o[lDict[k.lower().replace('_', '')]]
 
     ret = propInObject(o)
+
     if ret: return ret
 
     ret = propInObject(config)
-    if ret: return ret
 
+    if ret: return ret
     return defVal
 
 def findEnum (prop, obj):

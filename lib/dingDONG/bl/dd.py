@@ -52,7 +52,7 @@ class dingDONG:
         self._notIncludeFiles=notIncludeFiles
         self._dirLogs       = None
         self.propcesses     = config.DONG_MAX_PARALLEL_THREADS
-        self.sqlFolder      = config.SQL_FOLDER_DIR
+        self.sqlFolder      = config.SQL_FOLDER_DIR if not sqlFolder else sqlFolder
         self.connDict       = connDict
         self.setCounter     = 0
 
