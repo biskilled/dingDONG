@@ -834,7 +834,6 @@ class connDb (baseConnBatch):
         try:
             if batchRows and batchRows>0:
                 while True:
-
                     rows = self.cursor.fetchmany( batchRows )
                     if not rows or len(rows) < 1:
                         break
