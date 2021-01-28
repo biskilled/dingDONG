@@ -92,6 +92,7 @@ class eConn (object):
         DB_NVARCHAR     = 'nvarchar'
         DB_CHAR         = 'char'
         DB_BLOB         = 'blob'
+        DB_CLOB         = 'clob'
         DB_INT          = 'int'
         DB_BIGINT       = 'bigint'
         DB_FLOAT        = 'float'

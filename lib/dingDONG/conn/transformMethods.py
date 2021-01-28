@@ -183,10 +183,10 @@ class fClob(fncBase):
         self.errMsg = "fClob fn error"
 
     def subHandler(self, col):
-        if not col:
+        if not col :
             return None
 
-        return col
+        return str(col)
 
 
 #############################OLD  ATTEMT #############################################################

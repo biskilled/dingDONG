@@ -64,7 +64,8 @@ DATA_TYPES = {
                             eConn.dataTypes.DB_VARCHAR:None,
                             eConn.dataTypes.DB_NVARCHAR:None,
                             eConn.dataTypes.DB_CHAR:None,
-                            eConn.dataTypes.DB_BLOB:None},
+                            eConn.dataTypes.DB_BLOB:None,
+                            eConn.dataTypes.DB_CLOB:None},
     eConn.dataTypes.B_INT: {eConn.dataTypes.DB_INT:None,
                            eConn.dataTypes.DB_BIGINT:None},
     eConn.dataTypes.B_FLOAT:{eConn.dataTypes.DB_FLOAT:None,
@@ -79,7 +80,8 @@ EXTEND_DATA_TYPES = {
                     },
     eConn.types.SQLSERVER:{
                         eConn.dataTypes.DB_DATE:['smalldatetime','datetime'],
-                        eConn.dataTypes.DB_DECIMAL:['decimal']
+                        eConn.dataTypes.DB_DECIMAL:['decimal'],
+                        eConn.dataTypes.DB_CLOB:['NVARCHAR(100)']
                     },
     eConn.types.POSTGESQL:{
                         eConn.dataTypes.DB_DATE:['smalldatetime','datetime'],
@@ -129,6 +131,7 @@ class connDb (baseConnBatch):
         self.cursor         = None
         self.connDB         = None
         self.connSql        = None
+        self.connOracleIsCBLOB = None
 
 
         self.isExtractSqlIsOnlySTR  = False
@@ -164,6 +167,7 @@ class connDb (baseConnBatch):
 
     def connect(self):
         odbc = None
+
         try:
             if eConn.types.MYSQL == self.connType:
                 import pymysql
@@ -185,6 +189,7 @@ class connDb (baseConnBatch):
                 self.isExtractSqlIsOnlySTR = True
 
                 self.connDB = cx_Oracle.connect(self.connUrl[eConn.connString.URL_USER], self.connUrl[eConn.connString.URL_PASS], self.connUrl[eConn.connString.URL_DSN])
+                self.connOracleIsCBLOB = cx_Oracle.CLOB
                 if 'nls' in self.connUrl:
                     os.environ["NLS_LANG"] = self.connUrl[eConn.connString.URL_NLS]
                 self.cursor = self.connDB.cursor()
