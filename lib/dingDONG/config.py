@@ -49,6 +49,8 @@ class config:
     LOGS_ERR_NAME  = 'log'
     LOGS_TMP_NAME  = 'lastLog'
     LOGS_HISTORY_DAYS=5
+    LOGS_SLACK_URL  = None
+    LOGS_SLACK_LEVEL= logging.ERROR
 
     VERSION_DIR         = None
     VERSION_FILE        = 'version.txt'

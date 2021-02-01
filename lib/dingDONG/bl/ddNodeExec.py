@@ -1,7 +1,7 @@
-# Copyright (c) 2017-2020, BPMK LTD (BiSkilled) Tal Shany <tal@biSkilled.com>
+# Copyright (c) 2017-2021, BPMK LTD (BiSkilled) Tal Shany <tal@biSkilled.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 #
-# This file is part of dingDong
+# This file is part of dingDONG
 #
 # dingDong is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

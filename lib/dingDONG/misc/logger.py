@@ -49,6 +49,10 @@ class __myLogger (object):
         if config.LOGS_DIR and os.path.isdir(config.LOGS_DIR):
             self.setLogsFiles(logDir=config.LOGS_DIR)
 
+        if config.LOGS_SLACK_URL and len(config.LOGS_SLACK_URL)>0:
+            slackLevel = config.LOGS_SLACK_LEVEL if config.LOGS_SLACK_LEVEL else self.logLevel
+            self.setSlack(slackLevel=slackLevel)
+
         #if logStdout:
         #    consoleHandler = logging.StreamHandler(sys.stdout)
         #    consoleHandler.setFormatter(self.logFormatter)
