@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
-# (c) 2017-2019, Tal Shany <tal.shany@biSkilled.com>
+# (c) 2017-2021, Tal Shany <tal.shany@biSkilled.com>
 #
-# This file is part of dingDong
+# This file is part of dingDONG
 #
-# dingDong is free software: you can redistribute it and/or modify
+# dingDONG is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# dingDong is distributed in the hope that it will be useful,
+# dingDONG is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
+# along with dingDONG.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
 import sqlparse
@@ -41,15 +41,36 @@ TABLE_COLUMN= 'column'
 ##      Using extract_tables which return Dictionary : {'Columns': {ColName:ColTargetName....}, 'Tables':{tableName: [Columns ....]}}
 ##      Using extract_table_identifiers which return list of [(table aliace, table schema, table Name) ...]
 def extract_tableAndColumns (sql):
+    spaecialCharacters = [("'\\'", "'~~'")]
     sql, pre = removeProps (sql=sql)
+
+    for sc in spaecialCharacters:
+        if sql and sc[0] in sql:
+            sql = sql.replace(sc[0], sc[1])
 
     tblTupe , columns, sqlPre, sqlPost = extract_tables(sql)
 
     pre = pre if pre and len(pre)>0 else sqlPre
 
+    for sc in spaecialCharacters:
+        if pre and sc[1] in pre:
+            pre = pre.replace(sc[1], sc[0])
+        if sqlPost and sc[1] in sqlPost:
+            sqlPost = sqlPost.replace(sc[1], sc[0])
+
     ret = {QUERY_PRE:pre, QUERY_POST:sqlPost}
 
     if QUERY_COLUMNS_KEY in columns:
+        for ind, tup in enumerate (columns[QUERY_COLUMNS_KEY]):
+            tup = list(tup)
+            tmpL = []
+            for partSen in tup[0]:
+                for sc in spaecialCharacters:
+                    if sc[1] in partSen:
+                        partSen = partSen.replace(sc[1], sc[0])
+                tmpL.append (partSen)
+            tup[0] = tmpL
+            columns[QUERY_COLUMNS_KEY][ind] = tuple(tup)
         ret[QUERY_COLUMNS_KEY] = columns[QUERY_COLUMNS_KEY]
         del columns[QUERY_COLUMNS_KEY]
 
@@ -63,7 +84,13 @@ def extract_tableAndColumns (sql):
         schamenName = tbl[2]
         tableName   = tbl[3]
 
+        if tableName:
+            for sc in spaecialCharacters:
+                if sc[1] in tableName:
+                    tableName = tableName.replace(sc[1], sc[0])
+
         aliasTbl = alias if alias is not None and len(alias)>0 else tableName
+
         tableAliasVsName[aliasTbl] = tableName
 
         if tableName not in ret:
@@ -81,6 +108,16 @@ def extract_tableAndColumns (sql):
     for tbl in columns:
 
         if tbl not in foundTables:
+            for ind, col in enumerate(columns[tbl]):
+                tup = list(col)
+                tmpL = []
+                for partSen in tup[0]:
+                    for sc in spaecialCharacters:
+                        if sc[1] in partSen:
+                            partSen = partSen.replace(sc[1], sc[0])
+                    tmpL.append(partSen)
+                tup[0] = tmpL
+                columns[tbl][ind] = tuple(tup)
             if QUERY_NO_TABLE not in ret:
                 ret[QUERY_NO_TABLE] = {TABLE_ALIAS:None, TABLE_SCHEMA:None,TABLE_DB:None, TABLE_COLUMN:[]}
             ret[QUERY_NO_TABLE][TABLE_COLUMN].extend ( columns[tbl] )
@@ -88,8 +125,18 @@ def extract_tableAndColumns (sql):
     return ret
 
 def removeProps (sql):
-    sql = re.sub(re.compile("/\*.*?\*/", re.MULTILINE | re.UNICODE | re.DOTALL), "",sql)
-    sql = re.sub(re.compile("--.*?\n"), "", sql, re.MULTILINE | re.UNICODE | re.DOTALL)  # remov
+    specialReplace = ['CONVERT', 'REVERSE', 'ISNULL', 'TO_DATE', 'DATEDIFF', 'CHARINDEX']
+    sql = re.sub(re.compile("/\*.*?\*/", re.MULTILINE | re.UNICODE | re.DOTALL), "", sql)
+    sql = re.sub(re.compile("--.*?\n",   re.MULTILINE | re.UNICODE | re.DOTALL), "", sql)  # remov
+    sql = re.sub(re.compile("[\n|\t]", re.MULTILINE | re.UNICODE | re.DOTALL), " ", sql)  # remov
+
+    for sl in specialReplace:
+        sql = re.sub(re.compile("%s\s+\(" %sl, re.MULTILINE | re.UNICODE | re.IGNORECASE), "%s(" %sl, sql)  # remov
+
+    #pattern = re.compile(re.escape(findStr), re.IGNORECASE)
+   # res = pattern.sub(repStr, sString)
+
+
     #sql = re.sub(r"/\*[^*]*\*+(?:[^*/][^*]*\*+)*/", "", sql)
     #sql = re.sub(r"\s+", " ", sql)
 
@@ -113,10 +160,6 @@ def extract_tables(sql):
     postSql= ""
     # replacements to SQL queries
 
-    sql = replaceStr (sString=sql,findStr="ISNULL (", repStr="ISNULL(", ignoreCase=True,addQuotes=None)
-    sql = replaceStr(sString=sql, findStr="CONVERT (",repStr="CONVERT(", ignoreCase=True, addQuotes=None)
-    sql = sql.replace("\t"," ")
-
     statements = list(sqlparse.parse(sql))
 
     for statement in statements:
@@ -128,6 +171,7 @@ def extract_tables(sql):
 
             #extracted_tables.append(list(extract_table_identifiers(stream)))
     #return list(itertools.chain(*extracted_tables))
+
     return (extracted_last_tables_Tuple , extracted_last_columns_Dic,preSql,postSql)
 
 def extract_from_part(parsed):
