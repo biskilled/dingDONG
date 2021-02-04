@@ -37,7 +37,7 @@ from dingDONG.misc.logger     import p
 DEFAULTS = {
     eConn.defaults.FILE_MIN_SIZE :1024,
     eConn.defaults.FILE_DEF_COLUMN_PREF :'col_',
-    eConn.defaults.FILE_ENCODING:None,      # 'windows-1255'
+    eConn.defaults.FILE_ENCODING:"windows-1255",      # 'windows-1255'
     eConn.defaults.FILE_DELIMITER:',',
     eConn.defaults.FILE_ROW_HEADER:1,
     eConn.defaults.FILE_END_OF_LINE:'\r\n',
@@ -162,7 +162,7 @@ class connFile (baseConnBatch):
         pass
 
     def test(self):
-        baseConnBatch.test(self)
+        return baseConnBatch.test(self)
 
     def isExists(self, fullPath=None):
         fileDict = {'':{eObj.FILE_FULL_PATH: fullPath}} if fullPath else self.objNames
@@ -359,7 +359,7 @@ class connFile (baseConnBatch):
             """ EXECUTING LOADING SOURCE FILE DATA """
             rows = []
             try:
-                with io.open( fileFullPath, 'r', encoding=self.encode, errors=self.withCharErr) as textFile:
+                with codecs.open( fileFullPath, 'r', encoding=self.encode) as textFile: # errors=self.withCharErr
                     if self.isCsv:
                         fFile = csv.reader(textFile, delimiter=self.delimiter)
                         for i, split_line in enumerate(fFile):
@@ -417,13 +417,12 @@ class connFile (baseConnBatch):
 
 
         with codecs.open(filename=fileName, mode='wb', encoding=self.encode) as f:
-
             if targetColumn and len(targetColumn) > 0:
                 f.write(self.delimiter.join(targetColumn))
                 f.write(self.endOfLine)
 
             for row in rows:
-                row = [str(s) for s in row]
+                row = [str(s).replace("\n", " ").replace(self.delimiter,"").replace("\r","") for s in row]
                 f.write(self.delimiter.join(row))
                 f.write(self.endOfLine)
 

@@ -342,17 +342,16 @@ class nodeExec (object):
                         node[k].execMethod()
 
                     if eJson.SOURCE == k:
-                        if node[k].test():
+                        if node[k] and node[k].test():
                             src = node[k]
                             mrgSource = src
 
                     elif eJson.TARGET == k:
-                        if node[k].test():
+                        if node[k] and node[k].test():
                             tar = node[k]
                             mrgSource = tar
 
                     elif eJson.MERGE == k:
-                        if node[k].test():
                             mrg = node[k]
 
                     if src and tar:
@@ -385,12 +384,12 @@ class nodeExec (object):
             for node in self.nodes:
                 for k in node:
                     if eJson.SOURCE == k:
-                        if node[k].test():
+                        if node[k] and node[k].test():
                             src = node[k]
                             mrgSource = src
 
                     elif eJson.TARGET == k:
-                        if node[k].test():
+                        if node[k] and node[k].test():
                             tar = node[k]
                             mrgSource = tar
 
