@@ -3,18 +3,18 @@
 #
 # This file is part of dingDONG
 #
-# dingDong is free software: you can redistribute it and/or modify
+# dingDONG is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# dingDong is distributed in the hope that it will be useful,
+# dingDONG is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
+# along with dingDONG.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
 import copy
@@ -111,6 +111,10 @@ class nodeExec (object):
 
     """ LOADING MODULE: Return mapping between source and target """
     def mappingLoadingSourceToTarget(self, srcDictStructure,  src, tar):
+
+        if not srcDictStructure:
+            return None
+
         tarToSrc    = OrderedDict()
 
         srcPre, srcPos, tarPre, tarPos = '', '', '', ''
@@ -202,6 +206,9 @@ class nodeExec (object):
         retListStrucure = OrderedDict()
         sourceStt       = src.getStructure()
 
+        if not sourceStt:
+            return None
+
         if src.isSingleObject:
             sourceStt= {'':sourceStt}
 
@@ -219,6 +226,7 @@ class nodeExec (object):
                     retListStrucure[stt] = newSttVal.copy()
             else:
                 srcPre, srcPos = src.columnFrame[0], src.columnFrame[1]
+
                 for stt in sourceStt:
                     sttVal = sourceStt[stt]
                     newSttVal = OrderedDict()
@@ -334,15 +342,18 @@ class nodeExec (object):
                         node[k].execMethod()
 
                     if eJson.SOURCE == k:
-                        src = node[k]
-                        mrgSource = src
+                        if node[k].test():
+                            src = node[k]
+                            mrgSource = src
 
                     elif eJson.TARGET == k:
-                        tar = node[k]
-                        mrgSource = tar
+                        if node[k].test():
+                            tar = node[k]
+                            mrgSource = tar
 
                     elif eJson.MERGE == k:
-                        mrg = node[k]
+                        if node[k].test():
+                            mrg = node[k]
 
                     if src and tar:
                         """ TRANSFER DATA FROM SOURCE TO TARGET """
@@ -360,10 +371,11 @@ class nodeExec (object):
                     """ MERGE DATA BETWEEN SOURCE AND TARGET TABLES """
                     if mrg and mrgSource:
                         mrgSource.connect()
-                        mergeTarget = mrg[eJson.merge.TARGET]
-                        mergeKeys   = mrg[eJson.merge.MERGE]
-                        mrgSource.merge(mergeTable=mergeTarget, mergeKeys=mergeKeys, sourceTable=None)
-                        mrgSource.close()
+                        if mrgSource.test():
+                            mergeTarget = mrg[eJson.merge.TARGET]
+                            mergeKeys   = mrg[eJson.merge.MERGE]
+                            mrgSource.merge(mergeTable=mergeTarget, mergeKeys=mergeKeys, sourceTable=None)
+                            mrgSource.close()
 
     def ding( self ):
         if self.nodes and len(self.nodes) > 0:
@@ -373,17 +385,19 @@ class nodeExec (object):
             for node in self.nodes:
                 for k in node:
                     if eJson.SOURCE == k:
-                        src = node[k]
-                        mrgSource = src
+                        if node[k].test():
+                            src = node[k]
+                            mrgSource = src
 
                     elif eJson.TARGET == k:
-                        tar = node[k]
-                        mrgSource = tar
+                        if node[k].test():
+                            tar = node[k]
+                            mrgSource = tar
 
-                        if  eJson.SOURCE not in node:
-                            tar.create(stt=self.stt, addIndex=self.addIndex)
-                            tar.close()
-                            tar = None
+                            if  eJson.SOURCE not in node:
+                                tar.create(stt=self.stt, addIndex=self.addIndex)
+                                tar.close()
+                                tar = None
 
                     if tar and src:
                         # convert source data type to target data types
@@ -403,16 +417,19 @@ class nodeExec (object):
                         mrgTarget = copy.copy(mrgSource)
                         mrgSource.connect()
                         mrgTarget.connect()
-                        mrgTarget.connTbl   = node[k][eJson.merge.TARGET]
-                        mrgTarget.connIsTar = True
-                        mrgTarget.connIsSrc = False
-                        if eConn.updateMethod.UPDATE  in node[k]:
-                            mrgTarget.update = node[k][eConn.updateMethod.UPDATE]
-                        sttMerge = self.updateTargetBySourceAndStt(src=mrgSource, tar=mrgTarget)
-                        mrgTarget.create(sttDict=sttMerge,addIndex=self.addIndex)
-                        mrgTarget.close()
-                        mrgSource.close()
+
+                        if mrgSource.test() and mrgTarget.test():
+                            mrgTarget.connTbl   = node[k][eJson.merge.TARGET]
+                            mrgTarget.connIsTar = True
+                            mrgTarget.connIsSrc = False
+                            if eConn.updateMethod.UPDATE  in node[k]:
+                                mrgTarget.update = node[k][eConn.updateMethod.UPDATE]
+                            sttMerge = self.updateTargetBySourceAndStt(src=mrgSource, tar=mrgTarget)
+                            mrgTarget.create(sttDict=sttMerge,addIndex=self.addIndex)
+                            mrgTarget.close()
+                            mrgSource.close()
                         mrgSource = None
 
                     if eJson.CREATE == k:
-                        node[k].createFrom(stt=self.stt, addIndex=self.addIndex)
+                        if node[k].test():
+                            node[k].createFrom(stt=self.stt, addIndex=self.addIndex)

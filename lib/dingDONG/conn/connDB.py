@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
-# (c) 2017-2020, Tal Shany <tal.shany@biSkilled.com>
+# (c) 2017-2021, Tal Shany <tal.shany@biSkilled.com>
 #
-# This file is part of dingDong
+# This file is part of dingDONG
 #
-# dingDong is free software: you can redistribute it and/or modify
+# dingDONG is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any late r version.
 #
-# dingDong is distributed in the hope that it will be useful,
+# dingDONG is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
+# along with dingDONG.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import io
@@ -143,6 +143,7 @@ class connDb (baseConnBatch):
         elif not self.connTbl or (self.connTbl and (self.connTbl =="*" or self.connTbl =="")):
             self.isSingleObject = False
 
+
         elif self.connTbl and len(self.connTbl)>0 \
                 and ('.sql' not in self.connTbl and (not self.sqlFile or (self.sqlFile and self.sqlFile not in self.connTbl))):
 
@@ -235,7 +236,9 @@ class connDb (baseConnBatch):
                                                     eObj.DB_QUERY: """Select * From %s""" % col[0]}
                     p("There are %s Tables to use" % (str(len(rows))), "ii")
 
-            return True
+            if self.connDB and self.cursor:
+                return True
+            return False
 
         except ImportError:
             p("%s is not installed" % (self.connType), "e")
@@ -260,7 +263,7 @@ class connDb (baseConnBatch):
             p("ERROR: file name:"+str(fname)+" line: "+str(exc_tb.tb_lineno)+" massage: "+str(exc_obj), "e")
 
     def test(self):
-        baseConnBatch.test(self)
+        return baseConnBatch.test(self)
 
     def isExists(self, tableName, tableSchema=None):
         tableSchema, tableName = self.setTableAndSchema(tableName=tableName, tableSchema=tableSchema, wrapTable=False)
@@ -279,6 +282,7 @@ class connDb (baseConnBatch):
         isNew, isChanged, newHistoryTable = self.cloneObject(stt=stt, tableName=tableName)
         if isNew or (isChanged and (self.update in [eConn.updateMethod.UPDATE, eConn.updateMethod.DROP])):
             sql = "CREATE TABLE %s \n (" % (tableFullName)
+
             for col in stt:
                 if eJson.stt.ALIACE in stt[col] and stt[col][eJson.stt.ALIACE] and len(stt[col][eJson.stt.ALIACE]) > 0:
                     colName = self.wrapColName(col=stt[col][eJson.stt.ALIACE], remove=False)

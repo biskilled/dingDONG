@@ -1,7 +1,10 @@
 """
-    Copyright (c) 2017-2020, BPMK LTD (BiSkilled) Tal Shany <tal@biSkilled.com>
+    Copyright (c) 2017-2021, BPMK LTD (BiSkilled) Tal Shany <tal@biSkilled.com>
 
-    Download
+    Download data
+    original files downloaded from:
+    http://ftp.cdc.gov/pub/Health_Statistics/NCHS/Datasets/CHDI/chsi_dataset.zip
+
 """
 
 import requests
@@ -23,10 +26,9 @@ def unZip (filePath):
     print ("FINISH TO UNZIP INTO %s" %head)
 
 URL = 'https://github.com/biskilled/dingDong/raw/master/samples/sampleHealthCare/csvData.zip'
-FILE_PATH = "C:\\dingDONG\\data\\csvData.zip"
+FILE_PATH = "C:\\dingDONG\\csvData.zip"
 
 downloadFile (url=URL, filePath=FILE_PATH, chunk_size=128)
 unZip (filePath=FILE_PATH)
 
 
-# URL = 'http://ftp.cdc.gov/pub/Health_Statistics/NCHS/Datasets/CHDI/chsi_dataset.zip'

@@ -1,9 +1,9 @@
-# Copyright (c) 2017-2020, BPMK LTD (BiSkilled) Tal Shany <tal@biSkilled.com>
+# Copyright (c) 2017-2021, BPMK LTD (BiSkilled) Tal Shany <tal@biSkilled.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 #
 # This file is part of dingDONG
 #
-# dingDong is free software: you can redistribute it and/or modify
+# dingDONG is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -97,6 +97,16 @@ class dingDONG:
         ## Set logs only once !!
         if self._dirLogs and self.setCounter==1:
             LOGGER_OBJECT.setLogsFiles(logDir=self._dirLogs)
+
+        if self.setCounter==1 and config.LOGS_SLACK_URL and len(config.LOGS_SLACK_URL)>0:
+            LOGGER_OBJECT.setSlackLogs()
+
+        if self.setCounter==1 and config.LOGS_TEAMS_URL and len(config.LOGS_TEAMS_URL)>0:
+            LOGGER_OBJECT.setTeamsLogs()
+
+        if self.setCounter == 1 and config.LOGS_NAME and len(config.LOGS_NAME)>0:
+            LOGGER_OBJECT.setLogName(config.LOGS_NAME)
+
 
     def ding (self, destList=None, jsName=None, jsonNodes=None):
         p('STARTING TO MODEL DATA STRUCURE >>>>>' , "i")

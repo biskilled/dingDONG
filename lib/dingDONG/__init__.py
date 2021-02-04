@@ -1,6 +1,6 @@
-# (c) 2017-2019, Tal Shany <tal.shany@biSkilled.com>
+# (c) 2017-2021, Tal Shany <tal.shany@biSkilled.com>
 #
-# This file is part of dingDong
+# This file is part of dingDONG
 #
 # dingDong is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

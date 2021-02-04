@@ -1,8 +1,8 @@
-# (c) 2017-2019, Tal Shany <tal.shany@biSkilled.com>
+# (c) 2017-2021, Tal Shany <tal.shany@biSkilled.com>
 #
-# This file is part of dingDong
+# This file is part of dingDONG
 #
-# dingDong is free software: you can redistribute it and/or modify
+# dingDONG is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
+# along with dingDONG.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import  (absolute_import, division, print_function)
 __metaclass__ = type
@@ -43,6 +43,7 @@ class config:
     DONG_MAX_PARALLEL_THREADS   = 4
 
     #LOGGING Properties
+    LOGS_NAME  = "dingDONG"
     LOGS_DEBUG = logging.DEBUG
     LOGS_DIR   = None
     LOGS_INFO_NAME = 'log'
@@ -50,7 +51,9 @@ class config:
     LOGS_TMP_NAME  = 'lastLog'
     LOGS_HISTORY_DAYS=5
     LOGS_SLACK_URL  = None
-    LOGS_SLACK_LEVEL= logging.ERROR
+    LOGS_TEAMS_URL  = None
+    LOGS_WEB_LEVEL = logging.ERROR
+
 
     VERSION_DIR         = None
     VERSION_FILE        = 'version.txt'

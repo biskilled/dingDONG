@@ -1,19 +1,19 @@
-# (c) 2017-2019, Tal Shany <tal.shany@biSkilled.com>
+# (c) 2017-2021, Tal Shany <tal.shany@biSkilled.com>
 #
-# This file is part of dingDong
+# This file is part of dingDONG
 #
-# dingDong is free software: you can redistribute it and/or modify
+# dingDONG is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# dingDong is distributed in the hope that it will be useful,
+# dingDONG is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
+# along with dingDONG.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
 import shutil
@@ -90,6 +90,7 @@ class connFile (baseConnBatch):
         self.fileName = setProperty(k=eConn.props.TBL, o=self.propertyDict, setVal=fileName)
 
         pre, pos = self.__getSplitedFileName(fullPath=self.fileName)
+
         if pre and pos:
             self.fileFullName   = self.fileName
             self.fileName       = pos
@@ -97,10 +98,9 @@ class connFile (baseConnBatch):
 
         elif self.folder and self.fileName:
             pre, pos = self.__getSplitedFileName(fullPath=os.path.join( self.folder, self.fileName ))
-            if  pre and pos:
-                self.fileFullName = os.path.join( self.folder, self.fileName )
-                self.fileName = pos
-                self.folder = pre
+            self.fileFullName = os.path.join( self.folder, self.fileName )
+            self.fileName = pos
+            self.folder = pre
 
         else:
             pre, pos = self.__getSplitedFileName(fullPath=self.folder)
@@ -134,8 +134,14 @@ class connFile (baseConnBatch):
 
             if os.path.isfile(self.fileFullName):
                 p(u"FILE EXISTS:%s, DELIMITER %s, HEADER %s " % (self.fileFullName, self.delimiter, self.header), "ii")
+                return True
             else:
-                p(u"FILE NOT EXISTS:%s, DELIMITER %s, HEADER %s " % (self.fileFullName, self.delimiter, self.header), "ii")
+                if self.connIsSrc:
+                    p(u"SOURCE FILE NOT EXISTS:%s, DELIMITER %s, HEADER %s " % (self.fileFullName, self.delimiter, self.header), "e")
+                    return False
+                else:
+                    p(u"TARGET FILE NOT EXISTS:%s, DELIMITER %s, HEADER %s " % (self.fileFullName, self.delimiter, self.header), "ii")
+                    return True
         elif os.path.isdir (self.folder):
             self.isSingleObject = False
             for fileName in os.listdir(self.folder):
@@ -149,7 +155,8 @@ class connFile (baseConnBatch):
                 else:
                     self.objNames[pos] = {eObj.FILE_FULL_PATH: fileFullPath, eObj.FILE_FOLDER: self.folder}
                     p(u"FILE IN FOLDER EXISTS:%s, DELIMITER %s, HEADER %s " % (fileName, self.delimiter, self.header),"ii")
-
+            return True
+        return False
 
     def close(self):
         pass
@@ -168,6 +175,7 @@ class connFile (baseConnBatch):
 
     def create(self, sttDict=None, fullPath=None, addIndex=None):
         fileDict = {'': {eObj.FILE_FULL_PATH: fullPath}} if fullPath else self.objNames
+
         for ff in fileDict:
             stt = self.getStt(sttDict=sttDict, k=ff)
             fullPath = fileDict[ff][eObj.FILE_FULL_PATH]
@@ -249,6 +257,7 @@ class connFile (baseConnBatch):
 
     def getStructure (self, objects=None):
         objDict = objects if objects else self.objNames
+
         if not isinstance(objDict, (dict, OrderedDict)):
             if objects in self.objNames:
                 return self.__getStructure(fullPath=self.objNames[objects][eObj.FILE_FULL_PATH] )

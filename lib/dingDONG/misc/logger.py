@@ -1,30 +1,30 @@
-# (c) 2017-2019, Tal Shany <tal.shany@biSkilled.com>
+# (c) 2017-2021, Tal Shany <tal.shany@biSkilled.com>
 #
-# This file is part of dingDong
+# This file is part of dingDONG
 #
-# dingDong is free software: you can redistribute it and/or modify
+# dingDONG is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# dingDong is distributed in the hope that it will be useful,
+# dingDONG is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
+# along with dingDONG.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
 import logging
+import logging.handlers
 import inspect
 import os
+import requests
 
 from dingDONG.config import config
 
-
 ### INTERNAL LOGGING CLASSES
-
 
 class __myLogger (object):
     class __logFilter(object):
@@ -34,29 +34,43 @@ class __myLogger (object):
         def filter(self, logRecord):
             return logRecord.levelno <= self.__level
 
-    def __init__ (self, loggLevel=logging.DEBUG, logFormat='%(asctime)s %(levelname)s %(message)s' ):
+    def __init__ (self, logName="dingDONG", loggLevel=logging.DEBUG, logFormat='%(asctime)s %(levelname)s %(message)s' ):
         dateFormat          = '%Y-%m-%d %H:%M:%S'
         self.logFormatter   = logging.Formatter(logFormat, dateFormat)
         self.logLevel       = loggLevel
+        self.logName        = logName
 
         logging.basicConfig(level=self.logLevel, format=logFormat, datefmt=dateFormat)
         self.isLogsFilesInit= False
         self.logTmpFileErr  = None
         self.logTmpFileWar  = None
         self.logDir         = config.LOGS_DIR
-        self.logg =  logging.getLogger(__name__)
+        self.logg =  logging.getLogger(logName)
 
         if config.LOGS_DIR and os.path.isdir(config.LOGS_DIR):
             self.setLogsFiles(logDir=config.LOGS_DIR)
 
         if config.LOGS_SLACK_URL and len(config.LOGS_SLACK_URL)>0:
-            slackLevel = config.LOGS_SLACK_LEVEL if config.LOGS_SLACK_LEVEL else self.logLevel
-            self.setSlack(slackLevel=slackLevel)
+            self.setSlackLogs(dateFormat)
+
+        if config.LOGS_TEAMS_URL and len(config.LOGS_TEAMS_URL)>0:
+            self.setTeamsLogs(dateFormat)
+
 
         #if logStdout:
         #    consoleHandler = logging.StreamHandler(sys.stdout)
         #    consoleHandler.setFormatter(self.logFormatter)
         #    self.logg.addHandler(consoleHandler)
+
+
+
+    def setSlackLogs (self, dateFormat='%Y-%m-%d %H:%M:%S'):
+        logLevel = config.LOGS_WEB_LEVEL if config.LOGS_WEB_LEVEL else self.logLevel
+        self.logg.addHandler(SlackHandler(logLevel, dateFormat))
+
+    def setTeamsLogs (self, dateFormat='%Y-%m-%d %H:%M:%S'):
+        logLevel = config.LOGS_WEB_LEVEL if config.LOGS_WEB_LEVEL else self.logLevel
+        self.logg.addHandler(TeamsHandler(logLevel, dateFormat))
 
     def setLogsFiles (self, logDir=None, timeFormat='%Y%m%d'):
         self.logDir = logDir if logDir else config.LOGS_DIR
@@ -139,6 +153,10 @@ class __myLogger (object):
         self.logLevel = logLevel
         self.logg.setLevel(self.logLevel)
 
+    def setLogName (self, logName):
+        self.logName = logName
+        self.logg.name = self.logName
+
     def getLogData (self, logPath=None, error=True):
         def getLines (dir=None, f=None, fPath=None):
             lines = None
@@ -185,6 +203,26 @@ class __listHandler(logging.Handler):  # Inherit from logging.Handler
     def getList (self):
         return self.log_list
 
+
+class SlackHandler(logging.Handler):
+    def __init__(self, logLevel, dateFormat):
+        logFormat = '*%(name)s - %(levelname)s: %(asctime)s * \n\r%(message)s'
+        logging.Handler.__init__(self, logLevel)
+        self.formatter = logging.Formatter(logFormat, dateFormat)
+
+    def emit(self, record):
+        msg = self.format(record)
+        requests.post(config.LOGS_SLACK_URL, json={'text': msg})
+
+class TeamsHandler(logging.Handler):
+    def __init__(self, logLevel, dateFormat):
+        logFormat = '**%(name)s - %(levelname)s: %(asctime)s** \n\r%(message)s'
+        logging.Handler.__init__(self, logLevel)
+        self.formatter = logging.Formatter(logFormat, dateFormat)
+
+    def emit(self, record):
+        msg = self.format(record)
+        requests.post(config.LOGS_TEAMS_URL, json={'text': msg})
 
 LOGGER_OBJECT  = __myLogger(loggLevel=config.LOGS_DEBUG)
 __logg  = LOGGER_OBJECT.getLogg()
