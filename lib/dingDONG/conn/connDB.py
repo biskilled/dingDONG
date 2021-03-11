@@ -75,13 +75,14 @@ DATA_TYPES = {
 
 EXTEND_DATA_TYPES = {
     eConn.types.ORACLE:   { eConn.dataTypes.DB_DATE:['date','datetime'],
-                      eConn.dataTypes.DB_VARCHAR:['varchar','varchar2'],
-                      eConn.dataTypes.DB_DECIMAL:['number','numeric','dec','decimal']
+                            eConn.dataTypes.DB_VARCHAR:['varchar','varchar2'],
+                            eConn.dataTypes.DB_DECIMAL:['number','numeric','dec','decimal'],
+                            eConn.dataTypes.DB_CLOB:['clob']
                     },
     eConn.types.SQLSERVER:{
                         eConn.dataTypes.DB_DATE:['smalldatetime','datetime'],
                         eConn.dataTypes.DB_DECIMAL:['decimal'],
-                        eConn.dataTypes.DB_CLOB:['NVARCHAR(100)']
+                        eConn.dataTypes.DB_CLOB:['NVARCHAR(MAX)']
                     },
     eConn.types.POSTGESQL:{
                         eConn.dataTypes.DB_DATE:['smalldatetime','datetime'],
@@ -194,15 +195,18 @@ class connDb (baseConnBatch):
                 if 'nls' in self.connUrl:
                     os.environ["NLS_LANG"] = self.connUrl[eConn.connString.URL_NLS]
                 self.cursor = self.connDB.cursor()
+
             elif eConn.types.ACCESS == self.connType:
                 import pyodbc as odbc
                 self.connDB = odbc.connect(self.connUrl)  # , ansi=True
                 self.cursor = self.connType.cursor()
                 self.cColoumnAs = False
+
             elif eConn.types.LITE == self.connType:
                 import sqlite3 as sqlite
                 self.connDB = sqlite.connect(self.connUrl)  # , ansi=True
                 self.cursor = self.connDB.cursor()
+
             elif eConn.types.SQLSERVER == self.connType:
                 try:
                     if eConn.props.DB_PYODBC in self.propertyDict:
@@ -218,13 +222,14 @@ class connDb (baseConnBatch):
                 if odbc:
                     self.connDB = odbc.connect(self.connUrl)  # ansi=True
                     self.cursor = self.connDB.cursor()
+
             else:
                 import pyodbc as odbc
                 self.connDB = odbc.connect(self.connUrl)  # ansi=True
                 self.cursor = self.connDB.cursor()
                 p("CONN %s is not defined, using PYODBC connection " %self.connType, "w")
 
-            p("CONNECTED, DB TYPE: %s, URL: %s" % (self.connType, self.connUrl), "ii")
+            #p("CONNECTED, DB TYPE: %s, URL: %s" % (self.connType, self.connUrl), "ii")
             if not self.isSingleObject:
                 sql = setSqlQuery().getSql(conn=self.connType, sqlType=eSql.ALL_TABLES, filterTables=self.connFilter)
                 self.exeSQL(sql, commit=False)
@@ -444,7 +449,6 @@ class connDb (baseConnBatch):
         ### Return dictionary : {Table Name:[{SOURCE:ColumnName, ALIASE: column aliase}, ....]}
         ### And empty table -> all column that not related to any table '':[{SOURCE:columnName, ALIASE: .... } ...]
         queryTableAndColunDic = qp.extract_tableAndColumns(sql=sqlQuery)
-
 
         if qp.QUERY_COLUMNS_KEY in queryTableAndColunDic:
             allFoundColumns = queryTableAndColunDic[qp.QUERY_COLUMNS_KEY]

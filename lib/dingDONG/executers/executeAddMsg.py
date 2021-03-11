@@ -1,6 +1,6 @@
-# (c) 2017-2019, Tal Shany <tal.shany@biSkilled.com>
+# (c) 2017-2021, Tal Shany <tal.shany@biSkilled.com>
 #
-# This file is part of dingDong
+# This file is part of dingDONG
 #
 # dingDong is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
+# along with dingDONG.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
 import os

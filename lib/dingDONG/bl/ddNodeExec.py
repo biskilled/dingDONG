@@ -131,6 +131,7 @@ class nodeExec (object):
         # remove from STT column that not exists in Target OBJECT OR Source OBJECT
         for src in srcDictStructure:
             srcStructure = srcDictStructure[src]
+
             if src and len(src)>0:
                 tarStructure = tar.getStructure(objects=src)
             else:
@@ -201,105 +202,116 @@ class nodeExec (object):
 
         return tarToSrc
 
+    def convertToTargetDataType (self, sttVal, src, tar ):
+        srcPre, srcPos = src.columnFrame[0], src.columnFrame[1]
+        newSttVal = OrderedDict()
+
+        if src.connType == tar.connType:
+            for col in sttVal:
+                if eJson.stt.ALIACE in sttVal[col] and sttVal[col][eJson.stt.ALIACE]:
+                    newSttVal[sttVal[col][eJson.stt.ALIACE]] = {eJson.stt.TYPE: sttVal[col][eJson.stt.TYPE]}
+                else:
+                    newSttVal[col] = {eJson.stt.TYPE: sttVal[col][eJson.stt.TYPE]}
+        else:
+            for col in sttVal:
+                targetColName = col.replace(srcPre, "").replace(srcPos, "")
+                if eJson.stt.ALIACE in sttVal[col] and sttVal[col][eJson.stt.ALIACE]:
+                    targetColName = sttVal[col][eJson.stt.ALIACE].replace(srcPre, "").replace(srcPos, "")
+
+                colType = sttVal[col][eJson.stt.TYPE] if eJson.stt.TYPE in sttVal[col] and sttVal[col][
+                    eJson.stt.TYPE] else tar.defDataType
+                fmatch = re.search(r'(.*)(\(.+\))', colType, re.M | re.I)
+                if fmatch:
+                    replaceString = fmatch.group(1)  # --> varchar, int , ...
+                    postType = fmatch.group(2)  # --> (X), (X,X) , ....
+                else:
+                    replaceString = colType
+                    postType = ''
+
+                ## Receive list of all dataType in DataTypes Tree
+                newDataTypeTree = src.getDataTypeTree(dataType=replaceString.lower(), ret=([]))
+
+                if newDataTypeTree is None:
+                    p("SOURCE CONNECTION: %s, COLUMN: %s, DATA TYPE: %s ; IS NOT EXISTS, WILL USE DEFAULT VALUE" % (
+                    src.connType, col, replaceString), "w")
+                    tarType = tar.defDataType
+                else:
+                    targetList = tar.setDataTypeTree(dataTypeTree=newDataTypeTree, allDataTypes=tar.dataTypes,
+                                                     ret=[])
+                    if len(targetList) > 2:
+                        targetList = [x for x in targetList if x]
+
+                    tarType = '%s%s' % (targetList[-1], postType) if targetList and len(targetList) > 0 and \
+                                                                     targetList[-1] is not None else tar.defDataType
+                newSttVal[targetColName] = {eJson.stt.TYPE: tarType}
+        return newSttVal
+
+    def addSTTProperties (self, srcDict, tar, onlyFromStt=False):
+        srcKeys = {x.lower(): x for x in srcDict}
+
+        ### UPDATE srcDict with STT values
+        if self.stt:
+            columnToRemoveFromSrc = []
+            for colName in self.stt:
+                ## if source exists in stt, remove original column and add new naming column
+                if self.stt[colName] and eJson.stt.SOURCE in self.stt[colName]:
+                    srcColumnNameInSTT = self.stt[colName][eJson.stt.SOURCE]
+                    ## source exists
+                    if srcColumnNameInSTT.lower() in srcKeys:
+                        srcColumnName = srcKeys[srcColumnNameInSTT.lower()]
+                        if colName.lower() not in srcKeys:
+                            srcDict[colName] = self.stt[colName]
+                            # Theere is new name to source column, will remove original name
+                            for prop in srcDict [ srcColumnName ]:
+                                if prop not in srcDict[colName]:
+                                    srcDict[colName][prop] = srcDict[colName][prop]
+                            columnToRemoveFromSrc.append ( srcColumnName )
+                        else:
+                            for prop in self.stt[colName]:
+                                srcDict[ srcColumnName ][prop] = self.stt[colName][prop]
+                    else:
+                        if colName.lower() in srcKeys:
+                            for prop in self.stt[colName]:
+                                srcDict[ srcKeys[colName.lower()] ][prop] = self.stt[colName][prop]
+
+                        else:
+                            srcDict[colName] = self.stt[colName]
+
+                elif colName.lower() not in srcKeys:
+                    srcDict[colName] = self.stt[colName]
+
+                else:
+                    srcColumnName = srcKeys[colName.lower()]
+                    for prop in self.stt[colName]:
+                        srcDict[srcColumnName][prop] = self.stt[colName][prop]
+
+                if eJson.stt.TYPE not in srcDict[colName] or not srcDict[colName][eJson.stt.TYPE]:
+                    srcDict[colName][eJson.stt.TYPE] = tar.defDataType
+
+            for column in columnToRemoveFromSrc:
+                del srcDict[column]
+
+        if onlyFromStt:
+            removeColumn = filter(lambda x: (x not in self.stt), srcDict )
+            for column in removeColumn:
+                del srcDict[column]
+        return srcDict
+
     """ MAPPING MODULE: Convert Source Data Type into Target Data Type """
     def updateTargetBySourceAndStt(self, src, tar):
         retListStrucure = OrderedDict()
         sourceStt       = src.getStructure()
 
-        if not sourceStt:
-            return None
-
         if src.isSingleObject:
             sourceStt= {'':sourceStt}
 
-        if self.addSourceColumn:
-            if src.connType == tar.connType:
-                for stt in sourceStt:
-                    sttVal      = sourceStt[stt]
-                    newSttVal   = OrderedDict()
-
-                    for col in sttVal:
-                        if eJson.stt.ALIACE in sttVal[col] and sttVal[col][eJson.stt.ALIACE]:
-                            newSttVal [ sttVal[col][eJson.stt.ALIACE] ] = {eJson.stt.TYPE: sttVal[col][eJson.stt.TYPE]}
-                        else:
-                            newSttVal[col] = {eJson.stt.TYPE: sttVal[col][eJson.stt.TYPE]}
-                    retListStrucure[stt] = newSttVal.copy()
+        for stt in sourceStt:
+            srcDict = self.convertToTargetDataType(sttVal=sourceStt[stt], src=src, tar=tar)
+            if self.addSourceColumn:
+                srcDict = self.addSTTProperties(srcDict=srcDict, tar=tar, onlyFromStt=False)
             else:
-                srcPre, srcPos = src.columnFrame[0], src.columnFrame[1]
-
-                for stt in sourceStt:
-                    sttVal = sourceStt[stt]
-                    newSttVal = OrderedDict()
-
-                    for col in sttVal:
-                        targetColName = col.replace(srcPre, "").replace(srcPos, "")
-                        if eJson.stt.ALIACE in sttVal[col] and sttVal[col][eJson.stt.ALIACE]:
-                            targetColName = sttVal[col][eJson.stt.ALIACE].replace(srcPre, "").replace(srcPos, "")
-
-                        colType = sttVal[col][eJson.stt.TYPE] if eJson.stt.TYPE in sttVal[col] and sttVal[col][eJson.stt.TYPE] else tar.defDataType
-                        fmatch = re.search(r'(.*)(\(.+\))', colType, re.M | re.I)
-                        if fmatch:
-                            replaceString = fmatch.group(1)  # --> varchar, int , ...
-                            postType = fmatch.group(2)  # --> (X), (X,X) , ....
-                        else:
-                            replaceString = colType
-                            postType = ''
-
-                        ## Receive list of all dataType in DataTypes Tree
-                        newDataTypeTree = src.getDataTypeTree(dataType=replaceString.lower(), ret=([]))
-
-                        if newDataTypeTree is None:
-                            p("SOURCE CONNECTION: %s, COLUMN: %s, DATA TYPE: %s ; IS NOT EXISTS, WILL USE DEFAULT VALUE" % (src.connType, col, replaceString), "w")
-                            tarType = tar.defDataType
-                        else:
-                            targetList = tar.setDataTypeTree(dataTypeTree=newDataTypeTree, allDataTypes=tar.dataTypes,
-                                                             ret=[])
-                            if len(targetList) > 2:
-                                targetList = [x for x in targetList if x]
-
-                            tarType = '%s%s' % (targetList[-1], postType) if targetList and len(targetList) > 0 and \
-                                                                             targetList[-1] is not None else tar.defDataType
-                        newSttVal[targetColName] = {eJson.stt.TYPE: tarType}
-                    retListStrucure[stt] = newSttVal.copy()
-
-        if self.stt and len (self.stt)>0:
-            for sstt in retListStrucure:
-                newSttVal = retListStrucure[sstt]
-                retStrucureL = {x.lower(): x for x in newSttVal}
-
-                for col in self.stt:
-                    colName = col
-                    ## if source exists in stt, remove original column and add new naming column
-                    if eJson.stt.SOURCE in self.stt[col]:
-                        sourceName = self.stt[col][eJson.stt.SOURCE]
-
-                        if sourceName.lower() in retStrucureL:
-                            if col.lower() not in retStrucureL:
-                                newSttVal[col] = self.stt[col]
-                                del newSttVal[ retStrucureL[ sourceName.lower()] ]
-                            else:
-                               colName = retStrucureL[col.lower()]
-                               for prop in self.stt[col]:
-                                   newSttVal[ colName ][prop] = self.stt[col][prop]
-                        else:
-                            if col.lower() in retStrucureL:
-                                for prop in self.stt[col]:
-                                    newSttVal[ retStrucureL[col.lower()] ][prop] = self.stt[col][prop]
-
-                            else:
-                                newSttVal[col] =  self.stt[col]
-
-                    elif col.lower() not in retStrucureL:
-                        newSttVal[col] = self.stt[col]
-
-                    else:
-                        for prop in self.stt[col]:
-                            colName = retStrucureL[col.lower()]
-                            newSttVal[ colName ][prop] = self.stt[col][prop]
-
-
-                    if eJson.stt.TYPE not in newSttVal[ colName ] or not newSttVal[ colName ][eJson.stt.TYPE]:
-                        newSttVal[colName][eJson.stt.TYPE] = tar.defDataType
+                srcDict = self.addSTTProperties(srcDict=srcDict, tar=tar, onlyFromStt=True)
+            retListStrucure[stt] = srcDict.copy()
 
         if len(retListStrucure)==1:
             k, v = retListStrucure.popitem()
@@ -315,8 +327,9 @@ class nodeExec (object):
         for col in srcStructure:
             srcStrucureL.append (col.replace(pre,"").replace(pos,"").lower())
             if eJson.stt.SOURCE in srcStructure[col] and srcStructure[col][eJson.stt.SOURCE]:
-                srcStrucureL.append(uniocdeStr(srcStructure[col][eJson.stt.SOURCE]))
-                srcColumns[srcStructure[col][eJson.stt.SOURCE]] = None
+                srcName = srcStructure[col][eJson.stt.SOURCE].replace(pre,"").replace(pos,"")
+                srcStrucureL.append(uniocdeStr(srcName))
+                srcColumns[srcName] = None
 
         removeColumnsSrc = []
         if self.stt:
