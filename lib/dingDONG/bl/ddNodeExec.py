@@ -444,4 +444,4 @@ class nodeExec (object):
 
                     if eJson.CREATE == k:
                         if node[k].test():
-                            node[k].createFrom(stt=self.stt, addIndex=self.addIndex)
+                            node[k].create(sttDict=self.stt, addIndex=self.addIndex)

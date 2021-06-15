@@ -25,7 +25,7 @@ from collections import OrderedDict
 from dingDONG.conn.baseConnBatch import baseConnBatch
 from dingDONG.conn.transformMethods import *
 from dingDONG.misc.enums            import eConn, eSql, eJson, eObj
-from dingDONG.misc.globalMethods import uniocdeStr, setProperty
+from dingDONG.misc.globalMethods import uniocdeStr, setProperty, myBaseString
 from dingDONG.config                import config
 from dingDONG.misc.logger           import p
 
@@ -56,8 +56,14 @@ DEFAULTS = {
                                     eConn.defaults.SP: {'match': r'([@].*[=])(.*?(;|$))', 'replace': r"[=;@\s']"}, eConn.defaults.UPDATABLE:True  },
 
             eConn.types.LITE: {   eConn.defaults.DEFAULT_TYPE:'varchar(100)',eConn.defaults.TABLE_SCHEMA:None,
-                                  eConn.defaults.COLUMNS_NULL:'Null', eConn.defaults.UPDATABLE:eConn.updateMethod.DROP}
-           }
+                                  eConn.defaults.COLUMNS_NULL:'Null', eConn.defaults.UPDATABLE:eConn.updateMethod.DROP},
+
+            eConn.types.MYSQL: {eConn.defaults.DEFAULT_TYPE: 'varchar(100)', eConn.defaults.TABLE_SCHEMA: None,
+                    eConn.defaults.COLUMNS_NULL: 'Null', eConn.defaults.COLUMN_FRAME: ('`', '`'),
+                    eConn.defaults.SP: {'match': r'([@].*[=])(.*?(;|$))', 'replace': r"[=;@\s']"},
+                    eConn.defaults.UPDATABLE: True}
+
+            }
 
 DATA_TYPES = {
     eConn.dataTypes.B_STR: {
@@ -88,6 +94,10 @@ EXTEND_DATA_TYPES = {
                         eConn.dataTypes.DB_DATE:['smalldatetime','datetime'],
                         eConn.dataTypes.DB_DECIMAL:['decimal']
                     },
+    eConn.types.MYSQL: {
+        eConn.dataTypes.DB_DATE: ['smalldatetime', 'datetime'],
+        eConn.dataTypes.DB_DECIMAL: ['decimal']
+    },
     eConn.types.ACCESS: { eConn.dataTypes.DB_VARCHAR:['varchar', 'longchar', 'bit', 'ntext'],
                     eConn.dataTypes.DB_INT:['integer', 'counter'],
                     eConn.dataTypes.DB_FLOAT:['double'],
@@ -140,7 +150,8 @@ class connDb (baseConnBatch):
         if self.connIsSql:
             self.connSql    = self.setQueryWithParams(self.connTbl)
             self.connTbl    = self.connSql
-
+        elif connType and connUrl:
+            self.isSingleObject = True
         elif not self.connTbl or (self.connTbl and (self.connTbl =="*" or self.connTbl =="")):
             self.isSingleObject = False
 
@@ -173,8 +184,8 @@ class connDb (baseConnBatch):
         try:
             if eConn.types.MYSQL == self.connType:
                 import pymysql
-                self.connDB = pymysql.connect(self.connUrl[eConn.connString.URL_HOST], self.connUrl[eConn.connString.URL_USER],
-                                              self.connUrl[eConn.connString.URL_PASS], self.connUrl[eConn.connString.URL_DB])
+                self.connDB = pymysql.connect(host=self.connUrl[eConn.connString.URL_HOST], user=self.connUrl[eConn.connString.URL_USER],
+                                              password=self.connUrl[eConn.connString.URL_PASS], database=self.connUrl[eConn.connString.URL_DB])
                 self.cursor = self.connDB.cursor()
 
             elif eConn.types.POSTGESQL == self.connType:
@@ -886,7 +897,6 @@ class connDb (baseConnBatch):
 
         tarStrucutre = self.getStructure(tableName=tableName, sqlQuery=None)
         tarStrucutreL= {x.replace(pre, "").replace(pos, "").lower(): x for x in tarStrucutre}
-
         removeCol = {}
         for i, col in enumerate (targetColumn):
             if col.replace(pre, "").replace(pos, "").lower() not in tarStrucutreL:
@@ -903,12 +913,16 @@ class connDb (baseConnBatch):
         for col in targetColumn:
             colName = '%s%s%s' % (pre, col, pos)
             colList.append(colName)
-            colInsert.append('?')
+            if eConn.types.MYSQL == self.connType:
+                colInsert.append('%s')
+            else:
+                colInsert.append('?')
+
         execQuery += "(%s) " % (",".join(colList))
         execQuery += "VALUES (%s)" % (",".join(colInsert))
 
         try:
-            self.cursor.executemany(execQuery, rows)
+            self.cursor.executemany(str(execQuery), rows)
             self.connDB.commit()
             p('LOAD %s into target: %s >>>>>> ' % (str(totalRows), tableName), "ii")
 
@@ -921,7 +935,7 @@ class connDb (baseConnBatch):
             for col in rows[0]:
                 if not col:
                     sampleRes.append ('Null')
-                elif isinstance(col, basestring):
+                elif myBaseString(col):
                     sampleRes.append(u"'%s'" %uniocdeStr(col, decode=True))
                 else:
                     sampleRes.append(str(col))
@@ -936,7 +950,7 @@ class connDb (baseConnBatch):
                 for r in rows:
                     try:
                         iCnt += 1
-                        self.cursor.executemany(execQuery, [r])
+                        self.cursor.executemany(str(execQuery), [r])
                         self.connDB.commit()
                     except Exception as e:
                         totalErrorsFound += 1
@@ -945,7 +959,7 @@ class connDb (baseConnBatch):
                         ret = []
                         for col in r:
                             if col is None: ret.append ('Null')
-                            elif isinstance(col, basestring):
+                            elif myBaseString(col):
                                 ret.append(u"'%s'" % uniocdeStr(col, decode=True))
                             else:
                                 ret.append(str(col))

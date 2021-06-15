@@ -127,6 +127,7 @@ class setSqlQuery (baseSqlQuery):
         self.connQuery[eConn.types.LITE] = self.default
         self.connQuery[eConn.types.SQLSERVER] = "EXEC sp_rename '%s','%s'" %(tableName, tableNewName)
         self.connQuery[eConn.types.POSTGESQL] = self.default
+        self.connQuery[eConn.types.MYSQL] = "RENAME TABLE `%s` TO `%s`;" %(tableName, tableNewName)
 
     def setSqlDrop (self, tableName, tableSchema):
         tableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName
@@ -134,6 +135,7 @@ class setSqlQuery (baseSqlQuery):
         self.connQuery[eConn.types.SQLSERVER] = self.default
         self.connQuery[eConn.types.ORACLE]    = self.default
         self.connQuery[eConn.types.LITE] = self.default
+        self.connQuery[eConn.types.MYSQL] = self.default
         self.connQuery[eConn.types.POSTGESQL] = "drop table if exists %s " %(tableName)
 
     def setSqlTruncate (self, tableName, tableSchema):
@@ -141,6 +143,7 @@ class setSqlQuery (baseSqlQuery):
         self.default = "truncate table %s;" %(fullTableName)
         self.connQuery[eConn.types.SQLSERVER] = self.default
         self.connQuery[eConn.types.ORACLE]    = self.default
+        self.connQuery[eConn.types.MYSQL] = self.default
         self.connQuery[eConn.types.LITE] = "DELETE FROM %s;" %(fullTableName)
         self.connQuery[eConn.types.POSTGESQL] = "TRUNCATE %s RESTART IDENTITY;" % (fullTableName)
 
@@ -202,6 +205,7 @@ class setSqlQuery (baseSqlQuery):
         sql += "and TABLE_SCHEMA='" + tableSchema + "';" if tableSchema else ";"
 
         self.connQuery[eConn.types.MYSQL] = str(sql)
+        self.connQuery[eConn.types.MYSQL] = "SHOW COLUMNS FROM %s;" % tableName
 
         ### VERTICA
         sql = """
@@ -257,6 +261,9 @@ class setSqlQuery (baseSqlQuery):
         sql = "SELECT * FROM ALL_OBJECTS WHERE OBJECT_NAME = '%s' " %str(tableName)
         sql+= "AND OWNER = '%s'" %str(tableSchema) if tableSchema and len(tableSchema)>0 else ""
         self.connQuery[eConn.types.ORACLE] = sql
+
+        sql = "SELECT * FROM information_schema.tables WHERE table_name = '%s' LIMIT 1;" % str(tableName)
+        self.connQuery[eConn.types.MYSQL] = sql
 
     def setSqlDelete (self, sqlFilter, tableName, tableSchema):
         fullTableName = '%s.%s' % (tableSchema, tableName) if tableSchema else tableName

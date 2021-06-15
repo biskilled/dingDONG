@@ -65,6 +65,11 @@ def uniocdeStr (sObj, decode=False):
 
     return unicode (str(sObj).decode(config.DECODE)) if decode else unicode (sObj)
 
+def myBaseString ( v ):
+    if 3 == sys.version_info[0]:
+        return isinstance( v , str )
+    return isinstance(v, basestring)
+
 def replaceStr (sString,findStr, repStr, ignoreCase=True,addQuotes=None):
     if addQuotes and isinstance(repStr,str):
         repStr="%s%s%s" %(addQuotes,repStr,addQuotes)

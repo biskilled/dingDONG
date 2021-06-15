@@ -1,5 +1,5 @@
 from __future__ import print_function
-__version__ = '1.0.16'
+__version__ = '1.0.18'
 __author__  = 'Tal@BiSkilled.com'
 __codename__= 'Why not?'
 
@@ -63,11 +63,11 @@ static_setup_params = dict(
 
     project_urls={
         'Bug Tracker'    : 'https://github.com/biskilled/dingDONG/issues',
-        'CI: Shippable'  : 'https://app.shippable.com/github/biskilled/dingDong',
-        'Code of Conduct': '',
-        'Documentation'  : 'https://readthedocs.org/projects/dingDong/',
-        'Mailing lists'  : '',
-        'Source Code'    : 'https://github.com/biskilled/dingDONG',
+        'CI: Shippable'  : 'https://app.shippable.com/github/biskilled/dingDONG',
+        #'Code of Conduct': '',
+        'Documentation'  : 'https://readthedocs.org/projects/dingdong/',
+        #'Mailing lists'  : '',
+        'Source Code'    : 'https://github.com/biskilled/dingDONG'
     },
     license='GPLv3+',
     python_requires= '>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*',
@@ -93,6 +93,7 @@ static_setup_params = dict(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     scripts=[],
     data_files=[],
