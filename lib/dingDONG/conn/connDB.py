@@ -284,6 +284,7 @@ class connDb (baseConnBatch):
     def isExists(self, tableName, tableSchema=None):
         tableSchema, tableName = self.setTableAndSchema(tableName=tableName, tableSchema=tableSchema, wrapTable=False)
         sql = setSqlQuery().getSql(conn=self.connType, sqlType=eSql.ISEXISTS, tableName=tableName, tableSchema=tableSchema)
+
         self.cursor.execute(sql)
         row = self.cursor.fetchone()
         if row and row[0]:

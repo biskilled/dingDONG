@@ -126,6 +126,9 @@ class baseConn ():
     """ -----------------   GLOBAL METHODS -------------------------------------"""
     """ General method - implemented localy """
     def dataTransform(self, data, functionDict=None, execDict=None):
+        if isinstance(data, tuple):
+            data = list(data)
+
         regex = r"(\{.*?\})"
         if (functionDict and len(functionDict) > 0) or (execDict and len(execDict) > 0):
             for num, dataRow in enumerate(data):
