@@ -978,7 +978,7 @@ class connDb (baseConnBatch):
             methodTup = [(1,method,{})]
             execQuery(sqlWithParamList=method, connObj=self, sqlFolder=self.sqlFolder)
 
-    def merge (self, mergeTable, mergeKeys=None, sourceTable=None):
+    def merge (self, mergeTable, mergeKeys=None, sourceTable=None, ingoreUpdateColumn=None):
         srcSchema, srcName = self.setTableAndSchema(tableName=sourceTable, tableSchema=None, wrapTable=True)
         mrgSchema, mrgName = self.setTableAndSchema(tableName=mergeTable, tableSchema=None, wrapTable=True)
 
@@ -1017,11 +1017,19 @@ class connDb (baseConnBatch):
         if len (notExistsInSourceCol)>0:
             p ("MERGE COLUMNS %s NOT EXISTS IN SOURCE TABLE %s" %(str(notExistsInSourceCol), mergeTable),"ii")
 
+        if ingoreUpdateColumn and len(ingoreUpdateColumn)>0:
+            for col in ingoreUpdateColumn:
+                if col in updateColumns:
+                    updateColumns.remove(col)
+                    p("MERGE COLUMNS IGNORE %s column on update TABLE %s" % (col, mergeTable), "ii")
+
         if len (keyColumns) == 0:
             keyColumns = updateColumns
 
         dstTable = '%s.%s' %(mrgSchema,mrgName) if mrgSchema else mrgName
         srcTable = '%s.%s' %(srcSchema,srcName)
+
+
 
         sql = setSqlQuery().getSql(conn=self.connType, sqlType=eSql.MERGE, dstTable=dstTable, srcTable=srcTable, mergeKeys=keyColumns, colList=updateColumns, colFullList=allColumns)
         self.exeSQL(sql=sql)

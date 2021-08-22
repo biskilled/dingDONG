@@ -303,9 +303,19 @@ class jsonParser (object):
                 else:
                     ret[eJson.merge.MERGE]  = propVal[1]
             elif len(propVal) == 3:
-                ret[eJson.merge.TARGET]  = propVal[0]
-                ret[eJson.merge.MERGE]   = propVal[1]
-                ret[eConn.props.UPDATE]       = self.__setUpdate (propVal[2])
+                ret[eJson.merge.TARGET] = propVal[0]
+                ret[eJson.merge.MERGE]  = propVal[1]
+                if str(propVal[2]).isdigit():
+                    ret[eConn.props.UPDATE] = self.__setUpdate (propVal[2])
+                else:
+                    ret[eJson.merge.IGNORE] = propVal[1]
+            elif len(propVal) == 4:
+                ret[eJson.merge.TARGET] = propVal[0]
+                ret[eJson.merge.MERGE]  = propVal[1]
+                ret[eJson.merge.IGNORE] = propVal[2]
+                ret[eConn.props.UPDATE] = self.__setUpdate (propVal[3])
+
+
             else:
                 p("%s: Not valid merge valuues, must have obj and merge key..." % (str(propVal)), "e")
         elif isinstance(propVal, dict):

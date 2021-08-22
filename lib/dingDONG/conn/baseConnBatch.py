@@ -91,7 +91,7 @@ class baseConnBatch ( baseConn ):
         pass
 
     @abc.abstractmethod
-    def merge(self, mergeTable, mergeKeys=None, sourceTable=None):
+    def merge(self, mergeTable, mergeKeys=None, sourceTable=None, ingoreUpdateColumn=None):
         pass
 
     @abc.abstractmethod

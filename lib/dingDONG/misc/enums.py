@@ -169,7 +169,8 @@ class eJson (object):
         SOURCE  = 'merge_source'
         TARGET  = 'merge_target'
         MERGE   = 'merge_keys'
-        DIC     = {SOURCE:None, TARGET:None, MERGE:None}
+        IGNORE  = "ignore_columns"
+        DIC     = {SOURCE:None, TARGET:None, MERGE:None, IGNORE:None}
 
     class index(object):
         COLUMNS = 'c'
