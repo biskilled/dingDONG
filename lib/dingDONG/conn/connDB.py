@@ -978,7 +978,7 @@ class connDb (baseConnBatch):
             methodTup = [(1,method,{})]
             execQuery(sqlWithParamList=method, connObj=self, sqlFolder=self.sqlFolder)
 
-    def merge (self, mergeTable, mergeKeys=None, sourceTable=None, ingoreUpdateColumn=None):
+    def merge (self, mergeTable, mergeKeys=None, sourceTable=None, ignoreUpdateColumn=None):
         srcSchema, srcName = self.setTableAndSchema(tableName=sourceTable, tableSchema=None, wrapTable=True)
         mrgSchema, mrgName = self.setTableAndSchema(tableName=mergeTable, tableSchema=None, wrapTable=True)
 
@@ -988,6 +988,16 @@ class connDb (baseConnBatch):
         mrgStructureL   = {x.lower():x for x in mrgStructure}
         srcStructureL   = {x.lower():x for x in srcStructure}
         mergeKeysL      = [self.wrapColName(col=x.lower(), remove=False) for x in mergeKeys]
+        if ignoreUpdateColumn and len(ignoreUpdateColumn)>0:
+            if myBaseString(ignoreUpdateColumn):
+                ignoreUpdateColumn = [ignoreUpdateColumn.lower()]
+            elif isinstance(ignoreUpdateColumn, (tuple,list) ):
+                ignoreUpdateColumn = [x.lower() for x in ignoreUpdateColumn]
+            else:
+                p("MERGE, CANNOT IGNORE COLUMN: %s, MUST BE STRING OR LIST " % (str(ignoreUpdateColumn)), "i")
+                ignoreUpdateColumn = []
+        else:
+            ignoreUpdateColumn = []
 
         ### MERGE IDENTICAL COLUMN ONLY
         updateColumns       = []
@@ -998,12 +1008,16 @@ class connDb (baseConnBatch):
 
         for col in srcStructure:
             if col.lower() in mrgStructureL:
+                colMerge = col
                 col = self.wrapColName(col=col, remove=False)
                 allColumns.append (col)
                 if col.lower() in mergeKeysL:
                     keyColumns.append(col)
                 else:
-                    updateColumns.append(col)
+                    if colMerge.lower() not in ignoreUpdateColumn:
+                        updateColumns.append(col)
+                    else:
+                        p("MERGE COLUMNS IGNORE %s column on update TABLE %s" % (col, mergeTable), "ii")
             else:
                 notExistsInMergeCol.append (col)
 
@@ -1017,19 +1031,11 @@ class connDb (baseConnBatch):
         if len (notExistsInSourceCol)>0:
             p ("MERGE COLUMNS %s NOT EXISTS IN SOURCE TABLE %s" %(str(notExistsInSourceCol), mergeTable),"ii")
 
-        if ingoreUpdateColumn and len(ingoreUpdateColumn)>0:
-            for col in ingoreUpdateColumn:
-                if col in updateColumns:
-                    updateColumns.remove(col)
-                    p("MERGE COLUMNS IGNORE %s column on update TABLE %s" % (col, mergeTable), "ii")
-
         if len (keyColumns) == 0:
             keyColumns = updateColumns
 
         dstTable = '%s.%s' %(mrgSchema,mrgName) if mrgSchema else mrgName
         srcTable = '%s.%s' %(srcSchema,srcName)
-
-
 
         sql = setSqlQuery().getSql(conn=self.connType, sqlType=eSql.MERGE, dstTable=dstTable, srcTable=srcTable, mergeKeys=keyColumns, colList=updateColumns, colFullList=allColumns)
         self.exeSQL(sql=sql)

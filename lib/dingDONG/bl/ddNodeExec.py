@@ -386,7 +386,8 @@ class nodeExec (object):
                         if mrgSource.test():
                             mergeTarget = mrg[eJson.merge.TARGET]
                             mergeKeys   = mrg[eJson.merge.MERGE]
-                            mrgSource.merge(mergeTable=mergeTarget, mergeKeys=mergeKeys, sourceTable=None)
+                            ignoreColumns=mrg[eJson.merge.IGNORE]
+                            mrgSource.merge(mergeTable=mergeTarget, mergeKeys=mergeKeys, sourceTable=None, ignoreUpdateColumn=ignoreColumns)
                             mrgSource.close()
 
     def ding( self ):

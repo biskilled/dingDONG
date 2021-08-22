@@ -287,6 +287,7 @@ class jsonParser (object):
         ### Update values from Source connection
         ret[eJson.merge.SOURCE]  = srcConn[eConn.props.TBL]
         ret[eConn.props.TYPE]    = srcConn[eConn.props.TYPE]
+        ret[eJson.merge.IGNORE]  = []
 
         if isinstance(propVal, str):
             ret[eConn.props.NAME]         = propFullName
