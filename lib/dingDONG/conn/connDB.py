@@ -808,7 +808,10 @@ class connDb (baseConnBatch):
                     if srcColumnName in existingColumnsByTargetL:
                         srcColumnName = '%s As %s' % (existingColumnsByTargetL[srcColumnName], tarColumnName)
                     elif srcColumnName in existingColumnsL:
-                        srcColumnName = '%s As %s' % (existingColumnsL[srcColumnName], tarColumnName)
+                        if tarColumn.lower() in existingColumnsByTargetL:
+                            srcColumnName = '%s As %s' % (existingColumnsByTargetL[tarColumn.lower()], tarColumnName)
+                        else:
+                            srcColumnName = '%s As %s' % (existingColumnsL[srcColumnName], tarColumnName)
                     elif srcColumnName in existingColumnsLFull:
                         srcColumnName = '%s As %s' % (existingColumnsLFull[srcColumnName], tarColumnName)
 
