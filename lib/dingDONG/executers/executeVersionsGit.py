@@ -642,8 +642,8 @@ class dbVersions ():
 # Create token by creting new token at setting/Developer setting/Personal access token
 # Cretae new project --> Add file
 # Connect / load first project !!!
-# cd C:\Users\Owner\Documents\projects\dingDongGitHubTest\2ndUser
-# git clone https://github.com/biskilled/exp1.git
+# cd ...
+# git clone ...
 # add file, git add .  ; git commit -m "...." ; git push
 
 repoName    = "exp1"
