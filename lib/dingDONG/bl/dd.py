@@ -38,12 +38,14 @@ from dingDONG.executers.executeSql import execQuery
 from dingDONG.executers.executeAddMsg import executeAddMsg
 from dingDONG.executers.executeMicrosoftOLAP import OLAP_Process
 from dingDONG.executers.executeVersionsGit import dbVersions
+from dingDONG.executers.executeVersionsGit import gitMng
 
 
 class dingDONG:
     def __init__ (self,  dicObj=None, filePath=None,
                 dirData=None, includeFiles=None, notIncludeFiles=None,
-                dirLogs=None,connDict=None, processes=None, sqlFolder=None):
+                dirLogs=None,connDict=None, processes=None, sqlFolder=None,
+                repoType=None, repoAuth=None):
 
         self._dicObj        = dicObj
         self._filePath      = filePath
@@ -55,11 +57,14 @@ class dingDONG:
         self.sqlFolder      = config.SQL_FOLDER_DIR if not sqlFolder else sqlFolder
         self.connDict       = connDict
         self.setCounter     = 0
+        self.repoType       = repoType
+        self.repoAuth       = repoAuth
 
         self.Set(dicObj=self._dicObj, filePath=self._filePath,
                 dirData=self._dirData, includeFiles=self._includeFiles,
                 notIncludeFiles=self._notIncludeFiles,dirLogs=dirLogs,
-                connDict=self.connDict, processes=processes, sqlFolder=sqlFolder)
+                connDict=self.connDict, processes=processes, sqlFolder=sqlFolder,
+                repoType=self.repoType, repoAuth=self.repoAuth )
 
         self.msg = executeAddMsg()
 
@@ -71,7 +76,8 @@ class dingDONG:
 
     def Set (self, dicObj=None, filePath=None,
                 dirData=None, includeFiles=None, notIncludeFiles=None,
-                dirLogs=None,connDict=None, processes=None, sqlFolder=None):
+                dirLogs=None,connDict=None, processes=None, sqlFolder=None,
+                repoType=None, repoAuth=None):
 
         self.sqlFolder = sqlFolder if sqlFolder else self.sqlFolder
         self._dicObj    = dicObj
@@ -81,6 +87,8 @@ class dingDONG:
         self._notIncludeFiles=notIncludeFiles
         self.connDict = connDict if connDict else self.connDict
         self.setCounter +=1
+        self.repoType=repoType if repoType else self.repoType
+        self.repoAuth=repoAuth if repoAuth else self.repoAuth
 
         if dicObj or filePath or dirData or includeFiles or notIncludeFiles \
                 or connDict or sqlFolder:

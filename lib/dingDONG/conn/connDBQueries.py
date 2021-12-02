@@ -280,6 +280,7 @@ class setSqlQuery (baseSqlQuery):
         self.default = sql
         self.connQuery[eConn.types.SQLSERVER] = sql
         self.connQuery[eConn.types.LITE] = sql
+        self.connQuery[eConn.types.MYSQL] = sql
 
     def setSqlExistingIndexes(self, tableName):
         sql = """

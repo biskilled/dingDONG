@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2019, BPMK LTD (BiSkilled) Tal Shany <tal.shany@biSkilled.com>
+# Copyright (c) 2017-2021, BPMK LTD (BiSkilled) Tal Shany <tal.shany@biSkilled.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 #
 # This file is part of dingDong
@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with dingDong.  If not, see <http://www.gnu.org/licenses/>.
 
-
 ### USING gitpython and pygithub
 
 import os
@@ -28,48 +27,84 @@ import time
 import stat
 import io
 import getpass
-
+import git  # GitPython
+from github import Github  # PyGithub
 
 from dingDONG.misc.logger   import p
-from dingDONG.misc.enums import eConn
+from dingDONG.misc.enums import eConn, eGit
 from dingDONG.conn.connDB import connDb
 from dingDONG.config import config
 
-class gitTypes (object):
-    MODIFIED    = 'MODIFIED'
-    NEW         = 'NEW'
-    DELETED     = 'DELETED'
-    UNKNOWN     = 'WHAT IS IT ....'
+class gitMng():
+    def __init__ (self, remoteType, repoName, repoLocalFolder, remoteAuth,
+                  create=True, defaultBranch="master"):
 
-    COMMIT_MSG = '%s: TIME:%s, STATUS:%s, NAME: %s'
-
-class ops():
-    def __init__ (self, repoName, repoFolder, remoteUser, remotePass):
         # GIT, GITHUB packages
-        import git
-        from github import Github
+        import git  # GitPython
+        from github import Github  # PyGithub
+
+        self.remoteType = remoteType
+        if self.remoteType.lower() not in (eGit.ALL_TYPES):
+            p ("REPO TYPE %s is not defined " %self.remoteType)
 
         self.repoName   = repoName
-        self.repoFolder = repoFolder
 
         self.remoteObj      = None
         self.remoteRepo     = None
         self.remoteUrl      = None
         self.remoteUrlFull  = None
-        self.remoteUser     = None
-        self.remoteLoginUser= remoteUser
-        self.remoteLoginPass= remotePass
+        self.remoteAuth     = remoteAuth
         self.remoteConnected= False
-
+        self.remoteUser     = None
         self.localObj       = None
         self.localRepo      = None
-        self.localPath      = os.path.join(self.repoFolder, self.repoName)
+        self.repoLocalFolder = repoLocalFolder
+        self.localPath      = os.path.join (self.repoLocalFolder, repoName)
+        self.localPathTmp   = os.path.join (self.repoLocalFolder, "temp")
+        self.localPathHistory = os.path.join (self.repoLocalFolder, "History_"+repoName)
         self.localConnected = False
+        self.create         = create
+        self.branch         = defaultBranch
 
-        self.versionFile = 'version.txt'
-        self.startTime = time.strftime("%Y-%m-%d %H:%M:%S")
-        self.versionId = None
+        self.versionFile    = 'version.txt'
+        self.startTime      = time.strftime("%Y-%m-%d %H:%M:%S")
+        self.versionId      = None
         self.getSetVersion (versionCommit=None, defualtStart='1')
+
+    def initRepos (self, commDesc="Init Repo .... "):
+        totalNewFiles = 0
+        if not self.localConnected:     self.connectLocal ()
+        if not self.remoteConnected:    self.connectRemote()
+
+        if self.remoteConnected and not self.remoteRepo:
+            if self.create:
+                self.remoteRepo = self.remoteUser.create_repo(self.repoName, description=commDesc,
+                                                              has_wiki=False, has_issues=True, auto_init=False)
+                self.repoName = self.remoteRepo.name
+                self.remoteUrl = self.remoteRepo.git_url
+                startFrom = self.remoteUrl.find("://")
+                self.remoteUrlFull = 'https://%s' % (self.remoteUrl[startFrom + 3:])
+                self.remoteRepo.create_file(".gitignore", "Add gitIgnore file", self.__addGitIgnore(), branch="master")
+                p ("REMOTE REPO %s CREATED !!!!" %self.repoName)
+            else:
+                p("REMOTE REPO %s NOT CREATED" %self.repoName, "e")
+
+        if self.localConnected and not self.localRepo:
+            if self.create:
+                _ = git.Repo.init(self.localPath)
+                self.localRepo = git.Repo(self.localPath)
+                origin = self.localRepo.create_remote('origin', url=self.remoteUrlFull)
+                origin.fetch()
+                self.localRepo.create_head("master", origin.refs.master)
+                self.localRepo.heads.master.set_tracking_branch(origin.refs.master)
+                self.localRepo.heads.master.checkout(True)
+                newFiles = self.localRepo.untracked_files
+                totalNewFiles = len(newFiles)
+                self.localRepo.index.add(newFiles)
+                commitId = self.localRepo.index.commit(commDesc)
+                self.getSetVersion(versionCommit=commitId)
+                self.localRepo.git.push(force=True)
+        return totalNewFiles
 
     def connectLocal (self):
         if self.localPath and os.path.isdir(self.localPath):
@@ -77,39 +112,50 @@ class ops():
                 _ = git.Repo(self.localPath).git_dir
                 self.localRepo = git.Repo(self.localPath)
                 p("SET: USING LOCAL REPO %s, URL: %s" % (self.repoName, self.localPath))
-                self.localConnected = True
             except git.exc.InvalidGitRepositoryError as e:
-                p("SET: ERROR USING LOCAL FOLDER ")
-                p("SET: ERROR %s " %(str(e)) )
                 self.localRepo = None
-                self.localConnected = False
+        if self.localPath:
+            if not os.path.isdir(self.localPath):
+                os.mkdir(self.localPath)
+            self.localConnected = True
+        else:
+            p ("PATH %s IS NOT EXISTS " %self.localPath , "e")
 
-    def connectRemote (self):
-        try:
-            self.remoteObj = Github(self.remoteLoginUser, self.remoteLoginPass)
-            p("INIT: CONNECTED TO GITHUB USING USER: %s, PASS: %s " % (self.remoteLoginUser, self.remoteLoginPass))
-            self.remoteUser = self.remoteObj.get_user()
-
-            for repo in self.remoteUser.get_repos():
-                if repo.name.lower() == self.repoName.lower():
+    def connectRemote (self, commDesc="Init repo"):
+        if eGit.GITHUB == self.remoteType:
+            try:
+                remoteGit = Github(self.remoteAuth)
+                p("INIT: CONNECTED TO GITHUB USING TOKEN: %s  " % (self.remoteAuth))
+                self.remoteUser = remoteGit.get_user()
+                self.remoteConnected = True
+                repo = self.__getRemoteRepo(repos=self.remoteUser.get_repos())
+                if repo:
                     self.repoName = repo.name
                     self.remoteUrl = repo.git_url
-
                     # self.remoteUrlFull
                     startFrom = self.remoteUrl.find("://")
-                    self.remoteUrlFull = 'https://%s:%s@%s'  %(self.remoteLoginUser, self.remoteLoginPass, self.remoteUrl[startFrom+3:])
+                    self.remoteUrlFull = 'https://%s@%s'  %(self.remoteAuth, self.remoteUrl[startFrom+3:])
                     self.remoteRepo = repo
                     p("SET: USING REMOTE GITHUB REPO %s, URL: %s" % (self.repoName, self.remoteUrl))
-                    self.remoteConnected = True
-                    break
 
-        except Exception as e:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(exc_type, exc_value, exc_traceback, limit=4, file=sys.stdout)
-            p("Error: %s" % (str(e)))
-            self.remoteConnected = True
+            except Exception as e:
+                p("CREATE REPO: REMOTE GIT IS NOT CONNECTED !")
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                traceback.print_exception(exc_type, exc_value, exc_traceback, limit=4, file=sys.stdout)
+                p("Error: %s" % (str(e)))
 
-    def getRemoteRepo (self, create=True):
+    def __getRemoteRepo (self,repos):
+        for repInRemote in repos:
+            if repInRemote.name.lower() == self.repoName.lower():
+                return repInRemote
+
+    def __addGitIgnore (self):
+        str = """__pycache__/\n*.py[cod]\n*$py.class\n\n.Python\nenv/\nbuild/\ndevelop-eggs/\n
+                dist/\ndownloads/\neggs/\n.eggs/\nlib64/\nparts/\nsdist/\nvar/\nwheels/\n*.egg-info/\n
+                .installed.cfg\n*.egg\n*.manifest\n*.spec"""
+        return str
+
+    def getRemoteRepo (self):
         createDesc = 'Local testi ng repo '
 
         if not self.remoteConnected:self.connectRemote()
@@ -148,7 +194,7 @@ class ops():
             traceback.print_exception(exc_type, exc_value, exc_traceback,limit=4, file=sys.stdout)
             p ("Error: %s" %(str(e)))
 
-    def deleteRemoteRepo(self, totalRetry=4):
+    def deleteRemoteRepo(self, repoName=None, totalRetry=4):
         if not self.remoteConnected:
             self.connectRemote()
 
@@ -228,9 +274,99 @@ class ops():
                     f.write(newCommit)
                     self.versionId = str(int(self.versionId) + 1)
 
+    def gitUpdate (self, commMsg=None):
+        commDesc = commMsg if commMsg else "INIT REPOSITORY ..."
+        newFiles = self.initRepos(commDesc=commDesc)
+
+        # Update project
+        self.localRepo.git.pull()
+
+        # Commit all prev changes
+        self.__pushCommits()
+
+        # Check for changes
+        self.__checkLocalUpdates (commMsg=commMsg)
+
+
+    def __pushCommits (self):
+        # Commits that not pushed
+        commitsNotPush = self.localRepo.iter_commits('origin/%s..%s' %(self.branch, self.branch))
+        countCommits = sum(1 for c in commitsNotPush)
+
+        if countCommits is not None and countCommits>0:
+            self.localRepo.git.push(force=True)  # self.remoteUrlFull,
+            p(">>>> %s COMMITS PUSHED TO REMOTE " %(str(countCommits)))
+
+    def __isFolder (self, file):
+        head, tail = os.path.split(file)
+        if not head or head=='':
+            return True
+        return False
+
+    def __checkLocalUpdates (self, commMsg=None):
+
+        """" GIT modifying files mode
+                A: adding path
+                D: deleted paths
+                R: renamed paths
+                M: paths with modified data
+                T: changed in the type paths
+        """
+
+        addFiles        = []
+        addFolder       = []
+        deletedFiles    = []
+        deletedFolders  = []
+        newFilesAndFolders= self.localRepo.untracked_files
+        for f in newFilesAndFolders:
+            addFolder.append(f) if self.__isFolder(file=f) else addFiles.append(f)
+
+        for item in self.localRepo.index.diff(None):
+            if item.change_type in ['A','R','M','T']:
+                addFolder.append (item.a_path) if self.__isFolder(file=item.a_path) else addFiles.append(item.a_path)
+            else:
+                deletedFolders.append (item.a_path) if self.__isFolder(file=item.a_path) else deletedFiles.append(item.a_path)
+
+        commDescF = ""
+        if len (addFolder)>0:
+            self.localRepo.index.add(addFolder)
+            commDescF+="TOTAL MODIFIED: %s " %(str(len(addFolder )))
+
+        if len (deletedFolders)>0:
+            self.localRepo.index.remove(items=deletedFolders, cached=True)
+            commDescF += "    ;   TOTAL DELETED: %s ;" % (str(len(deletedFolders)))
+
+        if len(commDescF)>0:
+            p(">>>>>    COMMIT::: %s, MSG: %s" % (commDescF, commMsg))
+            comm = commMsg if commMsg else commDescF
+            commitId = self.localRepo.index.commit(comm)
+        else:
+            p(">>>>>    NO FOLDERS TO COMMIT")
+
+        commDesc = ""
+        if len(addFiles) > 0:
+            self.localRepo.index.add(addFiles)
+            commDesc += "TOTAL MODIFIED: %s " % (str(len(addFolder)))
+
+        if len(deletedFiles) > 0:
+            self.localRepo.index.remove(items=deletedFiles, cached=True)
+            commDesc += "    ;   TOTAL DELETED: %s ;" % (str(len(deletedFiles)))
+
+        if len(commDesc) > 0:
+            p(">>>>>    COMMIT::: %s, MSG: %s" % (commMsg, commDesc))
+            comm = commMsg if commMsg else commDesc
+
+        if len(commDesc) > 0 or len(commDescF) > 0:
+            commitId = self.localRepo.index.commit(comm)
+            self.getSetVersion(versionCommit=commitId)
+            self.localRepo.git.push(force=True)
+
     def checkChanges (self):
         if not self.localConnected: self.connectLocal()
         if not self.remoteConnected: self.connectRemote()
+
+        # Update project
+        self.localRepo.git.pull()
 
         # Commits that not pushed
         commitsNotPush = self.localRepo.iter_commits('origin/master..master')
@@ -328,9 +464,13 @@ class ops():
             p("THERE ARE NO FILES TO COMMITS")
 
     def getVesrion (self, vId):
-        if not self.localConnected: self.connectLocal()
+        if not self.localConnected:  self.connectLocal()
         if not self.remoteConnected: self.connectRemote()
-        commitId = self.getCommitId (vId=vId)
+
+        if not os.path.isdir(self.localPathHistory):
+            os.mkdir(self.localPathHistory)
+
+        commitId = self.getCommitId(vId=vId)
 
         if commitId:
             p("CHECKOUT TO VERSION %s, COMMIT %s" %(vId, commitId))
@@ -407,7 +547,7 @@ class ops():
         Download all contents at server_path with commit tag sha in
         the repository.
         """
-        contents = repository.get_dir_contents(server_path, ref=sha)
+        contents = repository.get_contents(server_path, ref=sha)
 
         for content in contents:
             print ("Processing %s" % content.path)
@@ -418,10 +558,10 @@ class ops():
                     path = content.path
                     file_content = repository.get_contents(path, ref=sha)
                     file_data = base64.b64decode(file_content.content)
-                    file_out = open(content.name, "w")
-                    print (path)
-                    #file_out.write(file_data)
+                    file_out = open(os.path.join (self.localPathHistory, content.name), "wb")
+                    file_out.write(file_data)
                     file_out.close()
+                    print (os.path.join (self.localPath, content.name))
                 except Exception as exc: # (GithubException, IOError)
                     p('Error processing %s: %s' %(content.path, exc))
 
@@ -499,12 +639,32 @@ class dbVersions ():
 
 
 ## TEST #######
-#repoName="talTest2"
-#localPath = "C:\\gitHub"
+# Create token by creting new token at setting/Developer setting/Personal access token
+# Cretae new project --> Add file
+# Connect / load first project !!!
+# cd C:\Users\Owner\Documents\projects\dingDongGitHubTest\2ndUser
+# git clone https://github.com/biskilled/exp1.git
+# add file, git add .  ; git commit -m "...." ; git push
 
-#myDevOps = ops(repoName=repoName, repoFolder=localPath, remoteUser='biskilled', remotePass='Emili1217')
-#myDevOps.deleteRemoteRepo()
+repoName    = "exp1"
+repoToken   = ""
+localPath   = ""
+
+mm = gitMng(remoteType=eGit.GITHUB, repoName=repoName, repoLocalFolder=localPath,
+            remoteAuth=repoToken, create=True, defaultBranch="master")
+mm.gitUpdate()
+#mm.getVesrion (vId=2)
+
+
+#mm.deleteRemoteRepo()
+
+#mm.initRepos (commDesc="Init Repo .... ")
+
+#myDevOps = ops(repoName=repoName, repoFolder=localPath, remoteToken=repoToken)
 #myDevOps.getRemoteRepo (create=True)
+#myDevOps.checkChanges ()
+
+
 
 #myDevOps.checkChanges ()
 

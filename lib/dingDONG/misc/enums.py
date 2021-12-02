@@ -189,3 +189,16 @@ class eObj (object):
 
     FILE_FOLDER     = 'folder'
     FILE_FULL_PATH  = 'fullFileName'
+
+class eGit (object):
+    GITHUB      = "github"
+
+    ALL_TYPES = ["github"]
+
+    class types(object):
+        MODIFIED = 'MODIFIED'
+        NEW = 'NEW'
+        DELETED = 'DELETED'
+        UNKNOWN = 'WHAT IS IT ....'
+
+        COMMIT_MSG = '%s: TIME:%s, STATUS:%s, NAME: %s'

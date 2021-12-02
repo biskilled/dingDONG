@@ -23,3 +23,5 @@ pyodbc
 pymongo
 pandas
 requests
+GitPython
+PyGithub

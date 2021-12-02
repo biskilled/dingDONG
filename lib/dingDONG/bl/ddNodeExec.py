@@ -408,7 +408,7 @@ class nodeExec (object):
                             mrgSource = tar
 
                             if  eJson.SOURCE not in node:
-                                tar.create(stt=self.stt, addIndex=self.addIndex)
+                                tar.create(sttDict=self.stt, addIndex=self.addIndex)
                                 tar.close()
                                 tar = None
 

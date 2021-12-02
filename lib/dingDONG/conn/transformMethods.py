@@ -27,6 +27,7 @@ from dingDONG.misc.logger import p
 class fncBase ():
     def __init__(self,*args, **kargs):
         self.cDate = datetime.datetime.today().strftime('%m/%d/%y %H:%M:%S')
+        self.mySqlDate = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
         self.errMsg = None
 
     def handler(self, col, colNum=''):
@@ -140,6 +141,16 @@ class fDCurr(fncBase):
 
     def subHandler(self, col):
          return self.cDate
+
+class fDMySqlCurr(fncBase):
+    def __init__(self, *args, **kargs):
+        fncBase.__init__(self, *args, **kargs)
+        self.errMsg = "fDMySqlCurr fn error"
+
+    def subHandler(self, col):
+        return self.mySqlDate
+
+
 
 class fTCast(fncBase):
     def __init__(self, *args, **kargs):
