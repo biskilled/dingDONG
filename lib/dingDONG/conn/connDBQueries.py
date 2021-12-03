@@ -249,6 +249,15 @@ class setSqlQuery (baseSqlQuery):
 
         self.connQuery[eConn.types.SQLSERVER] = self.default
 
+        sqlMysql = []
+        sqlMysql.append ("""delete t From %s as s inner join %s as t 
+                    ON %s;""" %(srcTable, dstTable,  " AND ".join(["t." + c + " = s." + c  for c in mergeKeys])))
+
+        sqlMysql.append ("insert into %s (%s) select %s from %s ;" %(dstTable, ",".join([c for c in colFullList]),  ",".join([c for c in colFullList]), srcTable))
+
+        self.connQuery[eConn.types.MYSQL] = sqlMysql
+
+
     def setSqlIsExists(self, tableName, tableSchema):
         fullTableName = '%s.%s' %(tableSchema, tableName) if tableSchema else tableName
         sql = "Select OBJECT_ID('%s')" %(fullTableName)

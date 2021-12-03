@@ -52,7 +52,7 @@ class eConn (object):
         DEFAULT_TYPE = 'dt'
         BATCH_SIZE = 'bs'
         COLUMN_TYPE = 't'
-        TABLE_SCHEMA = 's'
+        TABLE_SCHEMA = 'schema'
         COLUMNS_NULL = 'e'
         COLUMN_FRAME = 'cf'
         SP = 'sp'

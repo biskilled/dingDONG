@@ -134,7 +134,7 @@ class connDb (baseConnBatch):
         self.connTbl    = setProperty(k=eConn.props.TBL, o=self.propertyDict, defVal=None)
         self.sqlFolder  = setProperty(k=eConn.props.FOLDER, o=self.propertyDict, defVal=None)
         self.sqlFile    = setProperty(k=eConn.props.SQL_FILE, o=self.propertyDict, defVal=None)
-        self.defaultSchema  = self.defaults[eConn.defaults.TABLE_SCHEMA]
+        self.defaultSchema  = setProperty(k=eConn.defaults.TABLE_SCHEMA, o=self.propertyDict, defVal=self.defaults[eConn.defaults.TABLE_SCHEMA])
         self.defaulNull     = self.defaults[eConn.defaults.COLUMNS_NULL]
         self.defaultSP      = self.defaults[eConn.defaults.SP]
         self.columnFrame    = self.defaults[eConn.defaults.COLUMN_FRAME]
